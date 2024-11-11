@@ -1,11 +1,8 @@
 package handler
 
 import (
-	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"honoka-chan/database"
-	"honoka-chan/encrypt"
 	"honoka-chan/model"
 	"net/http"
 	"strconv"
@@ -26,10 +23,7 @@ func AuthKey(ctx *gin.Context) {
 	resp, err := json.Marshal(authResp)
 	CheckErr(err)
 
-	xMessageSign := base64.StdEncoding.EncodeToString(encrypt.RSA_Sign_SHA1(resp))
-
-	ctx.Header("X-Message-Sign", xMessageSign)
-
+	ctx.Header("X-Message-Sign", GenXMS(resp))
 	ctx.JSON(http.StatusOK, authResp)
 }
 
@@ -60,9 +54,6 @@ func Login(ctx *gin.Context) {
 	resp, err := json.Marshal(loginResp)
 	CheckErr(err)
 
-	ctx.Header("user_id", "")
-	ctx.Header("authorize", fmt.Sprintf("consumerKey=lovelive_test&timeStamp=%d&version=1.1&token=%s&nonce=%d&user_id=%s&requestTimeStamp=%d", time.Now().Unix(), ctx.GetString("authorize_token"), ctx.GetInt("nonce"), ctx.GetString("userid"), ctx.GetInt64("req_time")))
-	ctx.Header("X-Message-Sign", base64.StdEncoding.EncodeToString(encrypt.RSA_Sign_SHA1(resp)))
-
+	ctx.Header("X-Message-Sign", GenXMS(resp))
 	ctx.JSON(http.StatusOK, loginResp)
 }

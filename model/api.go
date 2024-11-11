@@ -15,3 +15,11 @@ type ApiResp struct {
 	ReleaseInfo  []any           `json:"release_info"`
 	StatusCode   int             `json:"status_code"`
 }
+
+// ApiUserInfoResp ...
+type ApiUserInfoResp struct {
+	Result     UserInfo `json:"result"`
+	Status     int      `json:"status"`
+	CommandNum bool     `json:"commandNum"`
+	TimeStamp  int64    `json:"timeStamp"`
+}

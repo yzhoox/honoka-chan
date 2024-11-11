@@ -1,12 +1,9 @@
 package handler
 
 import (
-	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"honoka-chan/config"
 	"honoka-chan/database"
-	"honoka-chan/encrypt"
 	"honoka-chan/model"
 	"honoka-chan/utils"
 	"math"
@@ -21,13 +18,7 @@ import (
 func PartyList(ctx *gin.Context) {
 	resp := utils.ReadAllText("assets/sif/partylist.json")
 
-	nonce := ctx.GetInt("nonce")
-	nonce++
-
-	ctx.Header("user_id", ctx.GetString("userid"))
-	ctx.Header("authorize", fmt.Sprintf("consumerKey=lovelive_test&timeStamp=%d&version=1.1&token=%s&nonce=%d&user_id=%s&requestTimeStamp=%d", time.Now().Unix(), ctx.GetString("token"), nonce, ctx.GetString("userid"), ctx.GetInt64("req_time")))
-	ctx.Header("X-Message-Sign", base64.StdEncoding.EncodeToString(encrypt.RSA_Sign_SHA1([]byte(resp))))
-
+	ctx.Header("X-Message-Sign", GenXMS([]byte(resp)))
 	ctx.String(http.StatusOK, resp)
 }
 
@@ -416,13 +407,7 @@ func PlayLive(ctx *gin.Context) {
 	resp, err := json.Marshal(playResp)
 	CheckErr(err)
 
-	nonce := ctx.GetInt("nonce")
-	nonce++
-
-	ctx.Header("user_id", ctx.GetString("userid"))
-	ctx.Header("authorize", fmt.Sprintf("consumerKey=lovelive_test&timeStamp=%d&version=1.1&token=%s&nonce=%d&user_id=%s&requestTimeStamp=%d", time.Now().Unix(), ctx.GetString("token"), nonce, ctx.GetString("userid"), ctx.GetInt64("req_time")))
-	ctx.Header("X-Message-Sign", base64.StdEncoding.EncodeToString(encrypt.RSA_Sign_SHA1(resp)))
-
+	ctx.Header("X-Message-Sign", GenXMS(resp))
 	ctx.String(http.StatusOK, string(resp))
 }
 
@@ -435,13 +420,7 @@ func GameOver(ctx *gin.Context) {
 	resp, err := json.Marshal(overResp)
 	CheckErr(err)
 
-	nonce := ctx.GetInt("nonce")
-	nonce++
-
-	ctx.Header("user_id", ctx.GetString("userid"))
-	ctx.Header("authorize", fmt.Sprintf("consumerKey=lovelive_test&timeStamp=%d&version=1.1&token=%s&nonce=%d&user_id=%s&requestTimeStamp=%d", time.Now().Unix(), ctx.GetString("token"), nonce, ctx.GetString("userid"), ctx.GetInt64("req_time")))
-	ctx.Header("X-Message-Sign", base64.StdEncoding.EncodeToString(encrypt.RSA_Sign_SHA1(resp)))
-
+	ctx.Header("X-Message-Sign", GenXMS(resp))
 	ctx.String(http.StatusOK, string(resp))
 }
 
@@ -527,13 +506,7 @@ func PlayScore(ctx *gin.Context) {
 	resp, err := json.Marshal(playResp)
 	CheckErr(err)
 
-	nonce := ctx.GetInt("nonce")
-	nonce++
-
-	ctx.Header("user_id", ctx.GetString("userid"))
-	ctx.Header("authorize", fmt.Sprintf("consumerKey=lovelive_test&timeStamp=%d&version=1.1&token=%s&nonce=%d&user_id=%s&requestTimeStamp=%d", time.Now().Unix(), ctx.GetString("token"), nonce, ctx.GetString("userid"), ctx.GetInt64("req_time")))
-	ctx.Header("X-Message-Sign", base64.StdEncoding.EncodeToString(encrypt.RSA_Sign_SHA1(resp)))
-
+	ctx.Header("X-Message-Sign", GenXMS(resp))
 	ctx.String(http.StatusOK, string(resp))
 }
 
@@ -714,12 +687,6 @@ func PlayReward(ctx *gin.Context) {
 	resp, err := json.Marshal(playResp)
 	CheckErr(err)
 
-	nonce := ctx.GetInt("nonce")
-	nonce++
-
-	ctx.Header("user_id", ctx.GetString("userid"))
-	ctx.Header("authorize", fmt.Sprintf("consumerKey=lovelive_test&timeStamp=%d&version=1.1&token=%s&nonce=%d&user_id=%s&requestTimeStamp=%d", time.Now().Unix(), ctx.GetString("token"), nonce, ctx.GetString("userid"), ctx.GetInt64("req_time")))
-	ctx.Header("X-Message-Sign", base64.StdEncoding.EncodeToString(encrypt.RSA_Sign_SHA1(resp)))
-
+	ctx.Header("X-Message-Sign", GenXMS(resp))
 	ctx.String(http.StatusOK, string(resp))
 }

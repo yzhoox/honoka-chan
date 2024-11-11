@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"encoding/base64"
 	"honoka-chan/config"
+	"honoka-chan/encrypt"
 
 	"xorm.io/xorm"
 )
@@ -32,4 +34,8 @@ func IsSigned(unitId int) bool {
 	CheckErr(err)
 
 	return exists
+}
+
+func GenXMS(resp []byte) string {
+	return base64.StdEncoding.EncodeToString(encrypt.RSASignSHA1(resp))
 }

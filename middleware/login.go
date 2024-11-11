@@ -25,12 +25,12 @@ func Login(ctx *gin.Context) {
 	req := gjson.Parse(ctx.GetString("request_data"))
 	tKey, err := base64.StdEncoding.DecodeString(req.Get("login_key").String())
 	CheckErr(err)
-	loginKey := utils.Sub16(encrypt.AES_CBC_Decrypt(tKey, aesKey))
+	loginKey := utils.Sub16(encrypt.AESCBCDecrypt(tKey, aesKey))
 	ctx.Set("login_key", string(loginKey))
 
 	tPasswd, err := base64.StdEncoding.DecodeString(req.Get("login_passwd").String())
 	CheckErr(err)
-	loginPasswd := utils.Sub16(encrypt.AES_CBC_Decrypt(tPasswd, aesKey))
+	loginPasswd := utils.Sub16(encrypt.AESCBCDecrypt(tPasswd, aesKey))
 	ctx.Set("login_passwd", string(loginPasswd))
 
 	nonce := ctx.GetInt("nonce")
@@ -41,5 +41,4 @@ func Login(ctx *gin.Context) {
 	ctx.Set("authorize_token", authorizeToken)
 
 	ctx.Next()
-
 }

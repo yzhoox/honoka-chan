@@ -65,6 +65,9 @@ func Common(ctx *gin.Context) {
 			ctx.String(http.StatusForbidden, ErrorMsg)
 			ctx.Abort()
 		}
+
+		ctx.Header("user_id", userId)
+		ctx.Header("authorize", fmt.Sprintf("consumerKey=lovelive_test&timeStamp=%d&version=1.1&token=%s&nonce=%d&user_id=%s&requestTimeStamp=%d", time.Now().Unix(), token, nonce, userId, time.Now().Unix()))
 	}
 
 	ctx.Header("Content-Type", "application/json; charset=utf-8")

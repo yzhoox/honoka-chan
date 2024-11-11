@@ -118,7 +118,7 @@ func Handshake(ctx *gin.Context) {
 
 	body64, err := base64.StdEncoding.DecodeString(string(body))
 	CheckErr(err)
-	decryptedBody := encrypt.RSA_Decrypt(body64)
+	decryptedBody := encrypt.RSADecrypt(body64)
 	// fmt.Println(decryptedBody)
 	// fmt.Println(string(decryptedBody))
 

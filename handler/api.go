@@ -1,12 +1,10 @@
 package handler
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"honoka-chan/config"
-	"honoka-chan/encrypt"
 	"honoka-chan/model"
 	"honoka-chan/tools"
 	"honoka-chan/utils"
@@ -217,10 +215,11 @@ func Api(ctx *gin.Context) {
 				}
 				res, err = json.Marshal(liveListResp)
 				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
 			}
 		case "unit":
-			switch v.Action {
-			case "unitAll":
+			if v.Action == "unitAll" {
 				// key = "unit_list_result"
 				unitsData := []model.Active{}
 				err = MainEng.Table("common_unit_m").Find(&unitsData)
@@ -246,7 +245,7 @@ func Api(ctx *gin.Context) {
 				}
 				res, err = json.Marshal(unitListResp)
 				CheckErr(err)
-			case "deckInfo":
+			} else if v.Action == "deckInfo" {
 				// key = "unit_deck_result"
 				userDeck := []model.UserDeckData{}
 				err = UserEng.Table("user_deck_m").Where("user_id = ?", ctx.GetString("userid")).Asc("deck_id").Find(&userDeck)
@@ -285,7 +284,7 @@ func Api(ctx *gin.Context) {
 				}
 				res, err = json.Marshal(unitDeckResp)
 				CheckErr(err)
-			case "supporterAll":
+			} else if v.Action == "supporterAll" {
 				// key = "unit_support_result"
 				unitSupportResp := model.UnitSupportResp{
 					Result: model.UnitSupportRes{
@@ -297,7 +296,7 @@ func Api(ctx *gin.Context) {
 				}
 				res, err = json.Marshal(unitSupportResp)
 				CheckErr(err)
-			case "removableSkillInfo":
+			} else if v.Action == "removableSkillInfo" {
 				// key = "owning_equip_result"
 				var skillEquipCount []model.SkillEquipCount
 				err := UserEng.Table("skill_equip_m").Where("user_id = ?", ctx.GetString("userid")).Select("unit_removable_skill_id,COUNT(*) AS ct").
@@ -353,7 +352,7 @@ func Api(ctx *gin.Context) {
 				}
 				res, err = json.Marshal(rmSkillResp)
 				CheckErr(err)
-			case "accessoryAll":
+			} else if v.Action == "accessoryAll" {
 				// key = "unit_accessory_result"
 				accessoryList := []model.AccessoryList{}
 				err := MainEng.Table("common_accessory_m").Find(&accessoryList)
@@ -380,490 +379,655 @@ func Api(ctx *gin.Context) {
 				}
 				res, err = json.Marshal(unitAccResp)
 				CheckErr(err)
-			// case "accessoryTab":
-			// case "accessoryMaterialAll":
-			default:
-				err = errors.New("invalid option")
-				CheckErr(err)
+			} else {
+				// case "accessoryTab":
+				// case "accessoryMaterialAll":
+				fmt.Println("Invalid action: ", v.Module, v.Action)
 			}
 		case "costume":
-			// key = "costume_list_result"
-			costumeListResp := model.CostumeListResp{
-				Result: model.CostumeListRes{
-					CostumeList: []model.CostumeList{},
-				},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
+			if v.Action == "costumeList" {
+				// key = "costume_list_result"
+				costumeListResp := model.CostumeListResp{
+					Result: model.CostumeListRes{
+						CostumeList: []model.CostumeList{},
+					},
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(costumeListResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
 			}
-			res, err = json.Marshal(costumeListResp)
-			CheckErr(err)
 		case "album":
-			// key = "album_unit_result"
-			albumLists := []model.AlbumResult{}
-			unitList := []AlbumRes{}
-			err = MainEng.Table("unit_m").Cols("unit_id,rarity").OrderBy("unit_id ASC").Find(&unitList)
-			CheckErr(err)
-			for _, unit := range unitList {
-				albumList := model.AlbumResult{
-					RankMaxFlag:      true,
-					LoveMaxFlag:      true,
-					RankLevelMaxFlag: true,
-					AllMaxFlag:       true,
-					FavoritePoint:    1000,
-				}
-				albumList.UnitID = unit.UnitId
-				if unit.Rarity != 4 {
-					albumList.SignFlag = false
-					if unit.Rarity == 1 {
-						albumList.HighestLovePerUnit = 50
-						albumList.TotalLove = 50
-					} else if unit.Rarity == 2 {
-						albumList.HighestLovePerUnit = 200
-						albumList.TotalLove = 200
-					} else if unit.Rarity == 3 {
-						albumList.HighestLovePerUnit = 500
-						albumList.TotalLove = 500
-					} else if unit.Rarity == 5 {
-						albumList.HighestLovePerUnit = 750
-						albumList.TotalLove = 750
+			if v.Action == "albumAll" {
+				// key = "album_unit_result"
+				albumLists := []model.AlbumResult{}
+				unitList := []AlbumRes{}
+				err = MainEng.Table("unit_m").Cols("unit_id,rarity").OrderBy("unit_id ASC").Find(&unitList)
+				CheckErr(err)
+				for _, unit := range unitList {
+					albumList := model.AlbumResult{
+						RankMaxFlag:      true,
+						LoveMaxFlag:      true,
+						RankLevelMaxFlag: true,
+						AllMaxFlag:       true,
+						FavoritePoint:    1000,
 					}
-				} else {
-					albumList.HighestLovePerUnit = 1000
-					albumList.TotalLove = 1000
+					albumList.UnitID = unit.UnitId
+					if unit.Rarity != 4 {
+						albumList.SignFlag = false
+						if unit.Rarity == 1 {
+							albumList.HighestLovePerUnit = 50
+							albumList.TotalLove = 50
+						} else if unit.Rarity == 2 {
+							albumList.HighestLovePerUnit = 200
+							albumList.TotalLove = 200
+						} else if unit.Rarity == 3 {
+							albumList.HighestLovePerUnit = 500
+							albumList.TotalLove = 500
+						} else if unit.Rarity == 5 {
+							albumList.HighestLovePerUnit = 750
+							albumList.TotalLove = 750
+						}
+					} else {
+						albumList.HighestLovePerUnit = 1000
+						albumList.TotalLove = 1000
 
-					// IsSigned
-					albumList.SignFlag = IsSigned(unit.UnitId)
+						// IsSigned
+						albumList.SignFlag = IsSigned(unit.UnitId)
+					}
+					albumLists = append(albumLists, albumList)
 				}
-				albumLists = append(albumLists, albumList)
-			}
 
-			albumResp := model.AlbumResp{
-				Result:     albumLists,
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
+				albumResp := model.AlbumResp{
+					Result:     albumLists,
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(albumResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
 			}
-			res, err = json.Marshal(albumResp)
-			CheckErr(err)
 		case "scenario":
-			// key = "scenario_status_result"
-			var scenarioIds []int
-			scenarioLists := []model.ScenarioStatusList{}
-			err = MainEng.Table("scenario_m").Cols("scenario_id").OrderBy("scenario_id ASC").Find(&scenarioIds)
-			CheckErr(err)
-			for _, id := range scenarioIds {
-				scenarioLists = append(scenarioLists, model.ScenarioStatusList{
-					ScenarioID: id,
-					Status:     2,
-				})
+			if v.Action == "scenarioStatus" {
+				// key = "scenario_status_result"
+				var scenarioIds []int
+				scenarioLists := []model.ScenarioStatusList{}
+				err = MainEng.Table("scenario_m").Cols("scenario_id").OrderBy("scenario_id ASC").Find(&scenarioIds)
+				CheckErr(err)
+				for _, id := range scenarioIds {
+					scenarioLists = append(scenarioLists, model.ScenarioStatusList{
+						ScenarioID: id,
+						Status:     2,
+					})
+				}
+				scenarioResp := model.ScenarioStatusResp{
+					Result: model.ScenarioStatusRes{
+						ScenarioStatusList: scenarioLists,
+					},
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(scenarioResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
 			}
-			scenarioResp := model.ScenarioStatusResp{
-				Result: model.ScenarioStatusRes{
-					ScenarioStatusList: scenarioLists,
-				},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
-			}
-			res, err = json.Marshal(scenarioResp)
-			CheckErr(err)
 		case "subscenario":
-			// key = "subscenario_status_result"
-			var subScenarioIds []int
-			subScenarioLists := []model.SubscenarioStatusList{}
-			err = MainEng.Table("subscenario_m").Cols("subscenario_id").OrderBy("subscenario_id ASC").Find(&subScenarioIds)
-			CheckErr(err)
-			for _, id := range subScenarioIds {
-				subScenarioLists = append(subScenarioLists, model.SubscenarioStatusList{
-					SubscenarioID: id,
-					Status:        2,
-				})
+			if v.Action == "subscenarioStatus" {
+				// key = "subscenario_status_result"
+				var subScenarioIds []int
+				subScenarioLists := []model.SubscenarioStatusList{}
+				err = MainEng.Table("subscenario_m").Cols("subscenario_id").OrderBy("subscenario_id ASC").Find(&subScenarioIds)
+				CheckErr(err)
+				for _, id := range subScenarioIds {
+					subScenarioLists = append(subScenarioLists, model.SubscenarioStatusList{
+						SubscenarioID: id,
+						Status:        2,
+					})
+				}
+				subScenarioResp := model.SubscenarioStatusResp{
+					Result: model.SubscenarioStatusRes{
+						SubscenarioStatusList:  subScenarioLists,
+						UnlockedSubscenarioIds: []any{},
+					},
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(subScenarioResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
 			}
-			subScenarioResp := model.SubscenarioStatusResp{
-				Result: model.SubscenarioStatusRes{
-					SubscenarioStatusList:  subScenarioLists,
-					UnlockedSubscenarioIds: []any{},
-				},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
-			}
-			res, err = json.Marshal(subScenarioResp)
-			CheckErr(err)
 		case "eventscenario":
-			// key = "event_scenario_result"
-			var eventIds []int
-			eventsList := []model.EventScenarioList{}
-			err = MainEng.Table("event_scenario_m").Cols("event_id").GroupBy("event_id").OrderBy("event_id DESC").Find(&eventIds)
-			CheckErr(err)
-			for _, id := range eventIds {
-				eventRes := []EventRes{}
-				chapsList := []model.EventScenarioChapterList{}
-				err = MainEng.Table("event_scenario_m").Where("event_id = ?", id).Cols("event_scenario_id,chapter,chapter_asset,open_date").
-					OrderBy("chapter DESC").Find(&eventRes)
+			if v.Action == "status" {
+				// key = "event_scenario_result"
+				var eventIds []int
+				eventsList := []model.EventScenarioList{}
+				err = MainEng.Table("event_scenario_m").Cols("event_id").GroupBy("event_id").OrderBy("event_id DESC").Find(&eventIds)
 				CheckErr(err)
-				for _, res := range eventRes {
-					chapList := model.EventScenarioChapterList{
-						EventScenarioID: res.EventScenarioId,
-						Chapter:         res.Chapter,
-						ChapterAsset:    res.ChapterAsset,
-						Status:          2,
-						OpenFlashFlag:   0,
-						IsReward:        false,
-						CostType:        1000,
-						ItemID:          1200,
-						Amount:          1,
+				for _, id := range eventIds {
+					eventRes := []EventRes{}
+					chapsList := []model.EventScenarioChapterList{}
+					err = MainEng.Table("event_scenario_m").Where("event_id = ?", id).Cols("event_scenario_id,chapter,chapter_asset,open_date").
+						OrderBy("chapter DESC").Find(&eventRes)
+					CheckErr(err)
+					for _, res := range eventRes {
+						chapList := model.EventScenarioChapterList{
+							EventScenarioID: res.EventScenarioId,
+							Chapter:         res.Chapter,
+							ChapterAsset:    res.ChapterAsset,
+							Status:          2,
+							OpenFlashFlag:   0,
+							IsReward:        false,
+							CostType:        1000,
+							ItemID:          1200,
+							Amount:          1,
+						}
+						chapsList = append(chapsList, chapList)
 					}
-					chapsList = append(chapsList, chapList)
-				}
 
-				eventList := model.EventScenarioList{
-					EventID:     id,
-					OpenDate:    strings.ReplaceAll(eventRes[0].OpenDate, "/", "-"),
-					ChapterList: chapsList,
-				}
+					eventList := model.EventScenarioList{
+						EventID:     id,
+						OpenDate:    strings.ReplaceAll(eventRes[0].OpenDate, "/", "-"),
+						ChapterList: chapsList,
+					}
 
-				// HACK event_scenario_btn_asset
-				if id == 10001 {
-					eventList.EventScenarioBtnAsset = "assets/image/ui/eventscenario/38_se_ba_t.png"
-				} else if id == 221 {
-					eventList.EventScenarioBtnAsset = "assets/image/ui/eventscenario/215_se_ba_t.png"
-				} else {
-					eventList.EventScenarioBtnAsset = fmt.Sprintf("assets/image/ui/eventscenario/%d_se_ba_t.png", id)
-				}
+					// HACK event_scenario_btn_asset
+					if id == 10001 {
+						eventList.EventScenarioBtnAsset = "assets/image/ui/eventscenario/38_se_ba_t.png"
+					} else if id == 221 {
+						eventList.EventScenarioBtnAsset = "assets/image/ui/eventscenario/215_se_ba_t.png"
+					} else {
+						eventList.EventScenarioBtnAsset = fmt.Sprintf("assets/image/ui/eventscenario/%d_se_ba_t.png", id)
+					}
 
-				eventsList = append(eventsList, eventList)
+					eventsList = append(eventsList, eventList)
+				}
+				eventScenarioResp := model.EventScenarioStatusResp{
+					Result: model.EventScenarioStatusRes{
+						EventScenarioList: eventsList,
+					},
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(eventScenarioResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
 			}
-			eventScenarioResp := model.EventScenarioStatusResp{
-				Result: model.EventScenarioStatusRes{
-					EventScenarioList: eventsList,
-				},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
-			}
-			res, err = json.Marshal(eventScenarioResp)
-			CheckErr(err)
 		case "multiunit":
-			// key = "multi_unit_scenario_result"
-			var multiIds []int
-			multiUnitsList := []model.MultiUnitScenarioStatusList{}
-			err = MainEng.Table("multi_unit_scenario_m").Cols("multi_unit_id").GroupBy("multi_unit_id").OrderBy("multi_unit_id ASC").Find(&multiIds)
-			CheckErr(err)
-			for _, id := range multiIds {
-				multiRes := MultiRes{}
-				_, err = MainEng.Table("multi_unit_scenario_m").
-					Join("LEFT", "multi_unit_scenario_open_m", "multi_unit_scenario_m.multi_unit_id = multi_unit_scenario_open_m.multi_unit_id").
-					Cols("multi_unit_scenario_btn_asset,open_date,multi_unit_scenario_id,chapter").
-					Where("multi_unit_scenario_m.multi_unit_id = ?", id).Get(&multiRes)
+			if v.Action == "multiunitscenarioStatus" {
+				// key = "multi_unit_scenario_result"
+				var multiIds []int
+				multiUnitsList := []model.MultiUnitScenarioStatusList{}
+				err = MainEng.Table("multi_unit_scenario_m").Cols("multi_unit_id").GroupBy("multi_unit_id").OrderBy("multi_unit_id ASC").Find(&multiIds)
+				CheckErr(err)
+				for _, id := range multiIds {
+					multiRes := MultiRes{}
+					_, err = MainEng.Table("multi_unit_scenario_m").
+						Join("LEFT", "multi_unit_scenario_open_m", "multi_unit_scenario_m.multi_unit_id = multi_unit_scenario_open_m.multi_unit_id").
+						Cols("multi_unit_scenario_btn_asset,open_date,multi_unit_scenario_id,chapter").
+						Where("multi_unit_scenario_m.multi_unit_id = ?", id).Get(&multiRes)
+					CheckErr(err)
+
+					multiUnitsList = append(multiUnitsList, model.MultiUnitScenarioStatusList{
+						MultiUnitID:               id,
+						Status:                    2,
+						MultiUnitScenarioBtnAsset: multiRes.MultiUnitScenarioBtnAsset,
+						OpenDate:                  strings.ReplaceAll(multiRes.OpenDate, "/", "-"),
+						ChapterList: []model.MultiUnitScenarioChapterList{
+							{
+								MultiUnitScenarioID: multiRes.MultiUnitScenarioId,
+								Chapter:             multiRes.Chapter,
+								Status:              2,
+							},
+						},
+					})
+				}
+				unitsResp := model.MultiUnitScenarioStatusResp{
+					Result: model.MultiUnitScenarioStatusRes{
+						MultiUnitScenarioStatusList:  multiUnitsList,
+						UnlockedMultiUnitScenarioIds: []any{},
+					},
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(unitsResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
+			}
+		case "payment":
+			if v.Action == "productList" {
+				// key = "product_result"
+				productResp := model.ProductListResp{
+					Result: model.ProductListRes{
+						RestrictionInfo: model.RestrictionInfo{
+							Restricted: false,
+						},
+						UnderAgeInfo: model.UnderAgeInfo{
+							BirthSet:    false,
+							HasLimit:    false,
+							LimitAmount: nil,
+							MonthUsed:   0,
+						},
+						SnsProductList:   []model.SnsProductList{},
+						ProductList:      []model.ProductList{},
+						SubscriptionList: []model.SubscriptionList{},
+						ShowPointShop:    false,
+					},
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(productResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
+			}
+		case "banner":
+			if v.Action == "bannerList" {
+				// key = "banner_result"
+				bannerResp := model.BannerListResp{
+					Result: model.BannerListRes{
+						TimeLimit: "2037-12-31 23:59:59",
+						BannerList: []model.BannerList{
+							{
+								BannerType:       1,
+								TargetID:         1743,
+								AssetPath:        "assets/image/secretbox/icon/s_ba_1718_1.png",
+								FixedFlag:        false,
+								BackSide:         false,
+								BannerID:         101151,
+								StartDate:        "2013-04-15 00:00:00",
+								EndDate:          "2037-12-31 23:59:59",
+								AddUnitStartDate: "2022-01-01 00:00:00",
+							},
+							{
+								BannerType:       1,
+								TargetID:         1741,
+								AssetPath:        "assets/image/secretbox/icon/s_ba_1719_1.png",
+								FixedFlag:        false,
+								BackSide:         false,
+								BannerID:         101150,
+								StartDate:        "2013-04-15 00:00:00",
+								EndDate:          "2037-12-31 23:59:59",
+								AddUnitStartDate: "2022-01-01 00:00:00",
+							},
+							{
+								BannerType:       1,
+								TargetID:         1740,
+								AssetPath:        "assets/image/secretbox/icon/s_ba_1720_1.png",
+								FixedFlag:        false,
+								BackSide:         false,
+								BannerID:         101149,
+								StartDate:        "2013-04-15 00:00:00",
+								EndDate:          "2037-12-31 23:59:59",
+								AddUnitStartDate: "2022-01-01 00:00:00",
+							},
+							{
+								BannerType:       1,
+								TargetID:         1739,
+								AssetPath:        "assets/image/secretbox/icon/s_ba_1721_1.png",
+								FixedFlag:        false,
+								BackSide:         false,
+								BannerID:         101144,
+								StartDate:        "2013-04-15 00:00:00",
+								EndDate:          "2037-12-31 23:59:59",
+								AddUnitStartDate: "2022-01-01 00:00:00",
+							},
+							{
+								BannerType: 2,
+								TargetID:   1,
+								AssetPath:  "assets/image/webview/wv_ba_01.png",
+								WebviewURL: "/manga",
+								FixedFlag:  false,
+								BackSide:   true,
+								BannerID:   200001,
+								StartDate:  "2016-10-15 15:00:00",
+								EndDate:    "2037-12-31 23:59:59",
+							},
+						},
+					},
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(bannerResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
+			}
+		case "notice":
+			if v.Action == "noticeMarquee" {
+				// key = "item_marquee_result"
+				marqueeResp := model.NoticeMarqueeResp{
+					Result: model.NoticeMarqueeRes{
+						ItemCount:   0,
+						MarqueeList: []any{},
+					},
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(marqueeResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
+			}
+		case "user":
+			if v.Action == "getNavi" {
+				// key = "user_intro_result"
+				var uId, oId int
+				_, err := UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Cols("user_id,unit_owning_user_id").Get(&uId, &oId)
+				CheckErr(err)
+				userIntroResp := model.UserNaviResp{
+					Result: model.UserNaviRes{
+						User: model.User{
+							UserID:           uId,
+							UnitOwningUserID: oId,
+						},
+					},
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(userIntroResp)
+				CheckErr(err)
+			} else if v.Action == "userInfo" {
+				userId, err := strconv.Atoi(ctx.GetString("userid"))
 				CheckErr(err)
 
-				multiUnitsList = append(multiUnitsList, model.MultiUnitScenarioStatusList{
-					MultiUnitID:               id,
-					Status:                    2,
-					MultiUnitScenarioBtnAsset: multiRes.MultiUnitScenarioBtnAsset,
-					OpenDate:                  strings.ReplaceAll(multiRes.OpenDate, "/", "-"),
-					ChapterList: []model.MultiUnitScenarioChapterList{
-						{
-							MultiUnitScenarioID: multiRes.MultiUnitScenarioId,
-							Chapter:             multiRes.Chapter,
-							Status:              2,
-						},
+				pref := tools.UserPref{}
+				exists, err := UserEng.Table("user_preference_m").Where("user_id = ?", userId).Get(&pref)
+				CheckErr(err)
+				if !exists {
+					ctx.String(http.StatusForbidden, ErrorMsg)
+					return
+				}
+
+				userInfoResp := model.ApiUserInfoResp{
+					Result: model.UserInfo{
+						UserID:                         userId,
+						Name:                           pref.UserName,
+						Level:                          config.Conf.UserPrefs.Level,
+						Exp:                            config.Conf.UserPrefs.ExpNumerator,
+						PreviousExp:                    0,
+						NextExp:                        config.Conf.UserPrefs.ExpDenominator,
+						GameCoin:                       config.Conf.UserPrefs.GameCoin,
+						SnsCoin:                        config.Conf.UserPrefs.SnsCoin,
+						FreeSnsCoin:                    config.Conf.UserPrefs.SnsCoin,
+						PaidSnsCoin:                    0,
+						SocialPoint:                    1438395,
+						UnitMax:                        5000,
+						WaitingUnitMax:                 1000,
+						EnergyMax:                      config.Conf.UserPrefs.EnergyMax,
+						EnergyFullTime:                 "2023-03-20 03:58:55",
+						LicenseLiveEnergyRecoverlyTime: 60,
+						EnergyFullNeedTime:             0,
+						OverMaxEnergy:                  config.Conf.UserPrefs.OverMaxEnergy,
+						TrainingEnergy:                 100,
+						TrainingEnergyMax:              100,
+						FriendMax:                      99,
+						InviteCode:                     config.Conf.UserPrefs.InviteCode,
+						InsertDate:                     "2015-08-10 18:58:30",
+						UpdateDate:                     "2018-08-09 18:13:12",
+						TutorialState:                  -1,
+						DiamondCoin:                    0,
+						CrystalCoin:                    0,
+						LpRecoveryItem:                 []model.LpRecoveryItem{},
 					},
-				})
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(userInfoResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
 			}
-			unitsResp := model.MultiUnitScenarioStatusResp{
-				Result: model.MultiUnitScenarioStatusRes{
-					MultiUnitScenarioStatusList:  multiUnitsList,
-					UnlockedMultiUnitScenarioIds: []any{},
-				},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
-			}
-			res, err = json.Marshal(unitsResp)
-			CheckErr(err)
-		case "payment":
-			// key = "product_result"
-			productResp := model.ProductListResp{
-				Result: model.ProductListRes{
-					RestrictionInfo: model.RestrictionInfo{
-						Restricted: false,
-					},
-					UnderAgeInfo: model.UnderAgeInfo{
-						BirthSet:    false,
-						HasLimit:    false,
-						LimitAmount: nil,
-						MonthUsed:   0,
-					},
-					SnsProductList:   []model.SnsProductList{},
-					ProductList:      []model.ProductList{},
-					SubscriptionList: []model.SubscriptionList{},
-					ShowPointShop:    false,
-				},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
-			}
-			res, err = json.Marshal(productResp)
-			CheckErr(err)
-		case "banner":
-			// key = "banner_result"
-			bannerResp := model.BannerListResp{
-				Result: model.BannerListRes{
-					TimeLimit: "2037-12-31 23:59:59",
-					BannerList: []model.BannerList{
-						{
-							BannerType:       1,
-							TargetID:         1743,
-							AssetPath:        "assets/image/secretbox/icon/s_ba_1743_1.png",
-							FixedFlag:        false,
-							BackSide:         false,
-							BannerID:         101151,
-							StartDate:        "2013-04-15 00:00:00",
-							EndDate:          "2037-12-31 23:59:59",
-							AddUnitStartDate: "2022-01-01 00:00:00",
-						},
-						{
-							BannerType: 2,
-							TargetID:   1,
-							AssetPath:  "assets/image/webview/wv_ba_01.png",
-							WebviewURL: "/manga",
-							FixedFlag:  false,
-							BackSide:   true,
-							BannerID:   200001,
-							StartDate:  "2016-10-15 15:00:00",
-							EndDate:    "2037-12-31 23:59:59",
-						},
-					},
-				},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
-			}
-			res, err = json.Marshal(bannerResp)
-			CheckErr(err)
-		case "notice":
-			// key = "item_marquee_result"
-			marqueeResp := model.NoticeMarqueeResp{
-				Result: model.NoticeMarqueeRes{
-					ItemCount:   0,
-					MarqueeList: []any{},
-				},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
-			}
-			res, err = json.Marshal(marqueeResp)
-			CheckErr(err)
-		case "user":
-			// key = "user_intro_result"
-			var uId, oId int
-			_, err := UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Cols("user_id,unit_owning_user_id").Get(&uId, &oId)
-			CheckErr(err)
-			userIntroResp := model.UserNaviResp{
-				Result: model.UserNaviRes{
-					User: model.User{
-						UserID:           uId,
-						UnitOwningUserID: oId,
-					},
-				},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
-			}
-			res, err = json.Marshal(userIntroResp)
-			CheckErr(err)
 		case "navigation":
-			// key = "special_cutin_result"
-			cutinResp := model.SpecialCutinResp{
-				Result: model.SpecialCutinRes{
-					SpecialCutinList: []any{},
-				},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
-			}
-			res, err = json.Marshal(cutinResp)
-			CheckErr(err)
-		case "award":
-			// key = "award_result"
-			var aIdList []int
-			err := MainEng.Table("award_m").Cols("award_id").Find(&aIdList)
-			CheckErr(err)
-			var aId int
-			_, err = UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Cols("award_id").Get(&aId)
-			CheckErr(err)
-
-			awardsList := []model.AwardInfo{}
-			for _, id := range aIdList {
-				isSet := false
-				if id == aId {
-					isSet = true
-				}
-				awardsList = append(awardsList, model.AwardInfo{
-					AwardID:    id,
-					IsSet:      isSet,
-					InsertDate: time.Now().Format("2006-01-02 03:04:05"),
-				})
-			}
-
-			awardResp := model.AwardInfoResp{
-				Result: model.AwardInfoRes{
-					AwardInfo: awardsList,
-				},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
-			}
-			res, err = json.Marshal(awardResp)
-			CheckErr(err)
-		case "background":
-			// key = "background_result"
-			var bIdList []int
-			err := MainEng.Table("background_m").Cols("background_id").Find(&bIdList)
-			CheckErr(err)
-			var bId int
-			_, err = UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Cols("background_id").Get(&bId)
-			CheckErr(err)
-
-			backgroundsList := []model.BackgroundInfo{}
-			for _, id := range bIdList {
-				isSet := false
-				if id == bId {
-					isSet = true
-				}
-				backgroundsList = append(backgroundsList, model.BackgroundInfo{
-					BackgroundID: id,
-					IsSet:        isSet,
-					InsertDate:   time.Now().Format("2006-01-02 03:04:05"),
-				})
-			}
-
-			backgroundResp := model.BackgroundInfoResp{
-				Result: model.BackgroundInfoRes{
-					BackgroundInfo: backgroundsList,
-				},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
-			}
-			res, err = json.Marshal(backgroundResp)
-			CheckErr(err)
-		case "stamp":
-			// key = "stamp_result"
-			stampResp := utils.ReadAllText("assets/sif/stamp.json")
-			var mStampResp any
-			err = json.Unmarshal([]byte(stampResp), &mStampResp)
-			CheckErr(err)
-			res, err = json.Marshal(mStampResp)
-			CheckErr(err)
-		case "exchange":
-			// key = "exchange_point_result"
-			var exchangeIds []int
-			exPointsList := []model.ExchangePointList{}
-			err = MainEng.Table("exchange_point_m").Cols("exchange_point_id").OrderBy("exchange_point_id ASC").Find(&exchangeIds)
-			CheckErr(err)
-			for _, id := range exchangeIds {
-				exPointsList = append(exPointsList, model.ExchangePointList{
-					Rarity:        id,
-					ExchangePoint: 9999,
-				})
-			}
-			exPointsResp := model.ExchangePointResp{
-				Result: model.ExchangePointRes{
-					ExchangePointList: exPointsList,
-				},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
-			}
-			res, err = json.Marshal(exPointsResp)
-			CheckErr(err)
-		case "livese":
-			// key = "live_se_result"
-			liveSeResp := model.LiveSeInfoResp{
-				Result: model.LiveSeInfoRes{
-					LiveSeList: []int{1, 2, 3},
-				},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
-			}
-			res, err = json.Marshal(liveSeResp)
-			CheckErr(err)
-		case "liveicon":
-			// key = "live_icon_result"
-			liveIconResp := model.LiveIconInfoResp{
-				Result: model.LiveIconInfoRes{
-					LiveNotesIconList: []int{1, 2, 3},
-				},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
-			}
-			res, err = json.Marshal(liveIconResp)
-			CheckErr(err)
-		case "item":
-			// key = "item_list_result"
-			itemResp := utils.ReadAllText("assets/sif/item.json")
-			var mItemResp any
-			err = json.Unmarshal([]byte(itemResp), &mItemResp)
-			CheckErr(err)
-			res, err = json.Marshal(mItemResp)
-			CheckErr(err)
-		case "marathon":
-			// key = "marathon_result"
-			marathonResp := model.MarathonInfoResp{
-				Result:     []any{},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
-			}
-			res, err = json.Marshal(marathonResp)
-			CheckErr(err)
-		case "challenge":
-			// key = "challenge_result"
-			challengeResp := model.ChallengeInfoResp{
-				Result:     []any{},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
-			}
-			res, err = json.Marshal(challengeResp)
-			CheckErr(err)
-		case "museum":
-			// key = "museum_result"
-			museumRes := []MuseumRes{}
-			var museumIds []int
-			var smileBuff, pureBuff, coolBuff int
-			err = MainEng.Table("museum_contents_m").Cols("museum_contents_id,smile_buff,pure_buff,cool_buff").
-				OrderBy("museum_contents_id ASC").Find(&museumRes)
-			CheckErr(err)
-			for _, res := range museumRes {
-				smileBuff += res.SmileBuff
-				pureBuff += res.PureBuff
-				coolBuff += res.CoolBuff
-				museumIds = append(museumIds, res.MuseumContentsId)
-			}
-			museumInfoResp := model.MuseumInfoResp{
-				Result: model.MuseumInfoRes{
-					MuseumInfo: model.Museum{
-						Parameter: model.MuseumParameter{
-							Smile: smileBuff,
-							Pure:  pureBuff,
-							Cool:  coolBuff,
-						},
-						ContentsIDList: museumIds,
+			if v.Action == "specialCutin" {
+				// key = "special_cutin_result"
+				cutinResp := model.SpecialCutinResp{
+					Result: model.SpecialCutinRes{
+						SpecialCutinList: []any{},
 					},
-				},
-				Status:     200,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(cutinResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
 			}
-			res, err = json.Marshal(museumInfoResp)
-			CheckErr(err)
+		case "award":
+			if v.Action == "awardInfo" {
+				// key = "award_result"
+				var aIdList []int
+				err := MainEng.Table("award_m").Cols("award_id").Find(&aIdList)
+				CheckErr(err)
+				var aId int
+				_, err = UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Cols("award_id").Get(&aId)
+				CheckErr(err)
+
+				awardsList := []model.AwardInfo{}
+				for _, id := range aIdList {
+					isSet := false
+					if id == aId {
+						isSet = true
+					}
+					awardsList = append(awardsList, model.AwardInfo{
+						AwardID:    id,
+						IsSet:      isSet,
+						InsertDate: time.Now().Format("2006-01-02 03:04:05"),
+					})
+				}
+
+				awardResp := model.AwardInfoResp{
+					Result: model.AwardInfoRes{
+						AwardInfo: awardsList,
+					},
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(awardResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
+			}
+		case "background":
+			if v.Action == "backgroundInfo" {
+				// key = "background_result"
+				var bIdList []int
+				err := MainEng.Table("background_m").Cols("background_id").Find(&bIdList)
+				CheckErr(err)
+				var bId int
+				_, err = UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Cols("background_id").Get(&bId)
+				CheckErr(err)
+
+				backgroundsList := []model.BackgroundInfo{}
+				for _, id := range bIdList {
+					isSet := false
+					if id == bId {
+						isSet = true
+					}
+					backgroundsList = append(backgroundsList, model.BackgroundInfo{
+						BackgroundID: id,
+						IsSet:        isSet,
+						InsertDate:   time.Now().Format("2006-01-02 03:04:05"),
+					})
+				}
+
+				backgroundResp := model.BackgroundInfoResp{
+					Result: model.BackgroundInfoRes{
+						BackgroundInfo: backgroundsList,
+					},
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(backgroundResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
+			}
+		case "stamp":
+			if v.Action == "stampInfo" {
+				// key = "stamp_result"
+				stampResp := utils.ReadAllText("assets/sif/stamp.json")
+				var mStampResp any
+				err = json.Unmarshal([]byte(stampResp), &mStampResp)
+				CheckErr(err)
+				res, err = json.Marshal(mStampResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
+			}
+		case "exchange":
+			if v.Action == "owningPoint" {
+				// key = "exchange_point_result"
+				var exchangeIds []int
+				exPointsList := []model.ExchangePointList{}
+				err = MainEng.Table("exchange_point_m").Cols("exchange_point_id").OrderBy("exchange_point_id ASC").Find(&exchangeIds)
+				CheckErr(err)
+				for _, id := range exchangeIds {
+					exPointsList = append(exPointsList, model.ExchangePointList{
+						Rarity:        id,
+						ExchangePoint: 9999,
+					})
+				}
+				exPointsResp := model.ExchangePointResp{
+					Result: model.ExchangePointRes{
+						ExchangePointList: exPointsList,
+					},
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(exPointsResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
+			}
+		case "livese":
+			if v.Action == "liveseInfo" {
+				// key = "live_se_result"
+				liveSeResp := model.LiveSeInfoResp{
+					Result: model.LiveSeInfoRes{
+						LiveSeList: []int{1, 2, 3},
+					},
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(liveSeResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
+			}
+		case "liveicon":
+			if v.Action == "liveiconInfo" {
+				// key = "live_icon_result"
+				liveIconResp := model.LiveIconInfoResp{
+					Result: model.LiveIconInfoRes{
+						LiveNotesIconList: []int{1, 2, 3},
+					},
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(liveIconResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
+			}
+		case "item":
+			if v.Action == "list" {
+				// key = "item_list_result"
+				itemResp := utils.ReadAllText("assets/sif/item.json")
+				var mItemResp any
+				err = json.Unmarshal([]byte(itemResp), &mItemResp)
+				CheckErr(err)
+				res, err = json.Marshal(mItemResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
+			}
+		case "marathon":
+			if v.Action == "marathonInfo" {
+				// key = "marathon_result"
+				marathonResp := model.MarathonInfoResp{
+					Result:     []any{},
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(marathonResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
+			}
+		case "challenge":
+			if v.Action == "challengeInfo" {
+				// key = "challenge_result"
+				challengeResp := model.ChallengeInfoResp{
+					Result:     []any{},
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(challengeResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
+			}
+		case "museum":
+			if v.Action == "info" {
+				// key = "museum_result"
+				museumRes := []MuseumRes{}
+				var museumIds []int
+				var smileBuff, pureBuff, coolBuff int
+				err = MainEng.Table("museum_contents_m").Cols("museum_contents_id,smile_buff,pure_buff,cool_buff").
+					OrderBy("museum_contents_id ASC").Find(&museumRes)
+				CheckErr(err)
+				for _, res := range museumRes {
+					smileBuff += res.SmileBuff
+					pureBuff += res.PureBuff
+					coolBuff += res.CoolBuff
+					museumIds = append(museumIds, res.MuseumContentsId)
+				}
+				museumInfoResp := model.MuseumInfoResp{
+					Result: model.MuseumInfoRes{
+						MuseumInfo: model.Museum{
+							Parameter: model.MuseumParameter{
+								Smile: smileBuff,
+								Pure:  pureBuff,
+								Cool:  coolBuff,
+							},
+							ContentsIDList: museumIds,
+						},
+					},
+					Status:     200,
+					CommandNum: false,
+					TimeStamp:  time.Now().Unix(),
+				}
+				res, err = json.Marshal(museumInfoResp)
+				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
+			}
 		case "profile":
 			if v.Action == "liveCnt" {
 				// key = "profile_livecnt_result"
@@ -1071,10 +1235,19 @@ func Api(ctx *gin.Context) {
 				}
 				res, err = json.Marshal(profileResp)
 				CheckErr(err)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
+			}
+		case "secretbox":
+			if v.Action == "all" {
+				res = []byte(utils.ReadAllText("111.json"))
+				// fmt.Println(apiReq)
+			} else {
+				fmt.Println("Invalid action: ", v.Module, v.Action)
 			}
 		default:
 			// fmt.Println(ErrorMsg)
-			fmt.Println(v)
+			// fmt.Println(v)
 			err = errors.New("invalid option")
 			CheckErr(err)
 		}
@@ -1094,13 +1267,8 @@ func Api(ctx *gin.Context) {
 	}
 	b, err = json.Marshal(rp)
 	CheckErr(err)
+	// fmt.Println(string(b))
 
-	nonce := ctx.GetInt("nonce")
-	nonce++
-
-	ctx.Header("user_id", ctx.GetString("userid"))
-	ctx.Header("authorize", fmt.Sprintf("consumerKey=lovelive_test&timeStamp=%d&version=1.1&token=%s&nonce=%d&user_id=%s&requestTimeStamp=%d", time.Now().Unix(), ctx.GetString("token"), nonce, ctx.GetString("userid"), ctx.GetInt64("req_time")))
-	ctx.Header("X-Message-Sign", base64.StdEncoding.EncodeToString(encrypt.RSA_Sign_SHA1(b)))
-
+	ctx.Header("X-Message-Sign", GenXMS(b))
 	ctx.String(http.StatusOK, string(b))
 }

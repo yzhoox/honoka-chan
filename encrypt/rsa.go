@@ -13,7 +13,7 @@ import (
 	"runtime"
 )
 
-func RSA_Gen(bits int) {
+func RSAGen(bits int) {
 	//get current path
 	_, currentpath, _, _ := runtime.Caller(0)
 	currentpath = filepath.Dir(currentpath)
@@ -75,7 +75,7 @@ func RSA_Gen(bits int) {
 	pem.Encode(publickeyfile, &publickeyblock)
 }
 
-func RSA_Encrypt(plainText []byte, publickeypath string) []byte {
+func RSAEncrypt(plainText []byte, publickeypath string) []byte {
 	//open publickeyfile
 	publickeyfile, err := os.Open(publickeypath)
 	if err != nil {
@@ -110,7 +110,7 @@ func RSA_Encrypt(plainText []byte, publickeypath string) []byte {
 	return cipherText
 }
 
-func RSA_Decrypt(cipherText []byte) []byte {
+func RSADecrypt(cipherText []byte) []byte {
 	//open privatekeyfile
 	privatekeyfile, err := os.Open(config.PrivateKeyPath)
 	if err != nil {
@@ -138,7 +138,7 @@ func RSA_Decrypt(cipherText []byte) []byte {
 	return plainText
 }
 
-func RSA_Sign_SHA1(cipherText []byte) []byte {
+func RSASignSHA1(cipherText []byte) []byte {
 	//open privatekeyfile
 	privatekeyfile, err := os.Open(config.PrivateKeyPath)
 	if err != nil {
