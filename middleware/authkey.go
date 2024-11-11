@@ -17,7 +17,7 @@ func AuthKey(ctx *gin.Context) {
 	req := gjson.Parse(ctx.PostForm("request_data"))
 	tDummyToken, err := base64.StdEncoding.DecodeString(req.Get("dummy_token").String())
 	CheckErr(err)
-	dummyToken := encrypt.RSA_Decrypt(tDummyToken, "privatekey.pem")
+	dummyToken := encrypt.RSA_Decrypt(tDummyToken)
 
 	// aesKey := dummyToken[0:16]
 	// tAuthData, err := base64.StdEncoding.DecodeString(req.Get("auth_data").String())

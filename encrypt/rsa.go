@@ -7,6 +7,7 @@ import (
 	"crypto/sha1"
 	"crypto/x509"
 	"encoding/pem"
+	"honoka-chan/config"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -34,7 +35,7 @@ func RSA_Gen(bits int) {
 
 	//encode x509 to pem and save to file
 	//1. create privatefile
-	privatekeyfile, err := os.Create(currentpath + "/privatekey.pem")
+	privatekeyfile, err := os.Create(config.PrivateKeyPath)
 	if err != nil {
 		panic(err)
 	}
@@ -57,7 +58,7 @@ func RSA_Gen(bits int) {
 
 	//encode x509 to pem and save to file
 	//1. create publickeyfile
-	publickeyfile, err := os.Create(currentpath + "/publickey.pem")
+	publickeyfile, err := os.Create(config.PublicKeyPath)
 	if err != nil {
 		panic(err)
 	}
@@ -109,9 +110,9 @@ func RSA_Encrypt(plainText []byte, publickeypath string) []byte {
 	return cipherText
 }
 
-func RSA_Decrypt(cipherText []byte, privatekeypath string) []byte {
+func RSA_Decrypt(cipherText []byte) []byte {
 	//open privatekeyfile
-	privatekeyfile, err := os.Open(privatekeypath)
+	privatekeyfile, err := os.Open(config.PrivateKeyPath)
 	if err != nil {
 		panic(err)
 	}
@@ -137,9 +138,9 @@ func RSA_Decrypt(cipherText []byte, privatekeypath string) []byte {
 	return plainText
 }
 
-func RSA_Sign_SHA1(cipherText []byte, privatekeypath string) []byte {
+func RSA_Sign_SHA1(cipherText []byte) []byte {
 	//open privatekeyfile
-	privatekeyfile, err := os.Open(privatekeypath)
+	privatekeyfile, err := os.Open(config.PrivateKeyPath)
 	if err != nil {
 		panic(err)
 	}
@@ -172,9 +173,9 @@ func RSA_Sign_SHA1(cipherText []byte, privatekeypath string) []byte {
 	return signature
 }
 
-func RSA_DecryptOAEP(cipherText []byte, privatekeypath string) []byte {
+func RSA_DecryptOAEP(cipherText []byte) []byte {
 	//open privatekeyfile
-	privatekeyfile, err := os.Open(privatekeypath)
+	privatekeyfile, err := os.Open(config.PrivateKeyPath)
 	if err != nil {
 		panic(err)
 	}

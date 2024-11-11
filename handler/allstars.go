@@ -39,7 +39,7 @@ func AsLogin(ctx *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
-	randomBytes := encrypt.RSA_DecryptOAEP(mask64, "privatekey.pem")
+	randomBytes := encrypt.RSA_DecryptOAEP(mask64)
 	// fmt.Println("Random Bytes:", randomBytes)
 
 	newKey := utils.SliceXor(randomBytes, []byte(sessionKey))

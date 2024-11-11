@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"honoka-chan/config"
 	"honoka-chan/database"
 	"honoka-chan/encrypt"
 	"honoka-chan/tools"
@@ -98,7 +99,7 @@ func Active(ctx *gin.Context) {
 }
 
 func PublicKey(ctx *gin.Context) {
-	publicKey := utils.ReadAllText("publickey.pem")
+	publicKey := utils.ReadAllText(config.PublicKeyPath)
 	publicKey = strings.ReplaceAll(publicKey, "\n", "")
 	publicKey = strings.ReplaceAll(publicKey, "-----BEGIN PUBLIC KEY-----", "")
 	publicKey = strings.ReplaceAll(publicKey, "-----END PUBLIC KEY-----", "")
@@ -117,7 +118,7 @@ func Handshake(ctx *gin.Context) {
 
 	body64, err := base64.StdEncoding.DecodeString(string(body))
 	CheckErr(err)
-	decryptedBody := encrypt.RSA_Decrypt(body64, "privatekey.pem")
+	decryptedBody := encrypt.RSA_Decrypt(body64)
 	// fmt.Println(decryptedBody)
 	// fmt.Println(string(decryptedBody))
 

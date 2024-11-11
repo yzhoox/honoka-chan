@@ -22,6 +22,9 @@ var (
 
 	PackageVersion = "97.4.6"
 
+	PrivateKeyPath = "assets/certs/privatekey.pem"
+	PublicKeyPath  = "assets/certs/publickey.pem"
+
 	// LLAS
 	StartUpKey    = "e0xrykyuBrLlwZhd"
 	MasterVersion = "f7f2ac627227500b"
