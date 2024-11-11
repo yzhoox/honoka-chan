@@ -16,7 +16,6 @@ type AppConfigs struct {
 
 type Settings struct {
 	SifCdnServer string `json:"sif_cdn_server"`
-	AsCdnServer  string `json:"as_cdn_server"`
 }
 
 type UserPrefs struct {
@@ -36,7 +35,6 @@ func DefaultConfigs() *AppConfigs {
 		AppName: "honoka-chan",
 		Settings: Settings{
 			SifCdnServer: "http://192.168.1.123/static",
-			AsCdnServer:  "http://192.168.1.123/static",
 		},
 		UserPrefs: UserPrefs{
 			Name:           "梦路 @bilibili",
@@ -68,7 +66,7 @@ func Load(p string) *AppConfigs {
 }
 
 func (c *AppConfigs) Save(p string) error {
-	data, err := json.Marshal(c)
+	data, err := json.MarshalIndent(c, "", "	")
 	if err != nil {
 		return err
 	}

@@ -8,7 +8,6 @@ require (
 	github.com/forgoer/openssl v1.5.0
 	github.com/gin-contrib/sessions v0.0.5
 	github.com/tidwall/gjson v1.14.4
-	github.com/tidwall/sjson v1.2.5
 	modernc.org/sqlite v1.22.1
 	xorm.io/builder v0.3.11-0.20220531020008-1bd24a7dc978
 	xorm.io/xorm v1.3.2

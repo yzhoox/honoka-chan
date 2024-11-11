@@ -1,6 +1,3 @@
-// Copyright (C) 2021 YumeMichi
-//
-// SPDX-License-Identifier: Apache-2.0
 package config
 
 import (
@@ -24,10 +21,6 @@ var (
 
 	PrivateKeyPath = "assets/certs/privatekey.pem"
 	PublicKeyPath  = "assets/certs/publickey.pem"
-
-	// LLAS
-	StartUpKey    = "e0xrykyuBrLlwZhd"
-	MasterVersion = "f7f2ac627227500b"
 )
 
 func init() {
