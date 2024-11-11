@@ -3,7 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"honoka-chan/config"
-	"honoka-chan/database"
+	"honoka-chan/db"
 	"honoka-chan/model"
 	"honoka-chan/utils"
 	"math"
@@ -34,7 +34,7 @@ func PlayLive(ctx *gin.Context) {
 
 	// Save Deck Id for /live/reward
 	key := "live_deck_" + ctx.GetString("userid")
-	err = database.LevelDb.Put([]byte(key), []byte(strconv.Itoa(deckId)))
+	err = db.DB.Set([]byte(key), []byte(strconv.Itoa(deckId)))
 	CheckErr(err)
 
 	// Song type: normal / special
@@ -525,7 +525,7 @@ func PlayReward(ctx *gin.Context) {
 	CheckErr(err)
 
 	key := "live_deck_" + ctx.GetString("userid")
-	deckId, err := database.LevelDb.Get([]byte(key))
+	deckId, err := db.DB.Get([]byte(key))
 	CheckErr(err)
 	unitsList := []model.PlayRewardUnitList{}
 	err = UserEng.Table("deck_unit_m").Join("LEFT", "user_deck_m", "deck_unit_m.user_deck_id = user_deck_m.id").

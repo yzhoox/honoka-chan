@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"encoding/base64"
-	"honoka-chan/database"
+	"honoka-chan/db"
 	"honoka-chan/encrypt"
 	"honoka-chan/utils"
 
@@ -11,7 +11,7 @@ import (
 )
 
 func Login(ctx *gin.Context) {
-	authData, err := database.LevelDb.Get([]byte(ctx.GetString("token")))
+	authData, err := db.DB.Get([]byte(ctx.GetString("token")))
 	CheckErr(err)
 
 	clientToken, err := base64.StdEncoding.DecodeString(gjson.Get(string(authData), "client_token").String())

@@ -2,7 +2,7 @@ package handler
 
 import (
 	"encoding/json"
-	"honoka-chan/database"
+	"honoka-chan/db"
 	"honoka-chan/model"
 	"net/http"
 	"strconv"
@@ -38,7 +38,7 @@ func Login(ctx *gin.Context) {
 	}
 	ctx.Set("userid", userId)
 
-	err = database.LevelDb.Put([]byte(strconv.Itoa(userId)), []byte(ctx.GetString("authorize_token")))
+	err = db.DB.Set([]byte(strconv.Itoa(userId)), []byte(ctx.GetString("authorize_token")))
 	CheckErr(err)
 
 	loginResp := model.LoginResp{

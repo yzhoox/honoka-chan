@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"fmt"
-	"honoka-chan/database"
+	"honoka-chan/db"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -54,14 +54,14 @@ func Common(ctx *gin.Context) {
 		}
 		ctx.Set("userid", userId)
 
-		rToken, err := database.LevelDb.Get([]byte(userId))
+		rToken, err := db.DB.Get([]byte(userId))
 		CheckErr(err)
 		if token != string(rToken) {
 			ctx.String(http.StatusForbidden, ErrorMsg)
 			ctx.Abort()
 		}
 
-		if !database.MatchTokenUid(token, userId) {
+		if !db.MatchTokenUid(token, userId) {
 			ctx.String(http.StatusForbidden, ErrorMsg)
 			ctx.Abort()
 		}

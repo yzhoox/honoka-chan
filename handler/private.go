@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"honoka-chan/config"
-	"honoka-chan/database"
+	"honoka-chan/db"
 	"honoka-chan/encrypt"
 	"honoka-chan/tools"
 	"honoka-chan/utils"
@@ -129,7 +129,7 @@ func Handshake(ctx *gin.Context) {
 	// fmt.Println(randKey)
 	// fmt.Println(deviceId)
 
-	err = database.LevelDb.Put([]byte(deviceId), []byte(randKey))
+	err = db.DB.Set([]byte(deviceId), []byte(randKey))
 	CheckErr(err)
 
 	token := strings.ToUpper(utils.RandomStr(33))
@@ -156,7 +156,7 @@ func Initialize(ctx *gin.Context) {
 	// fmt.Println(string(body64))
 
 	deviceId := ctx.Request.Header.Get("X-DEVICEID")
-	randKey, err := database.LevelDb.Get([]byte(deviceId))
+	randKey, err := db.DB.Get([]byte(deviceId))
 	CheckErr(err)
 	// decryptedBody, err := openssl.Des3ECBDecrypt(body64, randKey[0:24], openssl.PKCS7_PADDING)
 	// CheckErr(err)
@@ -205,7 +205,7 @@ func LoginAuto(ctx *gin.Context) {
 	// fmt.Println(string(body64))
 
 	deviceId := ctx.Request.Header.Get("X-DEVICEID")
-	randKey, err := database.LevelDb.Get([]byte(deviceId))
+	randKey, err := db.DB.Get([]byte(deviceId))
 	CheckErr(err)
 
 	decryptedBody, err := openssl.Des3ECBDecrypt(body64, randKey[0:24], openssl.PKCS7_PADDING)
@@ -279,7 +279,7 @@ func AccountLogin(ctx *gin.Context) {
 	// fmt.Println(string(body64))
 
 	deviceId := ctx.Request.Header.Get("X-DEVICEID")
-	randKey, err := database.LevelDb.Get([]byte(deviceId))
+	randKey, err := db.DB.Get([]byte(deviceId))
 	CheckErr(err)
 
 	decryptedBody, err := openssl.Des3ECBDecrypt(body64, randKey[0:24], openssl.PKCS7_PADDING)
@@ -432,7 +432,7 @@ func ReportRole(ctx *gin.Context) {
 	// fmt.Println(string(body64))
 
 	deviceId := ctx.Request.Header.Get("X-DEVICEID")
-	randKey, err := database.LevelDb.Get([]byte(deviceId))
+	randKey, err := db.DB.Get([]byte(deviceId))
 	CheckErr(err)
 
 	// decryptedBody, err := openssl.Des3ECBDecrypt(body64, randKey[0:24], openssl.PKCS7_PADDING)

@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"honoka-chan/database"
+	"honoka-chan/db"
 	"honoka-chan/encrypt"
 	"honoka-chan/utils"
 	"time"
@@ -37,7 +37,7 @@ func AuthKey(ctx *gin.Context) {
 		"server_token": serverToken,
 	})
 	CheckErr(err)
-	err = database.LevelDb.Put([]byte(authorizeToken), authJson)
+	err = db.DB.Set([]byte(authorizeToken), authJson)
 	CheckErr(err)
 
 	nonce := ctx.GetInt("nonce")
