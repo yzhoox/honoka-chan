@@ -1,14 +1,10 @@
 # honoka-chan
 
-LoveLive! 学园偶像祭、学园偶像季: 群星闪耀 自用私服。
+LoveLive! 学园偶像祭 自用私服。
 
-## 文档列表（更新中）
+## 文档列表
 
-1. [其一：文件准备](doc/1.md)
-2. [其二：SIF 客户端修改](doc/2.md)
-2. [其三：AS 客户端修改](doc/3.md)
-2. [其四：服务端部署](doc/4.md)
-2. [其五：运行测试](doc/5.md)
+详见 `doc` 目录。
 
 ## 视频教程
  - [合集·SIF、AS 私服（本地服）搭建教程](https://space.bilibili.com/671443/channel/collectiondetail?sid=2148053)
