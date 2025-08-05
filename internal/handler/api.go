@@ -54,7 +54,8 @@ func Api(ctx *gin.Context) {
 
 		switch v.Module {
 		case "login":
-			if v.Action == "topInfo" {
+			switch v.Action {
+			case "topInfo":
 				// key = "login_topinfo_result"
 				topInfoResp := model.TopInfoResp{
 					Result: model.TopInfoRes{
@@ -91,7 +92,7 @@ func Api(ctx *gin.Context) {
 				}
 				res, err = json.Marshal(topInfoResp)
 				utils.CheckErr(err)
-			} else if v.Action == "topInfoOnce" {
+			case "topInfoOnce":
 				// key = "login_topinfo_once_result"
 				topInfoOnceResp := model.TopInfoOnceResp{
 					Result: model.TopInfoOnceRes{
@@ -125,7 +126,8 @@ func Api(ctx *gin.Context) {
 				utils.CheckErr(err)
 			}
 		case "live":
-			if v.Action == "liveStatus" {
+			switch v.Action {
+			case "liveStatus":
 				// key = "live_status_result"
 				var liveDifficultyId []int
 				normalLives := []model.NormalLiveStatusList{}
@@ -173,7 +175,7 @@ func Api(ctx *gin.Context) {
 				}
 				res, err = json.Marshal(LiveStatusResp)
 				utils.CheckErr(err)
-			} else if v.Action == "schedule" {
+			case "schedule":
 				// key = "live_list_result"
 				var liveDifficultyId []int
 				specialLives := []model.SpecialLiveStatusList{}
@@ -216,7 +218,7 @@ func Api(ctx *gin.Context) {
 				}
 				res, err = json.Marshal(liveListResp)
 				utils.CheckErr(err)
-			} else {
+			default:
 				fmt.Println("Invalid action: ", v.Module, v.Action)
 			}
 		case "unit":
@@ -419,16 +421,17 @@ func Api(ctx *gin.Context) {
 					albumList.UnitID = unit.UnitId
 					if unit.Rarity != 4 {
 						albumList.SignFlag = false
-						if unit.Rarity == 1 {
+						switch unit.Rarity {
+						case 1:
 							albumList.HighestLovePerUnit = 50
 							albumList.TotalLove = 50
-						} else if unit.Rarity == 2 {
+						case 2:
 							albumList.HighestLovePerUnit = 200
 							albumList.TotalLove = 200
-						} else if unit.Rarity == 3 {
+						case 3:
 							albumList.HighestLovePerUnit = 500
 							albumList.TotalLove = 500
-						} else if unit.Rarity == 5 {
+						case 5:
 							albumList.HighestLovePerUnit = 750
 							albumList.TotalLove = 750
 						}
@@ -541,11 +544,12 @@ func Api(ctx *gin.Context) {
 					}
 
 					// HACK event_scenario_btn_asset
-					if id == 10001 {
+					switch id {
+					case 10001:
 						eventList.EventScenarioBtnAsset = "assets/image/ui/eventscenario/38_se_ba_t.png"
-					} else if id == 221 {
+					case 221:
 						eventList.EventScenarioBtnAsset = "assets/image/ui/eventscenario/215_se_ba_t.png"
-					} else {
+					default:
 						eventList.EventScenarioBtnAsset = fmt.Sprintf("assets/image/ui/eventscenario/%d_se_ba_t.png", id)
 					}
 
@@ -726,7 +730,8 @@ func Api(ctx *gin.Context) {
 				fmt.Println("Invalid action: ", v.Module, v.Action)
 			}
 		case "user":
-			if v.Action == "getNavi" {
+			switch v.Action {
+			case "getNavi":
 				// key = "user_intro_result"
 				var uId, oId int
 				_, err := UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Cols("user_id,unit_owning_user_id").Get(&uId, &oId)
@@ -744,7 +749,7 @@ func Api(ctx *gin.Context) {
 				}
 				res, err = json.Marshal(userIntroResp)
 				utils.CheckErr(err)
-			} else if v.Action == "userInfo" {
+			case "userInfo":
 				userId, err := strconv.Atoi(ctx.GetString("userid"))
 				utils.CheckErr(err)
 
@@ -793,7 +798,7 @@ func Api(ctx *gin.Context) {
 				}
 				res, err = json.Marshal(userInfoResp)
 				utils.CheckErr(err)
-			} else {
+			default:
 				fmt.Println("Invalid action: ", v.Module, v.Action)
 			}
 		case "navigation":
@@ -1030,7 +1035,8 @@ func Api(ctx *gin.Context) {
 				fmt.Println("Invalid action: ", v.Module, v.Action)
 			}
 		case "profile":
-			if v.Action == "liveCnt" {
+			switch v.Action {
+			case "liveCnt":
 				// key = "profile_livecnt_result"
 				difficultyResp := model.DifficultyResp{
 					Result: []model.DifficultyRes{
@@ -1061,7 +1067,7 @@ func Api(ctx *gin.Context) {
 				}
 				res, err = json.Marshal(difficultyResp)
 				utils.CheckErr(err)
-			} else if v.Action == "cardRanking" {
+			case "cardRanking":
 				// key = "profile_card_ranking_result"
 				var result []any
 				love := honokautils.ReadAllText("assets/serverdata/love.json")
@@ -1075,7 +1081,7 @@ func Api(ctx *gin.Context) {
 				}
 				res, err = json.Marshal(loveResp)
 				utils.CheckErr(err)
-			} else if v.Action == "profileInfo" {
+			case "profileInfo":
 				// key = "profile_info_result"
 				pref := tools.UserPref{}
 				exists, err := UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Get(&pref)
@@ -1236,7 +1242,7 @@ func Api(ctx *gin.Context) {
 				}
 				res, err = json.Marshal(profileResp)
 				utils.CheckErr(err)
-			} else {
+			default:
 				fmt.Println("Invalid action: ", v.Module, v.Action)
 			}
 		case "secretbox":

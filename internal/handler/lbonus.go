@@ -53,7 +53,7 @@ func LBonusExecute(ctx *gin.Context) {
 				Amount:  1,
 			},
 		})
-		if c == d2 {
+		if c.Equal(d2) {
 			break
 		}
 	}
@@ -86,7 +86,7 @@ func LBonusExecute(ctx *gin.Context) {
 				Amount:  1,
 			},
 		})
-		if c == d2 {
+		if c.Equal(d2) {
 			break
 		}
 	}

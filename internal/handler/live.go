@@ -161,11 +161,12 @@ func PlayLive(ctx *gin.Context) {
 		// fmt.Println("回忆画廊属性加成后的基础属性:", baseSmile, basePure, baseCool)
 
 		// 绊属性加成（该加成会影响个宝等百分比宝石属性加成的计算，故先计算。）
-		if attrId == 1 {
+		switch attrId {
+		case 1:
 			baseSmile += maxLove
-		} else if attrId == 2 {
+		case 2:
 			basePure += maxLove
-		} else if attrId == 3 {
+		case 3:
 			baseCool += maxLove
 		}
 		// fmt.Println("绊属性加成:", maxLove)
@@ -194,11 +195,12 @@ func PlayLive(ctx *gin.Context) {
 
 			if fixedValueFlag == 1 {
 				// 吻、眼神属性加成（固定数值）
-				if effectType == 1 {
+				switch effectType {
+				case 1:
 					kissSmile += effectValue
-				} else if effectType == 2 {
+				case 2:
 					kissPure += effectValue
-				} else if effectType == 3 {
+				case 3:
 					kissCool += effectValue
 				}
 				// fmt.Println("吻、眼神属性加成:", kissSmile, kissPure, kissCool)
@@ -207,11 +209,12 @@ func PlayLive(ctx *gin.Context) {
 				if effectType == 1 || effectType == 2 || effectType == 3 {
 					// 加成范围：2:全员 1:非全员
 					if effectRange == 2 {
-						if effectType == 1 {
+						switch effectType {
+						case 1:
 							skillSmile += math.Ceil(baseSmile * (effectValue / 100))
-						} else if effectType == 2 {
+						case 2:
 							skillPure += math.Ceil(basePure * (effectValue / 100))
-						} else if effectType == 3 {
+						case 3:
 							skillCool += math.Ceil(baseCool * (effectValue / 100))
 						}
 						// fmt.Println("全员类宝石属性加成:", skillSmile, skillPure, skillCool)
@@ -255,11 +258,12 @@ func PlayLive(ctx *gin.Context) {
 			Cols("unit_m.attribute_id,unit_leader_skill_m.effect_value").Get(&myAttrId, &myEffectValue)
 		utils.CheckErr(err)
 		var myCenterSmile, myCenterPure, myCenterCool float64
-		if myAttrId == 1 {
+		switch myAttrId {
+		case 1:
 			myCenterSmile = math.Ceil(smileMax * (myEffectValue / 100))
-		} else if myAttrId == 2 {
+		case 2:
 			myCenterPure = math.Ceil(pureMax * (myEffectValue / 100))
-		} else if myAttrId == 3 {
+		case 3:
 			myCenterCool = math.Ceil(coolMax * (myEffectValue / 100))
 		}
 		// fmt.Println("主C技能属性加成:", myCenterSmile, myCenterPure, myCenterCool)
@@ -278,11 +282,12 @@ func PlayLive(ctx *gin.Context) {
 		utils.CheckErr(err)
 		var mySubSmile, mySubPure, mySubCool float64
 		if exists {
-			if myAttrId == 1 {
+			switch myAttrId {
+			case 1:
 				mySubSmile = math.Ceil(smileMax * (mySubEffectValue / 100))
-			} else if myAttrId == 2 {
+			case 2:
 				mySubPure = math.Ceil(pureMax * (mySubEffectValue / 100))
-			} else if myAttrId == 3 {
+			case 3:
 				mySubCool = math.Ceil(coolMax * (mySubEffectValue / 100))
 			}
 			// fmt.Println("副C技能属性加成:", mySubSmile, mySubPure, mySubCool)
@@ -310,11 +315,12 @@ func PlayLive(ctx *gin.Context) {
 			Cols("unit_m.attribute_id,unit_leader_skill_m.effect_value").Get(&tomoAttrId, &tomoEffectValue)
 		utils.CheckErr(err)
 		var tomoCenterSmile, tomoCenterPure, tomoCenterCool float64
-		if myAttrId == 1 {
+		switch myAttrId {
+		case 1:
 			tomoCenterSmile = math.Ceil(smileMax * (tomoEffectValue / 100))
-		} else if myAttrId == 2 {
+		case 2:
 			tomoCenterPure = math.Ceil(pureMax * (tomoEffectValue / 100))
-		} else if myAttrId == 3 {
+		case 3:
 			tomoCenterCool = math.Ceil(coolMax * (tomoEffectValue / 100))
 		}
 		// fmt.Println("好友主C技能属性加成:", tomoCenterSmile, tomoCenterPure, tomoCenterCool)
@@ -333,11 +339,12 @@ func PlayLive(ctx *gin.Context) {
 		utils.CheckErr(err)
 		var tomoSubSmile, tomoSubPure, tomoSubCool float64
 		if exists {
-			if myAttrId == 1 {
+			switch myAttrId {
+			case 1:
 				tomoSubSmile = math.Ceil(smileMax * (tomoSubEffectValue / 100))
-			} else if myAttrId == 2 {
+			case 2:
 				tomoSubPure = math.Ceil(pureMax * (tomoSubEffectValue / 100))
-			} else if myAttrId == 3 {
+			case 3:
 				tomoSubCool = math.Ceil(coolMax * (tomoSubEffectValue / 100))
 			}
 			// fmt.Println("好友副C技能属性加成:", tomoSubSmile, tomoSubPure, tomoSubCool)
