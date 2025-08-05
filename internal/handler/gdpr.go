@@ -1,16 +1,17 @@
 package handler
 
 import (
-	"encoding/json"
 	"honoka-chan/internal/model"
-	"honoka-chan/internal/utils"
-	"net/http"
+	"honoka-chan/internal/session"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 func Gdpr(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	gdprResp := model.GdprResp{
 		ResponseData: model.GdprRes{
 			EnableGdpr:      true,
@@ -20,9 +21,6 @@ func Gdpr(ctx *gin.Context) {
 		ReleaseInfo: []any{},
 		StatusCode:  200,
 	}
-	resp, err := json.Marshal(gdprResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(gdprResp)
 }

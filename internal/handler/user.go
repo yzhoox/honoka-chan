@@ -1,10 +1,9 @@
 package handler
 
 import (
-	"encoding/json"
 	"honoka-chan/internal/model"
+	"honoka-chan/internal/session"
 	"honoka-chan/internal/tools"
-	"honoka-chan/internal/utils"
 	"net/http"
 	"time"
 
@@ -13,42 +12,50 @@ import (
 )
 
 func SetNotificationToken(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	notifResp := model.NotificationResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
 		StatusCode:   200,
 	}
-	resp, err := json.Marshal(notifResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(notifResp)
 }
 
 func ChangeNavi(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	req := gjson.Parse(ctx.PostForm("request_data"))
 	pref := tools.UserPref{
 		UnitOwningUserID: int(req.Get("unit_owning_user_id").Int()),
 	}
-	_, err := UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Update(&pref)
-	utils.CheckErr(err)
+	_, err := ss.UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Update(&pref)
+	if ss.CheckErr(err) {
+		return
+	}
+
 	naviResp := model.UserNaviChangeResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
 		StatusCode:   200,
 	}
-	resp, err := json.Marshal(naviResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(naviResp)
 }
 
 func ChangeName(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	req := gjson.Parse(ctx.PostForm("request_data"))
 	var oldName string
-	exists, err := UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Cols("user_name").Get(&oldName)
-	utils.CheckErr(err)
+	exists, err := ss.UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Cols("user_name").Get(&oldName)
+	if ss.CheckErr(err) {
+		return
+	}
 	if !exists {
 		ctx.String(http.StatusForbidden, ErrorMsg)
 		return
@@ -56,8 +63,10 @@ func ChangeName(ctx *gin.Context) {
 	pref := tools.UserPref{
 		UserName: req.Get("name").String(),
 	}
-	_, err = UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Update(&pref)
-	utils.CheckErr(err)
+	_, err = ss.UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Update(&pref)
+	if ss.CheckErr(err) {
+		return
+	}
 	nameResp := model.UserNameChangeResp{
 		ResponseData: model.UserNameChangeRes{
 			BeforeName:      oldName,
@@ -67,9 +76,6 @@ func ChangeName(ctx *gin.Context) {
 		ReleaseInfo: []any{},
 		StatusCode:  200,
 	}
-	resp, err := json.Marshal(nameResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(nameResp)
 }

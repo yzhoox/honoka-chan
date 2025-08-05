@@ -2,13 +2,13 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"honoka-chan/config"
 	"honoka-chan/internal/model"
-	"honoka-chan/internal/utils"
+	"honoka-chan/internal/session"
 	"honoka-chan/pkg/db"
 	honokautils "honoka-chan/pkg/utils"
 	"math"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -17,34 +17,52 @@ import (
 )
 
 func PartyList(ctx *gin.Context) {
-	resp := honokautils.ReadAllText("assets/serverdata/partylist.json")
+	ss := session.New(ctx)
+	defer ss.Finalize()
 
-	ctx.Header("X-Message-Sign", utils.GenXMS([]byte(resp)))
-	ctx.String(http.StatusOK, resp)
+	data := honokautils.ReadAllText("assets/serverdata/partylist.json")
+	var partyResp map[string]any
+	err := json.Unmarshal([]byte(data), &partyResp)
+	if ss.CheckErr(err) {
+		return
+	}
+
+	ss.Respond(partyResp)
 }
 
 func PlayLive(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	playReq := model.PlayReq{}
 	err := json.Unmarshal([]byte(ctx.GetString("request_data")), &playReq)
-	utils.CheckErr(err)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	tDifficultyId := playReq.LiveDifficultyID
 	difficultyId, err := strconv.Atoi(tDifficultyId)
-	utils.CheckErr(err)
+	if ss.CheckErr(err) {
+		return
+	}
 	deckId := playReq.UnitDeckID
 
 	// Save Deck Id for /live/reward
 	key := "live_deck_" + ctx.GetString("userid")
 	err = db.DB.Set([]byte(key), []byte(strconv.Itoa(deckId)))
-	utils.CheckErr(err)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	// Song type: normal / special
 	// sqlite3 doesn't support FULL OUTER JOIN so use UNION ALL here.
 	sql := `SELECT notes_setting_asset,c_rank_score,b_rank_score,a_rank_score,s_rank_score,ac_flag,swing_flag FROM live_setting_m WHERE live_setting_id IN (SELECT live_setting_id FROM normal_live_m WHERE live_difficulty_id = ? UNION ALL SELECT live_setting_id FROM special_live_m WHERE live_difficulty_id = ?)`
 	var notes_setting_asset string
 	var c_rank_score, b_rank_score, a_rank_score, s_rank_score, ac_flag, swing_flag int
-	err = MainEng.DB().QueryRow(sql, difficultyId, difficultyId).Scan(&notes_setting_asset, &c_rank_score, &b_rank_score, &a_rank_score, &s_rank_score, &ac_flag, &swing_flag)
-	utils.CheckErr(err)
+	err = ss.MainEng.DB().QueryRow(sql, difficultyId, difficultyId).Scan(&notes_setting_asset, &c_rank_score, &b_rank_score, &a_rank_score, &s_rank_score, &ac_flag, &swing_flag)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	// fmt.Println(notes_setting_asset)
 	// fmt.Println(c_rank_score, b_rank_score, a_rank_score, s_rank_score)
@@ -53,7 +71,9 @@ func PlayLive(ctx *gin.Context) {
 	// fmt.Println("./assets/notes/" + notes_setting_asset)
 	notes_list := honokautils.ReadAllText("./assets/serverdata/notes/" + notes_setting_asset)
 	err = json.Unmarshal([]byte(notes_list), &notes)
-	utils.CheckErr(err)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	ranks := []model.RankInfo{}
 	ranks = append(ranks, model.RankInfo{
@@ -78,69 +98,88 @@ func PlayLive(ctx *gin.Context) {
 		RankMax: 0,
 	})
 
-	// UserEng.ShowSQL(true)
-	// MainEng.ShowSQL(true)
+	//  ss.UserEng.ShowSQL(true)
+	// ss.MainEng.ShowSQL(true)
 	owningIdList := []int{}
-	err = UserEng.Table("deck_unit_m").Join("LEFT", "user_deck_m", "deck_unit_m.user_deck_id = user_deck_m.id").
+	err = ss.UserEng.Table("deck_unit_m").Join("LEFT", "user_deck_m", "deck_unit_m.user_deck_id = user_deck_m.id").
 		Where("user_id = ? AND deck_id = ?", ctx.GetString("userid"), deckId).Cols("unit_owning_user_id").
 		OrderBy("deck_unit_m.position ASC").Find(&owningIdList)
-	utils.CheckErr(err)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	unitList := []model.UnitList{}
 	var totalSmile, totalPure, totalCool, maxLove float64
 	var totalHp int
 	for _, owningId := range owningIdList {
 		var uId int
-		exists, err := MainEng.Table("common_unit_m").Where("unit_owning_user_id = ?", owningId).Cols("unit_id").Get(&uId)
-		utils.CheckErr(err)
+		exists, err := ss.MainEng.Table("common_unit_m").Where("unit_owning_user_id = ?", owningId).Cols("unit_id").Get(&uId)
+		if ss.CheckErr(err) {
+			return
+		}
 
 		var maxHp, attrId, unitTypeId int
 		var baseSmile, basePure, baseCool, smileMax, pureMax, coolMax float64
 		if exists {
 			// 公共卡片仅为100级属性
-			_, err = MainEng.Table("unit_m").Where("unit_id = ?", uId).
+			_, err = ss.MainEng.Table("unit_m").Where("unit_id = ?", uId).
 				Join("LEFT", "unit_rarity_m", "unit_m.rarity = unit_rarity_m.rarity").
 				Cols("attribute_id,hp_max,smile_max,pure_max,cool_max,after_love_max,unit_type_id").
 				Get(&attrId, &maxHp, &baseSmile, &basePure, &baseCool, &maxLove, &unitTypeId)
-			utils.CheckErr(err)
+			if ss.CheckErr(err) {
+				return
+			}
 		} else {
 			// 用户卡片暂时固定为满级350级
-			exists, err := UserEng.Table("user_unit_m").Where("unit_owning_user_id = ?", owningId).Cols("unit_id").Get(&uId)
-			utils.CheckErr(err)
+			exists, err := ss.UserEng.Table("user_unit_m").Where("unit_owning_user_id = ?", owningId).Cols("unit_id").Get(&uId)
+			if ss.CheckErr(err) {
+				return
+			}
 
 			if exists {
 				// 卡片100级基础属性
-				_, err = MainEng.Table("unit_m").Where("unit_id = ?", uId).
+				_, err = ss.MainEng.Table("unit_m").Where("unit_id = ?", uId).
 					Join("LEFT", "unit_rarity_m", "unit_m.rarity = unit_rarity_m.rarity").
 					Cols("attribute_id,hp_max,smile_max,pure_max,cool_max,after_love_max,unit_type_id").
 					Get(&attrId, &maxHp, &baseSmile, &basePure, &baseCool, &maxLove, &unitTypeId)
-				utils.CheckErr(err)
+				if ss.CheckErr(err) {
+					return
+				}
 
 				// 增量属性
 				var diffSmile, diffPure, diffCool float64
-				_, err = MainEng.Table("unit_level_limit_pattern_m").Where("unit_level_limit_id = 1 AND unit_level = 350").
+				_, err = ss.MainEng.Table("unit_level_limit_pattern_m").Where("unit_level_limit_id = 1 AND unit_level = 350").
 					Cols("smile_diff,pure_diff,cool_diff").Get(&diffSmile, &diffPure, &diffCool)
-				utils.CheckErr(err)
+				if ss.CheckErr(err) {
+					return
+				}
 
 				// 更新卡片属性（注意这里是负数，要用减号）
 				baseSmile -= diffSmile
 				basePure -= diffPure
 				baseCool -= diffCool
 			} else {
-				panic("no such unit")
+				err = fmt.Errorf("no such unit owning id: %d", owningId)
+			}
+			if ss.CheckErr(err) {
+				return
 			}
 		}
 
 		// 饰品属性加成（满级）
 		var accessoryOwningId int
-		_, err = UserEng.Table("accessory_wear_m").Where("unit_owning_user_id = ?", owningId).
+		_, err = ss.UserEng.Table("accessory_wear_m").Where("unit_owning_user_id = ?", owningId).
 			Cols("accessory_owning_user_id").Get(&accessoryOwningId)
-		utils.CheckErr(err)
+		if ss.CheckErr(err) {
+			return
+		}
 		var smileAccessory, pureAccessory, coolAccessory float64
-		_, err = MainEng.Table("common_accessory_m").Join("LEFT", "accessory_m", "common_accessory_m.accessory_id = accessory_m.accessory_id").
+		_, err = ss.MainEng.Table("common_accessory_m").Join("LEFT", "accessory_m", "common_accessory_m.accessory_id = accessory_m.accessory_id").
 			Where("accessory_owning_user_id = ?", accessoryOwningId).Cols("smile_max,pure_max,cool_max").
 			Get(&smileAccessory, &pureAccessory, &coolAccessory)
-		utils.CheckErr(err)
+		if ss.CheckErr(err) {
+			return
+		}
 		// fmt.Println("基础属性:", baseSmile, basePure, baseCool)
 
 		// 饰品属性加成（该加成会影响个宝等百分比宝石属性加成的计算，故先计算。）
@@ -152,8 +191,10 @@ func PlayLive(ctx *gin.Context) {
 
 		// 回忆画廊属性加成（该加成会影响个宝等百分比宝石属性加成的计算，故先计算。）
 		var smileBuff, pureBuff, coolBuff float64
-		_, err = MainEng.Table("museum_contents_m").Select("SUM(smile_buff),SUM(pure_buff),SUM(cool_buff)").Get(&smileBuff, &pureBuff, &coolBuff)
-		utils.CheckErr(err)
+		_, err = ss.MainEng.Table("museum_contents_m").Select("SUM(smile_buff),SUM(pure_buff),SUM(cool_buff)").Get(&smileBuff, &pureBuff, &coolBuff)
+		if ss.CheckErr(err) {
+			return
+		}
 		baseSmile += smileBuff
 		basePure += pureBuff
 		baseCool += coolBuff
@@ -180,18 +221,22 @@ func PlayLive(ctx *gin.Context) {
 
 		// 宝石加成（满级）
 		removableSkillIds := []int{}
-		err = UserEng.Table("skill_equip_m").Where("unit_owning_user_id = ? AND user_id = ?", owningId, ctx.GetString("userid")).
+		err = ss.UserEng.Table("skill_equip_m").Where("unit_owning_user_id = ? AND user_id = ?", owningId, ctx.GetString("userid")).
 			Cols("unit_removable_skill_id").Find(&removableSkillIds)
-		utils.CheckErr(err)
+		if ss.CheckErr(err) {
+			return
+		}
 
 		for _, sk := range removableSkillIds {
 			// 判断宝石效果类型（效果范围、效果类型、效果值、是否固定数值）
 			var effectRange, effectType, fixedValueFlag, refType int
 			var effectValue float64
-			_, err = MainEng.Table("unit_removable_skill_m").Where("unit_removable_skill_id = ?", sk).
+			_, err = ss.MainEng.Table("unit_removable_skill_m").Where("unit_removable_skill_id = ?", sk).
 				Cols("effect_range,effect_type,effect_value,fixed_value_flag,target_reference_type").
 				Get(&effectRange, &effectType, &effectValue, &fixedValueFlag, &refType)
-			utils.CheckErr(err)
+			if ss.CheckErr(err) {
+				return
+			}
 
 			if fixedValueFlag == 1 {
 				// 吻、眼神属性加成（固定数值）
@@ -244,19 +289,23 @@ func PlayLive(ctx *gin.Context) {
 
 		// 主唱技能加成
 		var myCenterUnitId int
-		_, err = UserEng.Table("deck_unit_m").Join("LEFT", "user_deck_m", "deck_unit_m.user_deck_id = user_deck_m.id").
+		_, err = ss.UserEng.Table("deck_unit_m").Join("LEFT", "user_deck_m", "deck_unit_m.user_deck_id = user_deck_m.id").
 			Where("user_deck_m.deck_id = ? AND user_deck_m.user_id = ? AND deck_unit_m.position = 5", playReq.UnitDeckID, ctx.GetString("userid")).
 			Cols("deck_unit_m.unit_id").Get(&myCenterUnitId)
-		utils.CheckErr(err)
+		if ss.CheckErr(err) {
+			return
+		}
 
 		// 主唱技能加成：主C技能（这里不使用新C技能，即以某属性的百分比提升另一属性）
 		var myAttrId int
 		var myEffectValue float64
-		_, err = MainEng.Table("unit_m").
+		_, err = ss.MainEng.Table("unit_m").
 			Join("LEFT", "unit_leader_skill_m", "unit_m.default_leader_skill_id = unit_leader_skill_m.unit_leader_skill_id").
 			Where("unit_m.unit_id = ?", myCenterUnitId).
 			Cols("unit_m.attribute_id,unit_leader_skill_m.effect_value").Get(&myAttrId, &myEffectValue)
-		utils.CheckErr(err)
+		if ss.CheckErr(err) {
+			return
+		}
 		var myCenterSmile, myCenterPure, myCenterCool float64
 		switch myAttrId {
 		case 1:
@@ -271,15 +320,19 @@ func PlayLive(ctx *gin.Context) {
 		// 主唱技能加成：副C技能
 		var mySubEffectValue float64
 		var myMemberTagId int
-		_, err = MainEng.Table("unit_m").
+		_, err = ss.MainEng.Table("unit_m").
 			Join("LEFT", "unit_leader_skill_extra_m", "unit_m.default_leader_skill_id = unit_leader_skill_extra_m.unit_leader_skill_id").
 			Where("unit_m.unit_id = ?", myCenterUnitId).
 			Cols("unit_leader_skill_extra_m.effect_value,unit_leader_skill_extra_m.member_tag_id").Get(&mySubEffectValue, &myMemberTagId)
-		utils.CheckErr(err)
+		if ss.CheckErr(err) {
+			return
+		}
 
-		exists, err = MainEng.Table("unit_type_member_tag_m").
+		exists, err = ss.MainEng.Table("unit_type_member_tag_m").
 			Where("unit_type_id = ? AND member_tag_id = ?", unitTypeId, myMemberTagId).Exist()
-		utils.CheckErr(err)
+		if ss.CheckErr(err) {
+			return
+		}
 		var mySubSmile, mySubPure, mySubCool float64
 		if exists {
 			switch myAttrId {
@@ -309,11 +362,13 @@ func PlayLive(ctx *gin.Context) {
 		// 好友主唱技能加成：主C技能（这里不使用新C技能，即以某属性的百分比提升另一属性）
 		var tomoAttrId int
 		var tomoEffectValue float64
-		_, err = MainEng.Table("unit_m").
+		_, err = ss.MainEng.Table("unit_m").
 			Join("LEFT", "unit_leader_skill_m", "unit_m.default_leader_skill_id = unit_leader_skill_m.unit_leader_skill_id").
 			Where("unit_m.unit_id = ?", tomoUnitId).
 			Cols("unit_m.attribute_id,unit_leader_skill_m.effect_value").Get(&tomoAttrId, &tomoEffectValue)
-		utils.CheckErr(err)
+		if ss.CheckErr(err) {
+			return
+		}
 		var tomoCenterSmile, tomoCenterPure, tomoCenterCool float64
 		switch myAttrId {
 		case 1:
@@ -328,15 +383,19 @@ func PlayLive(ctx *gin.Context) {
 		// 好友主唱技能加成：副C技能
 		var tomoSubEffectValue float64
 		var tomoMemberTagId int
-		_, err = MainEng.Table("unit_m").
+		_, err = ss.MainEng.Table("unit_m").
 			Join("LEFT", "unit_leader_skill_extra_m", "unit_m.default_leader_skill_id = unit_leader_skill_extra_m.unit_leader_skill_id").
 			Where("unit_m.unit_id = ?", tomoUnitId).
 			Cols("unit_leader_skill_extra_m.effect_value,unit_leader_skill_extra_m.member_tag_id").Get(&tomoSubEffectValue, &tomoMemberTagId)
-		utils.CheckErr(err)
+		if ss.CheckErr(err) {
+			return
+		}
 
-		exists, err = MainEng.Table("unit_type_member_tag_m").
+		exists, err = ss.MainEng.Table("unit_type_member_tag_m").
 			Where("unit_type_id = ? AND member_tag_id = ?", unitTypeId, tomoMemberTagId).Exist()
-		utils.CheckErr(err)
+		if ss.CheckErr(err) {
+			return
+		}
 		var tomoSubSmile, tomoSubPure, tomoSubCool float64
 		if exists {
 			switch myAttrId {
@@ -412,42 +471,47 @@ func PlayLive(ctx *gin.Context) {
 		StatusCode:  200,
 	}
 
-	resp, err := json.Marshal(playResp)
-	utils.CheckErr(err)
-
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(playResp)
 }
 
 func GameOver(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	overResp := model.GameOverResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
 		StatusCode:   200,
 	}
-	resp, err := json.Marshal(overResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(overResp)
 }
 
 func PlayScore(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	playScoreReq := model.PlayScoreReq{}
 	err := json.Unmarshal([]byte(ctx.GetString("request_data")), &playScoreReq)
-	utils.CheckErr(err)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	tDifficultyId := playScoreReq.LiveDifficultyID
 	difficultyId, err := strconv.Atoi(tDifficultyId)
-	utils.CheckErr(err)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	// Song type: normal / special
 	// sqlite3 doesn't support FULL OUTER JOIN so use UNION ALL here.
 	sql := `SELECT notes_setting_asset,c_rank_score,b_rank_score,a_rank_score,s_rank_score,ac_flag,swing_flag FROM live_setting_m WHERE live_setting_id IN (SELECT live_setting_id FROM normal_live_m WHERE live_difficulty_id = ? UNION ALL SELECT live_setting_id FROM special_live_m WHERE live_difficulty_id = ?)`
 	var notes_setting_asset string
 	var c_rank_score, b_rank_score, a_rank_score, s_rank_score, ac_flag, swing_flag int
-	err = MainEng.DB().QueryRow(sql, difficultyId, difficultyId).Scan(&notes_setting_asset, &c_rank_score, &b_rank_score, &a_rank_score, &s_rank_score, &ac_flag, &swing_flag)
-	utils.CheckErr(err)
+	err = ss.MainEng.DB().QueryRow(sql, difficultyId, difficultyId).Scan(&notes_setting_asset, &c_rank_score, &b_rank_score, &a_rank_score, &s_rank_score, &ac_flag, &swing_flag)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	// fmt.Println(notes_setting_asset)
 	// fmt.Println(c_rank_score, b_rank_score, a_rank_score, s_rank_score)
@@ -456,7 +520,9 @@ func PlayScore(ctx *gin.Context) {
 	// fmt.Println("./assets/notes/" + notes_setting_asset)
 	notes_list := honokautils.ReadAllText("./assets/serverdata/notes/" + notes_setting_asset)
 	err = json.Unmarshal([]byte(notes_list), &notes)
-	utils.CheckErr(err)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	ranks := []model.RankInfo{}
 	ranks = append(ranks, model.RankInfo{
@@ -511,17 +577,18 @@ func PlayScore(ctx *gin.Context) {
 		StatusCode:  200,
 	}
 
-	resp, err := json.Marshal(playResp)
-	utils.CheckErr(err)
-
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(playResp)
 }
 
 func PlayReward(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	playRewardReq := model.PlayRewardReq{}
 	err := json.Unmarshal([]byte(ctx.GetString("request_data")), &playRewardReq)
-	utils.CheckErr(err)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	difficultyId := playRewardReq.LiveDifficultyID
 
@@ -529,16 +596,22 @@ func PlayReward(ctx *gin.Context) {
 	// sqlite3 doesn't support FULL OUTER JOIN so use UNION ALL here.
 	sql := `SELECT c_rank_score,b_rank_score,a_rank_score,s_rank_score,c_rank_combo,b_rank_combo,a_rank_combo,s_rank_combo,ac_flag,swing_flag FROM live_setting_m WHERE live_setting_id IN (SELECT live_setting_id FROM normal_live_m WHERE live_difficulty_id = ? UNION ALL SELECT live_setting_id FROM special_live_m WHERE live_difficulty_id = ?)`
 	var c_rank_score, b_rank_score, a_rank_score, s_rank_score, c_rank_combo, b_rank_combo, a_rank_combo, s_rank_combo, ac_flag, swing_flag int
-	err = MainEng.DB().QueryRow(sql, difficultyId, difficultyId).Scan(&c_rank_score, &b_rank_score, &a_rank_score, &s_rank_score, &c_rank_combo, &b_rank_combo, &a_rank_combo, &s_rank_combo, &ac_flag, &swing_flag)
-	utils.CheckErr(err)
+	err = ss.MainEng.DB().QueryRow(sql, difficultyId, difficultyId).Scan(&c_rank_score, &b_rank_score, &a_rank_score, &s_rank_score, &c_rank_combo, &b_rank_combo, &a_rank_combo, &s_rank_combo, &ac_flag, &swing_flag)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	key := "live_deck_" + ctx.GetString("userid")
 	deckId, err := db.DB.Get([]byte(key))
-	utils.CheckErr(err)
+	if ss.CheckErr(err) {
+		return
+	}
 	unitsList := []model.PlayRewardUnitList{}
-	err = UserEng.Table("deck_unit_m").Join("LEFT", "user_deck_m", "deck_unit_m.user_deck_id = user_deck_m.id").
+	err = ss.UserEng.Table("deck_unit_m").Join("LEFT", "user_deck_m", "deck_unit_m.user_deck_id = user_deck_m.id").
 		Where("user_id = ? AND deck_id = ?", ctx.GetString("userid"), string(deckId)).Find(&unitsList)
-	utils.CheckErr(err)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	totalScore := playRewardReq.ScoreSmile + playRewardReq.ScoreCool + playRewardReq.ScoreCute
 	playResp := model.RewardResp{
@@ -692,9 +765,5 @@ func PlayReward(ctx *gin.Context) {
 		playResp.ResponseData.Rank = 5
 	}
 
-	resp, err := json.Marshal(playResp)
-	utils.CheckErr(err)
-
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(playResp)
 }

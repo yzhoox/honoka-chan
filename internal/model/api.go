@@ -1,7 +1,5 @@
 package model
 
-import "encoding/json"
-
 // ApiReq ...
 type ApiReq struct {
 	Module    string `json:"module"`
@@ -11,9 +9,9 @@ type ApiReq struct {
 
 // ApiResp ...
 type ApiResp struct {
-	ResponseData json.RawMessage `json:"response_data"`
-	ReleaseInfo  []any           `json:"release_info"`
-	StatusCode   int             `json:"status_code"`
+	ResponseData any `json:"response_data"`
+	ReleaseInfo  any `json:"release_info"`
+	StatusCode   int `json:"status_code"`
 }
 
 // ApiUserInfoResp ...

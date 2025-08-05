@@ -1,16 +1,17 @@
 package handler
 
 import (
-	"encoding/json"
 	"honoka-chan/internal/model"
-	"honoka-chan/internal/utils"
-	"net/http"
+	"honoka-chan/internal/session"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 func ProductList(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	prodReesp := model.ProductResp{
 		ResponseData: model.ProductRes{
 			RestrictionInfo: model.RestrictionInfo{
@@ -31,9 +32,6 @@ func ProductList(ctx *gin.Context) {
 		ReleaseInfo: []any{},
 		StatusCode:  200,
 	}
-	resp, err := json.Marshal(prodReesp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(prodReesp)
 }

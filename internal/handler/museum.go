@@ -1,10 +1,8 @@
 package handler
 
 import (
-	"encoding/json"
 	"honoka-chan/internal/model"
-	"honoka-chan/internal/utils"
-	"net/http"
+	"honoka-chan/internal/session"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -18,9 +16,15 @@ type MuseumContent struct {
 }
 
 func MuseumInfo(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	var contents []MuseumContent
-	err := MainEng.Table("museum_contents_m").Cols("museum_contents_id,smile_buff,pure_buff,cool_buff").Find(&contents)
-	utils.CheckErr(err)
+	err := ss.MainEng.Table("museum_contents_m").Cols("museum_contents_id,smile_buff,pure_buff,cool_buff").Find(&contents)
+	if ss.CheckErr(err) {
+		return
+	}
+
 	var smileBuff, pureBuff, coolBuff int
 	var contentsList []int
 	for _, content := range contents {
@@ -44,9 +48,6 @@ func MuseumInfo(ctx *gin.Context) {
 		ReleaseInfo: []any{},
 		StatusCode:  200,
 	}
-	resp, err := json.Marshal(museumResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(museumResp)
 }

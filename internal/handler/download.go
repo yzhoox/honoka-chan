@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"honoka-chan/config"
 	"honoka-chan/internal/model"
-	"honoka-chan/internal/utils"
+	"honoka-chan/internal/session"
 	"io"
 	"net/http"
 	"strings"
@@ -21,18 +21,25 @@ type PkgInfo struct {
 }
 
 func DownloadAdditional(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	downloadReq := model.AdditionalReq{}
-	if err := json.Unmarshal([]byte(ctx.GetString("request_data")), &downloadReq); err != nil {
-		panic(err)
+	err := json.Unmarshal([]byte(ctx.GetString("request_data")), &downloadReq)
+	if ss.CheckErr(err) {
+		return
 	}
+
 	pkgList := []model.AdditionalRes{}
 	if SifCdnServer != "" {
 		pkgType, pkgId := downloadReq.PackageType, downloadReq.PackageID
 		var pkgInfo []PkgInfo
-		err := MainEng.Table("download_m").Where("pkg_type = ? AND pkg_id = ? AND pkg_os = ?", pkgType, pkgId, downloadReq.TargetOs).
+		err := ss.MainEng.Table("download_m").Where("pkg_type = ? AND pkg_id = ? AND pkg_os = ?", pkgType, pkgId, downloadReq.TargetOs).
 			Cols("pkg_id,pkg_order,pkg_size").
 			OrderBy("pkg_id ASC, pkg_order ASC").Find(&pkgInfo)
-		utils.CheckErr(err)
+		if ss.CheckErr(err) {
+			return
+		}
 
 		for _, pkg := range pkgInfo {
 			pkgList = append(pkgList, model.AdditionalRes{
@@ -47,26 +54,30 @@ func DownloadAdditional(ctx *gin.Context) {
 		ReleaseInfo:  []any{},
 		StatusCode:   200,
 	}
-	resp, err := json.Marshal(addResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(addResp)
 }
 
 func DownloadBatch(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	downloadReq := model.BatchReq{}
-	if err := json.Unmarshal([]byte(ctx.GetString("request_data")), &downloadReq); err != nil {
-		panic(err)
+	err := json.Unmarshal([]byte(ctx.GetString("request_data")), &downloadReq)
+	if ss.CheckErr(err) {
+		return
 	}
+
 	pkgList := []model.BatchRes{}
 	if downloadReq.ClientVersion == config.PackageVersion && SifCdnServer != "" {
 		pkgType := downloadReq.PackageType
 		var pkgInfo []PkgInfo
-		err := MainEng.Table("download_m").Where(builder.NotIn("pkg_id", downloadReq.ExcludedPackageIds)).Where("pkg_type = ? AND pkg_os = ?", pkgType, downloadReq.Os).
+		err := ss.MainEng.Table("download_m").Where(builder.NotIn("pkg_id", downloadReq.ExcludedPackageIds)).Where("pkg_type = ? AND pkg_os = ?", pkgType, downloadReq.Os).
 			Cols("pkg_id,pkg_order,pkg_size").
 			OrderBy("pkg_id ASC, pkg_order ASC").Find(&pkgInfo)
-		utils.CheckErr(err)
+		if ss.CheckErr(err) {
+			return
+		}
 
 		for _, pkg := range pkgInfo {
 			pkgList = append(pkgList, model.BatchRes{
@@ -81,26 +92,30 @@ func DownloadBatch(ctx *gin.Context) {
 		ReleaseInfo:  []any{},
 		StatusCode:   200,
 	}
-	resp, err := json.Marshal(batchResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(batchResp)
 }
 
 func DownloadUpdate(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	downloadReq := model.UpdateReq{}
-	if err := json.Unmarshal([]byte(ctx.GetString("request_data")), &downloadReq); err != nil {
-		panic(err)
+	err := json.Unmarshal([]byte(ctx.GetString("request_data")), &downloadReq)
+	if ss.CheckErr(err) {
+		return
 	}
+
 	pkgList := []model.UpdateRes{}
 	if downloadReq.ExternalVersion != config.PackageVersion && SifCdnServer != "" {
 		pkgType := 99
 		var pkgInfo []PkgInfo
-		err := MainEng.Table("download_m").Where("pkg_type = ? AND pkg_os = ?", pkgType, downloadReq.TargetOs).
+		err := ss.MainEng.Table("download_m").Where("pkg_type = ? AND pkg_os = ?", pkgType, downloadReq.TargetOs).
 			Cols("pkg_id,pkg_order,pkg_size").
 			OrderBy("pkg_id ASC, pkg_order ASC").Find(&pkgInfo)
-		utils.CheckErr(err)
+		if ss.CheckErr(err) {
+			return
+		}
 
 		for _, pkg := range pkgInfo {
 			pkgList = append(pkgList, model.UpdateRes{
@@ -130,20 +145,22 @@ func DownloadUpdate(ctx *gin.Context) {
 		ReleaseInfo:  []any{},
 		StatusCode:   200,
 	}
-	resp, err := json.Marshal(updateResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(updateResp)
 }
 
 func DownloadUrl(ctx *gin.Context) {
 	// Extract SQL: SELECT CAST(pkg_type AS TEXT) || '_' || CAST(pkg_id AS TEXT) || '_' || CAST(pkg_order AS TEXT) || '.zip' AS zip_name FROM download_m ORDER BY pkg_type ASC,pkg_id ASC, pkg_order ASC;
 	// Extract Cmd: cat list.txt | while read line; do; unzip -o $line; done
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	downloadReq := model.UrlReq{}
-	if err := json.Unmarshal([]byte(ctx.GetString("request_data")), &downloadReq); err != nil {
-		panic(err)
+	err := json.Unmarshal([]byte(ctx.GetString("request_data")), &downloadReq)
+	if ss.CheckErr(err) {
+		return
 	}
+
 	urlList := []string{}
 	for _, v := range downloadReq.PathList {
 		urlList = append(urlList, fmt.Sprintf("%s/%s/extracted/%s", SifCdnServer, downloadReq.Os, strings.ReplaceAll(v, "\\", "")))
@@ -155,22 +172,19 @@ func DownloadUrl(ctx *gin.Context) {
 		ReleaseInfo: []any{},
 		StatusCode:  200,
 	}
-	resp, err := json.Marshal(urlResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(urlResp)
 }
 
 func DownloadEvent(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	eventResp := model.EventResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
 		StatusCode:   200,
 	}
-	resp, err := json.Marshal(eventResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(eventResp)
 }

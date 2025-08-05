@@ -70,7 +70,7 @@ func InitUserData(userId int) {
 			}
 			_, err = session.Table("user_preference_m").Insert(&userPref)
 			utils.CheckErr(err)
-			fmt.Println("UserPref ID", userPref.ID)
+			// fmt.Println("UserPref ID", userPref.ID)
 		}
 
 		// 检查用户卡组配置
@@ -94,7 +94,7 @@ func InitUserData(userId int) {
 				panic(err)
 			}
 			userDeckId := userDeck.ID
-			fmt.Println("New UserDeck:", userDeckId)
+			// fmt.Println("New UserDeck:", userDeckId)
 
 			// 默认卡组
 			unitIds := []int{}
@@ -137,7 +137,7 @@ func InitUserData(userId int) {
 					session.Rollback()
 					panic(err)
 				}
-				fmt.Println("New DeckUnit:", unitDeckData.ID)
+				// fmt.Println("New DeckUnit:", unitDeckData.ID)
 
 				position++
 			}

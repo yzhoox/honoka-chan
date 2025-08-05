@@ -1,10 +1,9 @@
 package handler
 
 import (
-	"encoding/json"
 	"honoka-chan/internal/model"
+	"honoka-chan/internal/session"
 	"honoka-chan/internal/utils"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,16 +14,22 @@ type AlbumRes struct {
 }
 
 func AlbumSeriesAll(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	var albumIds []int
-	err := MainEng.Table("album_series_m").Select("album_series_id").Find(&albumIds)
-	utils.CheckErr(err)
-	// fmt.Println(albumIds)
+	err := ss.MainEng.Table("album_series_m").Select("album_series_id").Find(&albumIds)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	albumSeriesAllRes := []model.AlbumSeriesRes{}
 	for _, albumId := range albumIds {
 		unitList := []AlbumRes{}
-		err = MainEng.Table("unit_m").Where("album_series_id = ?", albumId).Cols("unit_id,rarity").Find(&unitList)
-		utils.CheckErr(err)
+		err = ss.MainEng.Table("unit_m").Where("album_series_id = ?", albumId).Cols("unit_id,rarity").Find(&unitList)
+		if ss.CheckErr(err) {
+			return
+		}
 
 		albumSeriesAll := []model.AlbumResult{}
 		for _, unit := range unitList {
@@ -70,14 +75,11 @@ func AlbumSeriesAll(ctx *gin.Context) {
 		})
 	}
 
-	albumResp := model.AlbumSeriesResp{
+	resp := model.AlbumSeriesResp{
 		ResponseData: albumSeriesAllRes,
 		ReleaseInfo:  []any{},
 		StatusCode:   200,
 	}
-	resp, err := json.Marshal(albumResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(resp)
 }

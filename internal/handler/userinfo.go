@@ -1,11 +1,10 @@
 package handler
 
 import (
-	"encoding/json"
 	"honoka-chan/config"
 	"honoka-chan/internal/model"
+	"honoka-chan/internal/session"
 	"honoka-chan/internal/tools"
-	"honoka-chan/internal/utils"
 	"net/http"
 	"strconv"
 	"time"
@@ -14,12 +13,19 @@ import (
 )
 
 func UserInfo(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	userId, err := strconv.Atoi(ctx.GetString("userid"))
-	utils.CheckErr(err)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	pref := tools.UserPref{}
-	exists, err := UserEng.Table("user_preference_m").Where("user_id = ?", userId).Get(&pref)
-	utils.CheckErr(err)
+	exists, err := ss.UserEng.Table("user_preference_m").Where("user_id = ?", userId).Get(&pref)
+	if ss.CheckErr(err) {
+		return
+	}
 	if !exists {
 		ctx.String(http.StatusForbidden, ErrorMsg)
 		return
@@ -66,9 +72,6 @@ func UserInfo(ctx *gin.Context) {
 		ReleaseInfo: []any{},
 		StatusCode:  200,
 	}
-	resp, err := json.Marshal(userResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(userResp)
 }

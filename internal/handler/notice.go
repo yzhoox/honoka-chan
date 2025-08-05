@@ -1,16 +1,17 @@
 package handler
 
 import (
-	"encoding/json"
 	"honoka-chan/internal/model"
-	"honoka-chan/internal/utils"
-	"net/http"
+	"honoka-chan/internal/session"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 func NoticeFriendVariety(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	noticeResp := model.NoticeFriendVarietyResp{
 		ResponseData: model.NoticeFriendVarietyRes{
 			ItemCount:       1,
@@ -20,14 +21,14 @@ func NoticeFriendVariety(ctx *gin.Context) {
 		ReleaseInfo: []any{},
 		StatusCode:  200,
 	}
-	resp, err := json.Marshal(noticeResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(noticeResp)
 }
 
 func NoticeFriendGreeting(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	noticeResp := model.NoticeFriendGreetingResp{
 		ResponseData: model.NoticeFriendGreetingRes{
 			NextId:          0,
@@ -37,14 +38,14 @@ func NoticeFriendGreeting(ctx *gin.Context) {
 		ReleaseInfo: []any{},
 		StatusCode:  200,
 	}
-	resp, err := json.Marshal(noticeResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(noticeResp)
 }
 
 func NoticeUserGreeting(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	noticeResp := model.NoticeUserGreetingResp{
 		ResponseData: model.NoticeUserGreetingRes{
 			ItemCount:       0,
@@ -55,9 +56,6 @@ func NoticeUserGreeting(ctx *gin.Context) {
 		ReleaseInfo: []any{},
 		StatusCode:  200,
 	}
-	resp, err := json.Marshal(noticeResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(noticeResp)
 }

@@ -224,7 +224,7 @@ func LoginAuto(ctx *gin.Context) {
 	}
 
 	var userId, ticket string
-	_, err = UserEng.Table("users").Cols("userid,ticket").Where("autokey = ?", autoKey).Get(&userId, &ticket)
+	_, err = db.UserEng.Table("users").Cols("userid,ticket").Where("autokey = ?", autoKey).Get(&userId, &ticket)
 	utils.CheckErr(err)
 
 	var resp string
@@ -312,7 +312,7 @@ func AccountLogin(ctx *gin.Context) {
 	// 	"key" INTEGER
 	//   );`
 	var pass, autoKey, ticket, userId string
-	_, err = UserEng.Table("users").Cols("password,autokey,ticket,userid").Where("phone = ?", phone).
+	_, err = db.UserEng.Table("users").Cols("password,autokey,ticket,userid").Where("phone = ?", phone).
 		Get(&pass, &autoKey, &ticket, &userId)
 	utils.CheckErr(err)
 
@@ -322,7 +322,7 @@ func AccountLogin(ctx *gin.Context) {
 	loginTime := time.Now().Unix()
 	if pass == "" {
 		// 未注册 - 自动注册
-		session := UserEng.NewSession()
+		session := db.UserEng.NewSession()
 		defer session.Close()
 
 		// 开始会话
@@ -393,7 +393,7 @@ func AccountLogin(ctx *gin.Context) {
 			loginResp.Userid = userId // 实际登录用的账号
 
 			// 更新信息
-			userStmt, err := UserEng.DB().Prepare("UPDATE users SET autokey=?,ticket=?,last_login_time=? WHERE userid=?")
+			userStmt, err := db.UserEng.DB().Prepare("UPDATE users SET autokey=?,ticket=?,last_login_time=? WHERE userid=?")
 			utils.CheckErr(err)
 			defer userStmt.Close()
 

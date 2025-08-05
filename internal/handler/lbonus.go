@@ -1,16 +1,17 @@
 package handler
 
 import (
-	"encoding/json"
 	"honoka-chan/internal/model"
-	"honoka-chan/internal/utils"
-	"net/http"
+	"honoka-chan/internal/session"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 func LBonusExecute(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	weeks := map[string]int{
 		"Monday":    1,
 		"Tuesday":   2,
@@ -148,9 +149,5 @@ func LBonusExecute(ctx *gin.Context) {
 		StatusCode:  200,
 	}
 
-	resp, err := json.Marshal(LbRes)
-	utils.CheckErr(err)
-
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(LbRes)
 }

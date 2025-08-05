@@ -2,10 +2,10 @@ package handler
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"honoka-chan/config"
 	"honoka-chan/internal/model"
+	"honoka-chan/internal/session"
 	"honoka-chan/internal/tools"
 	"honoka-chan/internal/utils"
 	honokautils "honoka-chan/pkg/utils"
@@ -39,16 +39,17 @@ type MuseumRes struct {
 }
 
 func Api(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	apiReq := []model.ApiReq{}
 	err := json.Unmarshal([]byte(ctx.GetString("request_data")), &apiReq)
-	if err != nil {
-		fmt.Println(err)
+	if ss.CheckErr(err) {
 		return
 	}
+
 	results := []any{}
 	for _, v := range apiReq {
-		var res []byte
-		var err error
 		// fmt.Println(v)
 		// fmt.Println(v.Module, v.Action)
 
@@ -90,8 +91,7 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(topInfoResp)
-				utils.CheckErr(err)
+				results = append(results, topInfoResp)
 			case "topInfoOnce":
 				// key = "login_topinfo_once_result"
 				topInfoOnceResp := model.TopInfoOnceResp{
@@ -122,8 +122,9 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(topInfoOnceResp)
-				utils.CheckErr(err)
+				results = append(results, topInfoOnceResp)
+			default:
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "live":
 			switch v.Action {
@@ -131,8 +132,10 @@ func Api(ctx *gin.Context) {
 				// key = "live_status_result"
 				var liveDifficultyId []int
 				normalLives := []model.NormalLiveStatusList{}
-				err = MainEng.Table("normal_live_m").Cols("live_difficulty_id").OrderBy("live_difficulty_id ASC").Find(&liveDifficultyId)
-				utils.CheckErr(err)
+				err = ss.MainEng.Table("normal_live_m").Cols("live_difficulty_id").OrderBy("live_difficulty_id ASC").Find(&liveDifficultyId)
+				if ss.CheckErr(err) {
+					return
+				}
 				for _, id := range liveDifficultyId {
 					normalLive := model.NormalLiveStatusList{
 						LiveDifficultyID:   id,
@@ -146,8 +149,10 @@ func Api(ctx *gin.Context) {
 				}
 
 				specialLives := []model.SpecialLiveStatusList{}
-				err = MainEng.Table("special_live_m").Cols("live_difficulty_id").OrderBy("live_difficulty_id ASC").Find(&liveDifficultyId)
-				utils.CheckErr(err)
+				err = ss.MainEng.Table("special_live_m").Cols("live_difficulty_id").OrderBy("live_difficulty_id ASC").Find(&liveDifficultyId)
+				if ss.CheckErr(err) {
+					return
+				}
 				for _, id := range liveDifficultyId {
 					specialLive := model.SpecialLiveStatusList{
 						LiveDifficultyID:   id,
@@ -173,14 +178,15 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(LiveStatusResp)
-				utils.CheckErr(err)
+				results = append(results, LiveStatusResp)
 			case "schedule":
 				// key = "live_list_result"
 				var liveDifficultyId []int
 				specialLives := []model.SpecialLiveStatusList{}
-				err = MainEng.Table("special_live_m").Cols("live_difficulty_id").OrderBy("live_difficulty_id ASC").Find(&liveDifficultyId)
-				utils.CheckErr(err)
+				err = ss.MainEng.Table("special_live_m").Cols("live_difficulty_id").OrderBy("live_difficulty_id ASC").Find(&liveDifficultyId)
+				if ss.CheckErr(err) {
+					return
+				}
 				for _, id := range liveDifficultyId {
 					specialLive := model.SpecialLiveStatusList{
 						LiveDifficultyID:   id,
@@ -216,24 +222,24 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(liveListResp)
-				utils.CheckErr(err)
+				results = append(results, liveListResp)
 			default:
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "unit":
-			if v.Action == "unitAll" {
+			switch v.Action {
+			case "unitAll":
 				// key = "unit_list_result"
 				unitsData := []model.Active{}
-				err = MainEng.Table("common_unit_m").Find(&unitsData)
-				if err != nil {
-					panic(err)
+				err = ss.MainEng.Table("common_unit_m").Find(&unitsData)
+				if ss.CheckErr(err) {
+					return
 				}
 
 				userUnits := []model.Active{}
-				err = UserEng.Table("user_unit_m").Where("user_id = ?", ctx.GetString("userid")).Find(&userUnits)
-				if err != nil {
-					panic(err)
+				err = ss.UserEng.Table("user_unit_m").Where("user_id = ?", ctx.GetString("userid")).Find(&userUnits)
+				if ss.CheckErr(err) {
+					return
 				}
 				unitsData = append(unitsData, userUnits...)
 
@@ -246,19 +252,22 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(unitListResp)
-				utils.CheckErr(err)
-			} else if v.Action == "deckInfo" {
+				results = append(results, unitListResp)
+			case "deckInfo":
 				// key = "unit_deck_result"
 				userDeck := []model.UserDeckData{}
-				err = UserEng.Table("user_deck_m").Where("user_id = ?", ctx.GetString("userid")).Asc("deck_id").Find(&userDeck)
-				utils.CheckErr(err)
+				err = ss.UserEng.Table("user_deck_m").Where("user_id = ?", ctx.GetString("userid")).Asc("deck_id").Find(&userDeck)
+				if ss.CheckErr(err) {
+					return
+				}
 
 				unitDeckInfo := []model.UnitDeckInfoRes{}
 				for _, deck := range userDeck {
 					deckUnit := []model.UnitDeckData{}
-					err = UserEng.Table("deck_unit_m").Where("user_deck_id = ?", deck.ID).Asc("position").Find(&deckUnit)
-					utils.CheckErr(err)
+					err = ss.UserEng.Table("deck_unit_m").Where("user_deck_id = ?", deck.ID).Asc("position").Find(&deckUnit)
+					if ss.CheckErr(err) {
+						return
+					}
 
 					oUids := []model.UnitOwningUserIds{}
 					for _, unit := range deckUnit {
@@ -285,9 +294,8 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(unitDeckResp)
-				utils.CheckErr(err)
-			} else if v.Action == "supporterAll" {
+				results = append(results, unitDeckResp)
+			case "supporterAll":
 				// key = "unit_support_result"
 				unitSupportResp := model.UnitSupportResp{
 					Result: model.UnitSupportRes{
@@ -297,18 +305,21 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(unitSupportResp)
-				utils.CheckErr(err)
-			} else if v.Action == "removableSkillInfo" {
+				results = append(results, unitSupportResp)
+			case "removableSkillInfo":
 				// key = "owning_equip_result"
 				var skillEquipCount []model.SkillEquipCount
-				err := UserEng.Table("skill_equip_m").Where("user_id = ?", ctx.GetString("userid")).Select("unit_removable_skill_id,COUNT(*) AS ct").
+				err := ss.UserEng.Table("skill_equip_m").Where("user_id = ?", ctx.GetString("userid")).Select("unit_removable_skill_id,COUNT(*) AS ct").
 					GroupBy("unit_removable_skill_id").Find(&skillEquipCount)
-				utils.CheckErr(err)
+				if ss.CheckErr(err) {
+					return
+				}
 
 				var rmSkillIds []int
-				err = MainEng.Table("unit_removable_skill_m").Where("effect_range = 1").Cols("unit_removable_skill_id").Find(&rmSkillIds)
-				utils.CheckErr(err)
+				err = ss.MainEng.Table("unit_removable_skill_m").Where("effect_range = 1").Cols("unit_removable_skill_id").Find(&rmSkillIds)
+				if ss.CheckErr(err) {
+					return
+				}
 
 				owingInfo := []model.OwningInfo{}
 				for _, id := range rmSkillIds {
@@ -328,15 +339,19 @@ func Api(ctx *gin.Context) {
 				}
 
 				var unitOwningIds []int
-				err = UserEng.Table("skill_equip_m").Where("user_id = ?", ctx.GetString("userid")).Cols("unit_owning_user_id").GroupBy("unit_owning_user_id").Find(&unitOwningIds)
-				utils.CheckErr(err)
+				err = ss.UserEng.Table("skill_equip_m").Where("user_id = ?", ctx.GetString("userid")).Cols("unit_owning_user_id").GroupBy("unit_owning_user_id").Find(&unitOwningIds)
+				if ss.CheckErr(err) {
+					return
+				}
 
 				equipInfo := map[int]any{}
 				for _, v := range unitOwningIds {
 					detail := []model.SkillEquipDetail{}
-					err = UserEng.Table("skill_equip_m").Where("user_id = ? AND unit_owning_user_id = ?", ctx.GetString("userid"), v).
+					err = ss.UserEng.Table("skill_equip_m").Where("user_id = ? AND unit_owning_user_id = ?", ctx.GetString("userid"), v).
 						Cols("unit_removable_skill_id").Find(&detail)
-					utils.CheckErr(err)
+					if ss.CheckErr(err) {
+						return
+					}
 
 					equipInfo[v] = model.SkillEquipList{
 						UnitOwningUserID: v,
@@ -353,13 +368,14 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(rmSkillResp)
-				utils.CheckErr(err)
-			} else if v.Action == "accessoryAll" {
+				results = append(results, rmSkillResp)
+			case "accessoryAll":
 				// key = "unit_accessory_result"
 				accessoryList := []model.AccessoryList{}
-				err := MainEng.Table("common_accessory_m").Find(&accessoryList)
-				utils.CheckErr(err)
+				err := ss.MainEng.Table("common_accessory_m").Find(&accessoryList)
+				if ss.CheckErr(err) {
+					return
+				}
 				for k := range accessoryList {
 					accessoryList[k].NextExp = 0
 					accessoryList[k].Level = 8
@@ -368,8 +384,10 @@ func Api(ctx *gin.Context) {
 					accessoryList[k].FavoriteFlag = true
 				}
 				wearingInfo := []model.WearingInfo{}
-				err = UserEng.Table("accessory_wear_m").Where("user_id = ?", ctx.GetString("userid")).Find(&wearingInfo)
-				utils.CheckErr(err)
+				err = ss.UserEng.Table("accessory_wear_m").Where("user_id = ?", ctx.GetString("userid")).Find(&wearingInfo)
+				if ss.CheckErr(err) {
+					return
+				}
 				unitAccResp := model.UnitAccessoryAllResp{
 					Result: model.UnitAccessoryAllResult{
 						AccessoryList:      accessoryList,
@@ -380,12 +398,9 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(unitAccResp)
-				utils.CheckErr(err)
-			} else {
-				// case "accessoryTab":
-				// case "accessoryMaterialAll":
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				results = append(results, unitAccResp)
+			default:
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "costume":
 			if v.Action == "costumeList" {
@@ -398,18 +413,20 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(costumeListResp)
-				utils.CheckErr(err)
+				results = append(results, costumeListResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "album":
 			if v.Action == "albumAll" {
 				// key = "album_unit_result"
 				albumLists := []model.AlbumResult{}
 				unitList := []AlbumRes{}
-				err = MainEng.Table("unit_m").Cols("unit_id,rarity").OrderBy("unit_id ASC").Find(&unitList)
-				utils.CheckErr(err)
+				err = ss.MainEng.Table("unit_m").Cols("unit_id,rarity").OrderBy("unit_id ASC").Find(&unitList)
+				if ss.CheckErr(err) {
+					return
+				}
+
 				for _, unit := range unitList {
 					albumList := model.AlbumResult{
 						RankMaxFlag:      true,
@@ -451,18 +468,20 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(albumResp)
-				utils.CheckErr(err)
+				results = append(results, albumResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "scenario":
 			if v.Action == "scenarioStatus" {
 				// key = "scenario_status_result"
 				var scenarioIds []int
 				scenarioLists := []model.ScenarioStatusList{}
-				err = MainEng.Table("scenario_m").Cols("scenario_id").OrderBy("scenario_id ASC").Find(&scenarioIds)
-				utils.CheckErr(err)
+				err = ss.MainEng.Table("scenario_m").Cols("scenario_id").OrderBy("scenario_id ASC").Find(&scenarioIds)
+				if ss.CheckErr(err) {
+					return
+				}
+
 				for _, id := range scenarioIds {
 					scenarioLists = append(scenarioLists, model.ScenarioStatusList{
 						ScenarioID: id,
@@ -477,18 +496,20 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(scenarioResp)
-				utils.CheckErr(err)
+				results = append(results, scenarioResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "subscenario":
 			if v.Action == "subscenarioStatus" {
 				// key = "subscenario_status_result"
 				var subScenarioIds []int
 				subScenarioLists := []model.SubscenarioStatusList{}
-				err = MainEng.Table("subscenario_m").Cols("subscenario_id").OrderBy("subscenario_id ASC").Find(&subScenarioIds)
-				utils.CheckErr(err)
+				err = ss.MainEng.Table("subscenario_m").Cols("subscenario_id").OrderBy("subscenario_id ASC").Find(&subScenarioIds)
+				if ss.CheckErr(err) {
+					return
+				}
+
 				for _, id := range subScenarioIds {
 					subScenarioLists = append(subScenarioLists, model.SubscenarioStatusList{
 						SubscenarioID: id,
@@ -504,24 +525,29 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(subScenarioResp)
-				utils.CheckErr(err)
+				results = append(results, subScenarioResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "eventscenario":
 			if v.Action == "status" {
 				// key = "event_scenario_result"
 				var eventIds []int
 				eventsList := []model.EventScenarioList{}
-				err = MainEng.Table("event_scenario_m").Cols("event_id").GroupBy("event_id").OrderBy("event_id DESC").Find(&eventIds)
-				utils.CheckErr(err)
+				err = ss.MainEng.Table("event_scenario_m").Cols("event_id").GroupBy("event_id").OrderBy("event_id DESC").Find(&eventIds)
+				if ss.CheckErr(err) {
+					return
+				}
+
 				for _, id := range eventIds {
 					eventRes := []EventRes{}
 					chapsList := []model.EventScenarioChapterList{}
-					err = MainEng.Table("event_scenario_m").Where("event_id = ?", id).Cols("event_scenario_id,chapter,chapter_asset,open_date").
+					err = ss.MainEng.Table("event_scenario_m").Where("event_id = ?", id).Cols("event_scenario_id,chapter,chapter_asset,open_date").
 						OrderBy("chapter DESC").Find(&eventRes)
-					utils.CheckErr(err)
+					if ss.CheckErr(err) {
+						return
+					}
+
 					for _, res := range eventRes {
 						chapList := model.EventScenarioChapterList{
 							EventScenarioID: res.EventScenarioId,
@@ -563,25 +589,29 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(eventScenarioResp)
-				utils.CheckErr(err)
+				results = append(results, eventScenarioResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "multiunit":
 			if v.Action == "multiunitscenarioStatus" {
 				// key = "multi_unit_scenario_result"
 				var multiIds []int
 				multiUnitsList := []model.MultiUnitScenarioStatusList{}
-				err = MainEng.Table("multi_unit_scenario_m").Cols("multi_unit_id").GroupBy("multi_unit_id").OrderBy("multi_unit_id ASC").Find(&multiIds)
-				utils.CheckErr(err)
+				err = ss.MainEng.Table("multi_unit_scenario_m").Cols("multi_unit_id").GroupBy("multi_unit_id").OrderBy("multi_unit_id ASC").Find(&multiIds)
+				if ss.CheckErr(err) {
+					return
+				}
+
 				for _, id := range multiIds {
 					multiRes := MultiRes{}
-					_, err = MainEng.Table("multi_unit_scenario_m").
+					_, err = ss.MainEng.Table("multi_unit_scenario_m").
 						Join("LEFT", "multi_unit_scenario_open_m", "multi_unit_scenario_m.multi_unit_id = multi_unit_scenario_open_m.multi_unit_id").
 						Cols("multi_unit_scenario_btn_asset,open_date,multi_unit_scenario_id,chapter").
 						Where("multi_unit_scenario_m.multi_unit_id = ?", id).Get(&multiRes)
-					utils.CheckErr(err)
+					if ss.CheckErr(err) {
+						return
+					}
 
 					multiUnitsList = append(multiUnitsList, model.MultiUnitScenarioStatusList{
 						MultiUnitID:               id,
@@ -606,10 +636,9 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(unitsResp)
-				utils.CheckErr(err)
+				results = append(results, unitsResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "payment":
 			if v.Action == "productList" {
@@ -634,10 +663,9 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(productResp)
-				utils.CheckErr(err)
+				results = append(results, productResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "banner":
 			if v.Action == "bannerList" {
@@ -707,10 +735,9 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(bannerResp)
-				utils.CheckErr(err)
+				results = append(results, bannerResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "notice":
 			if v.Action == "noticeMarquee" {
@@ -724,18 +751,20 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(marqueeResp)
-				utils.CheckErr(err)
+				results = append(results, marqueeResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "user":
 			switch v.Action {
 			case "getNavi":
 				// key = "user_intro_result"
 				var uId, oId int
-				_, err := UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Cols("user_id,unit_owning_user_id").Get(&uId, &oId)
-				utils.CheckErr(err)
+				_, err := ss.UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Cols("user_id,unit_owning_user_id").Get(&uId, &oId)
+				if ss.CheckErr(err) {
+					return
+				}
+
 				userIntroResp := model.UserNaviResp{
 					Result: model.UserNaviRes{
 						User: model.User{
@@ -747,15 +776,18 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(userIntroResp)
-				utils.CheckErr(err)
+				results = append(results, userIntroResp)
 			case "userInfo":
 				userId, err := strconv.Atoi(ctx.GetString("userid"))
-				utils.CheckErr(err)
+				if ss.CheckErr(err) {
+					return
+				}
 
 				pref := tools.UserPref{}
-				exists, err := UserEng.Table("user_preference_m").Where("user_id = ?", userId).Get(&pref)
-				utils.CheckErr(err)
+				exists, err := ss.UserEng.Table("user_preference_m").Where("user_id = ?", userId).Get(&pref)
+				if ss.CheckErr(err) {
+					return
+				}
 				if !exists {
 					ctx.String(http.StatusForbidden, ErrorMsg)
 					return
@@ -796,10 +828,9 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(userInfoResp)
-				utils.CheckErr(err)
+				results = append(results, userInfoResp)
 			default:
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "navigation":
 			if v.Action == "specialCutin" {
@@ -812,20 +843,24 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(cutinResp)
-				utils.CheckErr(err)
+				results = append(results, cutinResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "award":
 			if v.Action == "awardInfo" {
 				// key = "award_result"
 				var aIdList []int
-				err := MainEng.Table("award_m").Cols("award_id").Find(&aIdList)
-				utils.CheckErr(err)
+				err := ss.MainEng.Table("award_m").Cols("award_id").Find(&aIdList)
+				if ss.CheckErr(err) {
+					return
+				}
+
 				var aId int
-				_, err = UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Cols("award_id").Get(&aId)
-				utils.CheckErr(err)
+				_, err = ss.UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Cols("award_id").Get(&aId)
+				if ss.CheckErr(err) {
+					return
+				}
 
 				awardsList := []model.AwardInfo{}
 				for _, id := range aIdList {
@@ -848,20 +883,24 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(awardResp)
-				utils.CheckErr(err)
+				results = append(results, awardResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "background":
 			if v.Action == "backgroundInfo" {
 				// key = "background_result"
 				var bIdList []int
-				err := MainEng.Table("background_m").Cols("background_id").Find(&bIdList)
-				utils.CheckErr(err)
+				err := ss.MainEng.Table("background_m").Cols("background_id").Find(&bIdList)
+				if ss.CheckErr(err) {
+					return
+				}
+
 				var bId int
-				_, err = UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Cols("background_id").Get(&bId)
-				utils.CheckErr(err)
+				_, err = ss.UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Cols("background_id").Get(&bId)
+				if ss.CheckErr(err) {
+					return
+				}
 
 				backgroundsList := []model.BackgroundInfo{}
 				for _, id := range bIdList {
@@ -884,10 +923,9 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(backgroundResp)
-				utils.CheckErr(err)
+				results = append(results, backgroundResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "stamp":
 			if v.Action == "stampInfo" {
@@ -895,19 +933,23 @@ func Api(ctx *gin.Context) {
 				stampResp := honokautils.ReadAllText("assets/serverdata/stamp.json")
 				var mStampResp any
 				err = json.Unmarshal([]byte(stampResp), &mStampResp)
-				utils.CheckErr(err)
-				res, err = json.Marshal(mStampResp)
-				utils.CheckErr(err)
+				if ss.CheckErr(err) {
+					return
+				}
+				results = append(results, mStampResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "exchange":
 			if v.Action == "owningPoint" {
 				// key = "exchange_point_result"
 				var exchangeIds []int
 				exPointsList := []model.ExchangePointList{}
-				err = MainEng.Table("exchange_point_m").Cols("exchange_point_id").OrderBy("exchange_point_id ASC").Find(&exchangeIds)
-				utils.CheckErr(err)
+				err = ss.MainEng.Table("exchange_point_m").Cols("exchange_point_id").OrderBy("exchange_point_id ASC").Find(&exchangeIds)
+				if ss.CheckErr(err) {
+					return
+				}
+
 				for _, id := range exchangeIds {
 					exPointsList = append(exPointsList, model.ExchangePointList{
 						Rarity:        id,
@@ -922,10 +964,9 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(exPointsResp)
-				utils.CheckErr(err)
+				results = append(results, exPointsResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "livese":
 			if v.Action == "liveseInfo" {
@@ -938,10 +979,9 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(liveSeResp)
-				utils.CheckErr(err)
+				results = append(results, liveSeResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "liveicon":
 			if v.Action == "liveiconInfo" {
@@ -954,10 +994,9 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(liveIconResp)
-				utils.CheckErr(err)
+				results = append(results, liveIconResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "item":
 			if v.Action == "list" {
@@ -965,11 +1004,12 @@ func Api(ctx *gin.Context) {
 				itemResp := honokautils.ReadAllText("assets/serverdata/item.json")
 				var mItemResp any
 				err = json.Unmarshal([]byte(itemResp), &mItemResp)
-				utils.CheckErr(err)
-				res, err = json.Marshal(mItemResp)
-				utils.CheckErr(err)
+				if ss.CheckErr(err) {
+					return
+				}
+				results = append(results, mItemResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "marathon":
 			if v.Action == "marathonInfo" {
@@ -980,10 +1020,9 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(marathonResp)
-				utils.CheckErr(err)
+				results = append(results, marathonResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "challenge":
 			if v.Action == "challengeInfo" {
@@ -994,10 +1033,9 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(challengeResp)
-				utils.CheckErr(err)
+				results = append(results, challengeResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "museum":
 			if v.Action == "info" {
@@ -1005,9 +1043,12 @@ func Api(ctx *gin.Context) {
 				museumRes := []MuseumRes{}
 				var museumIds []int
 				var smileBuff, pureBuff, coolBuff int
-				err = MainEng.Table("museum_contents_m").Cols("museum_contents_id,smile_buff,pure_buff,cool_buff").
+				err = ss.MainEng.Table("museum_contents_m").Cols("museum_contents_id,smile_buff,pure_buff,cool_buff").
 					OrderBy("museum_contents_id ASC").Find(&museumRes)
-				utils.CheckErr(err)
+				if ss.CheckErr(err) {
+					return
+				}
+
 				for _, res := range museumRes {
 					smileBuff += res.SmileBuff
 					pureBuff += res.PureBuff
@@ -1029,10 +1070,9 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(museumInfoResp)
-				utils.CheckErr(err)
+				results = append(results, museumInfoResp)
 			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		case "profile":
 			switch v.Action {
@@ -1065,45 +1105,57 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(difficultyResp)
-				utils.CheckErr(err)
+				results = append(results, difficultyResp)
 			case "cardRanking":
 				// key = "profile_card_ranking_result"
 				var result []any
 				love := honokautils.ReadAllText("assets/serverdata/love.json")
 				err := json.Unmarshal([]byte(love), &result)
-				utils.CheckErr(err)
+				if ss.CheckErr(err) {
+					return
+				}
+
 				loveResp := model.LoveResp{
 					Result:     result,
 					Status:     200,
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(loveResp)
-				utils.CheckErr(err)
+				results = append(results, loveResp)
 			case "profileInfo":
 				// key = "profile_info_result"
 				pref := tools.UserPref{}
-				exists, err := UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Get(&pref)
-				utils.CheckErr(err)
+				exists, err := ss.UserEng.Table("user_preference_m").Where("user_id = ?", ctx.GetString("userid")).Get(&pref)
+				if ss.CheckErr(err) {
+					return
+				}
 				if !exists {
 					ctx.String(http.StatusForbidden, ErrorMsg)
 					return
 				}
 
-				commonUnit, err := MainEng.Table("common_unit_m").Count()
-				utils.CheckErr(err)
-				userUnit, err := UserEng.Table("user_unit_m").Where("user_id = ?", ctx.GetString("userid")).Count()
-				utils.CheckErr(err)
+				commonUnit, err := ss.MainEng.Table("common_unit_m").Count()
+				if ss.CheckErr(err) {
+					return
+				}
+				userUnit, err := ss.UserEng.Table("user_unit_m").Where("user_id = ?", ctx.GetString("userid")).Count()
+				if ss.CheckErr(err) {
+					return
+				}
 
 				unitData := model.UnitData{}
-				exists, err = MainEng.Table("common_unit_m").Where("unit_owning_user_id = ?", pref.UnitOwningUserID).Get(&unitData)
-				utils.CheckErr(err)
+				exists, err = ss.MainEng.Table("common_unit_m").Where("unit_owning_user_id = ?", pref.UnitOwningUserID).Get(&unitData)
+				if ss.CheckErr(err) {
+					return
+				}
+
 				isCommon := true
 				if !exists {
-					_, err = UserEng.Table("user_unit_m").
+					_, err = ss.UserEng.Table("user_unit_m").
 						Where("unit_owning_user_id = ? AND user_id = ?", pref.UnitOwningUserID, ctx.GetString("userid")).Get(&unitData)
-					utils.CheckErr(err)
+					if ss.CheckErr(err) {
+						return
+					}
 					isCommon = false
 				}
 
@@ -1111,7 +1163,7 @@ func Api(ctx *gin.Context) {
 				var smileMax, pureMax, coolMax int
 				if isCommon {
 					// 公共卡片仅为100级属性
-					_, err = MainEng.Table("unit_m").Where("unit_id = ?", unitData.UnitID).
+					_, err = ss.MainEng.Table("unit_m").Where("unit_id = ?", unitData.UnitID).
 						Cols("attribute_id,hp_max,smile_max,pure_max,cool_max").Get(&attrId, &maxHp, &baseSmile, &basePure, &baseCool)
 					utils.CheckErr(err)
 
@@ -1125,12 +1177,16 @@ func Api(ctx *gin.Context) {
 				}
 
 				var accessoryOwningId, accessoryId, exp int
-				_, err = UserEng.Table("accessory_wear_m").Where("unit_owning_user_id = ? AND user_id = ?", pref.UnitOwningUserID, ctx.GetString("userid")).
+				_, err = ss.UserEng.Table("accessory_wear_m").Where("unit_owning_user_id = ? AND user_id = ?", pref.UnitOwningUserID, ctx.GetString("userid")).
 					Cols("accessory_owning_user_id").Get(&accessoryOwningId)
-				utils.CheckErr(err)
-				_, err = MainEng.Table("common_accessory_m").Where("accessory_owning_user_id = ?", accessoryOwningId).
+				if ss.CheckErr(err) {
+					return
+				}
+				_, err = ss.MainEng.Table("common_accessory_m").Where("accessory_owning_user_id = ?", accessoryOwningId).
 					Cols("accessory_id,exp").Get(&accessoryId, &exp)
-				utils.CheckErr(err)
+				if ss.CheckErr(err) {
+					return
+				}
 				accessoryInfo := model.AccessoryInfo{
 					AccessoryOwningUserID: accessoryOwningId,
 					AccessoryID:           accessoryId,
@@ -1143,12 +1199,17 @@ func Api(ctx *gin.Context) {
 				}
 
 				removeSkillIds := []int{}
-				err = UserEng.Table("skill_equip_m").Where("unit_owning_user_id = ? AND user_id = ?", pref.UnitOwningUserID, ctx.GetString("userid")).
+				err = ss.UserEng.Table("skill_equip_m").Where("unit_owning_user_id = ? AND user_id = ?", pref.UnitOwningUserID, ctx.GetString("userid")).
 					Cols("unit_removable_skill_id").Find(&removeSkillIds)
-				utils.CheckErr(err)
+				if ss.CheckErr(err) {
+					return
+				}
 
 				userId, err := strconv.Atoi(config.Conf.UserPrefs.InviteCode)
-				utils.CheckErr(err)
+				if ss.CheckErr(err) {
+					return
+				}
+
 				profileResp := model.ProfileResp{
 					Result: model.ProfileRes{
 						UserInfo: model.ProfileUserInfo{
@@ -1240,42 +1301,24 @@ func Api(ctx *gin.Context) {
 					CommandNum: false,
 					TimeStamp:  time.Now().Unix(),
 				}
-				res, err = json.Marshal(profileResp)
-				utils.CheckErr(err)
+				results = append(results, profileResp)
 			default:
-				fmt.Println("Invalid action: ", v.Module, v.Action)
-			}
-		case "secretbox":
-			if v.Action == "all" {
-				res = []byte(honokautils.ReadAllText("111.json"))
-				// fmt.Println(apiReq)
-			} else {
-				fmt.Println("Invalid action: ", v.Module, v.Action)
+				err = fmt.Errorf("unimplemented: %s", v.Module+":"+v.Action)
 			}
 		default:
-			// fmt.Println(ErrorMsg)
-			// fmt.Println(v)
-			err = errors.New("invalid option")
-			utils.CheckErr(err)
+			err = fmt.Errorf("unimplemented: %s", v.Module)
 		}
-
-		var result any
-		err = json.Unmarshal([]byte(res), &result)
-		utils.CheckErr(err)
-		results = append(results, result)
 	}
-	// fmt.Println(results)
-	b, err := json.Marshal(results)
-	utils.CheckErr(err)
-	rp := model.ApiResp{
-		ResponseData: b,
+
+	if ss.CheckErr(err) {
+		return
+	}
+
+	apiResp := model.ApiResp{
+		ResponseData: results,
 		ReleaseInfo:  []any{},
 		StatusCode:   200,
 	}
-	b, err = json.Marshal(rp)
-	utils.CheckErr(err)
-	// fmt.Println(string(b))
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(b))
-	ctx.String(http.StatusOK, string(b))
+	ss.Respond(apiResp)
 }

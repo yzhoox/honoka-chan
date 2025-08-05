@@ -3,17 +3,21 @@ package handler
 import (
 	"encoding/json"
 	"honoka-chan/internal/model"
-	"honoka-chan/internal/utils"
-	"net/http"
+	"honoka-chan/internal/session"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 func MultiUnitStartUp(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	startReq := model.MultiUnitStartUpReq{}
 	err := json.Unmarshal([]byte(ctx.PostForm("request_data")), &startReq)
-	utils.CheckErr(err)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	startResp := model.MultiUnitStartUpResp{
 		ResponseData: model.MultiUnitStartUpRes{
@@ -24,9 +28,6 @@ func MultiUnitStartUp(ctx *gin.Context) {
 		ReleaseInfo: []any{},
 		StatusCode:  200,
 	}
-	resp, err := json.Marshal(startResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(startResp)
 }

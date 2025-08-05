@@ -1,9 +1,8 @@
 package handler
 
 import (
-	"encoding/json"
 	"honoka-chan/internal/model"
-	"honoka-chan/internal/utils"
+	"honoka-chan/internal/session"
 	"html/template"
 	"net/http"
 	"time"
@@ -21,7 +20,10 @@ func AnnounceIndex(ctx *gin.Context) {
 }
 
 func AnnounceCheckState(ctx *gin.Context) {
-	announceResp := model.AnnounceResp{
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
+	resp := model.AnnounceResp{
 		ResponseData: model.AnnounceRes{
 			HasUnreadAnnounce: false,
 			ServerTimestamp:   time.Now().Unix(),
@@ -29,9 +31,6 @@ func AnnounceCheckState(ctx *gin.Context) {
 		ReleaseInfo: []any{},
 		StatusCode:  200,
 	}
-	resp, err := json.Marshal(announceResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(resp)
 }

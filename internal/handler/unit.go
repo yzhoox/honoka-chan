@@ -2,9 +2,10 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"honoka-chan/internal/model"
-	"honoka-chan/internal/utils"
+	"honoka-chan/internal/session"
 	"net/http"
 	"strconv"
 	"time"
@@ -13,56 +14,50 @@ import (
 )
 
 func SetDisplayRank(ctx *gin.Context) {
+	ss := session.New(ctx)
+	defer ss.Finalize()
+
 	dispResp := model.SetDisplayRankResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
 		StatusCode:   200,
 	}
-	resp, err := json.Marshal(dispResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(dispResp)
 }
 
 func SetDeck(ctx *gin.Context) {
-	userId, err := strconv.Atoi(ctx.GetString("userid"))
-	utils.CheckErr(err)
+	ss := session.New(ctx)
+	defer ss.Finalize()
 
-	deckReq := model.UnitDeckReq{}
-	if err := json.Unmarshal([]byte(ctx.PostForm("request_data")), &deckReq); err != nil {
-		panic(err)
+	userId, err := strconv.Atoi(ctx.GetString("userid"))
+	if ss.CheckErr(err) {
+		return
 	}
 
-	// 开始事务
-	// UserEng.ShowSQL(true)
-	session := UserEng.NewSession()
-	defer session.Close()
-	if err := session.Begin(); err != nil {
-		session.Rollback()
-		panic(err)
+	deckReq := model.UnitDeckReq{}
+	err = json.Unmarshal([]byte(ctx.PostForm("request_data")), &deckReq)
+	if ss.CheckErr(err) {
+		return
 	}
 
 	// 原有队伍信息
 	var userDeckId []int
-	err = session.Table("user_deck_m").Cols("id").Where("user_id = ?", userId).Find(&userDeckId)
-	if err != nil {
-		session.Rollback()
-		panic(err)
+	err = ss.UserEng.Table("user_deck_m").Cols("id").Where("user_id = ?", userId).Find(&userDeckId)
+	if ss.CheckErr(err) {
+		return
 	}
 
 	// 删除全部原有队伍成员
-	_, err = session.Table("deck_unit_m").In("user_deck_id", userDeckId).Delete()
-	if err != nil {
-		session.Rollback()
-		panic(err)
+	_, err = ss.UserEng.Table("deck_unit_m").In("user_deck_id", userDeckId).Delete()
+	if ss.CheckErr(err) {
+		return
 	}
 
 	// 删除全部原有队伍
-	_, err = session.Table("user_deck_m").In("id", userDeckId).Delete()
-	if err != nil {
-		session.Rollback()
-		panic(err)
+	_, err = ss.UserEng.Table("user_deck_m").In("id", userDeckId).Delete()
+	if ss.CheckErr(err) {
+		return
 	}
 
 	// 遍历新队伍
@@ -75,10 +70,9 @@ func SetDeck(ctx *gin.Context) {
 			UserID:     userId,
 			InsertDate: time.Now().Unix(),
 		}
-		_, err = session.Table("user_deck_m").Insert(&userDeck)
-		if err != nil {
-			session.Rollback()
-			panic(err)
+		_, err = ss.UserEng.Table("user_deck_m").Insert(&userDeck)
+		if ss.CheckErr(err) {
+			return
 		}
 		userDeckId := userDeck.ID
 		// fmt.Println("新队伍 ID:", userDeckId)
@@ -87,35 +81,33 @@ func SetDeck(ctx *gin.Context) {
 		for _, unit := range deck.UnitDeckDetail {
 			// 成员信息
 			newUnitData := model.UnitData{}
-			exists, err := session.Table("user_unit_m").Where("unit_owning_user_id = ?", unit.UnitOwningUserID).Exist()
-			if err != nil {
-				session.Rollback()
-				panic(err)
+			exists, err := ss.UserEng.Table("user_unit_m").Where("unit_owning_user_id = ?", unit.UnitOwningUserID).Exist()
+			if ss.CheckErr(err) {
+				return
 			}
 			if exists {
 				// fmt.Println("新成员为用户增加成员")
-				_, err = session.Table("user_unit_m").Where("unit_owning_user_id = ?", unit.UnitOwningUserID).Get(&newUnitData)
-				if err != nil {
-					session.Rollback()
-					panic(err)
+				_, err = ss.UserEng.Table("user_unit_m").Where("unit_owning_user_id = ?", unit.UnitOwningUserID).Get(&newUnitData)
+				if ss.CheckErr(err) {
+					return
 				}
 			} else {
-				exists, err := MainEng.Table("common_unit_m").Where("unit_owning_user_id = ?", unit.UnitOwningUserID).Exist()
-				if err != nil {
-					session.Rollback()
-					panic(err)
+				exists, err := ss.MainEng.Table("common_unit_m").Where("unit_owning_user_id = ?", unit.UnitOwningUserID).Exist()
+				if ss.CheckErr(err) {
+					return
 				}
 				if exists {
 					// fmt.Println("新成员为公共成员")
-					_, err = MainEng.Table("common_unit_m").Where("unit_owning_user_id = ?", unit.UnitOwningUserID).Get(&newUnitData)
-					if err != nil {
-						session.Rollback()
-						panic(err)
+					_, err = ss.MainEng.Table("common_unit_m").Where("unit_owning_user_id = ?", unit.UnitOwningUserID).Get(&newUnitData)
+					if ss.CheckErr(err) {
+						return
 					}
 				} else {
 					// fmt.Println("新成员不存在")
-					session.Rollback()
-					panic("unexpected operation")
+					err = errors.New("新成员不存在")
+				}
+				if ss.CheckErr(err) {
+					return
 				}
 			}
 			// fmt.Println("新的成员信息:", newUnitData)
@@ -123,31 +115,23 @@ func SetDeck(ctx *gin.Context) {
 			// 插入新成员信息
 			newUnitDeckData := model.UnitDeckData{}
 			b, err := json.Marshal(newUnitData)
-			if err != nil {
-				session.Rollback()
-				panic(err)
+			if ss.CheckErr(err) {
+				return
 			}
-			if err = json.Unmarshal(b, &newUnitDeckData); err != nil {
-				session.Rollback()
-				panic(err)
+			err = json.Unmarshal(b, &newUnitDeckData)
+			if ss.CheckErr(err) {
+				return
 			}
 			newUnitDeckData.BeforeLove = newUnitDeckData.MaxLove
 			newUnitDeckData.Position = unit.Position
 			newUnitDeckData.UserDeckID = userDeckId
 			newUnitDeckData.InsertData = time.Now().Unix()
 
-			_, err = session.Table("deck_unit_m").Insert(&newUnitDeckData)
-			if err != nil {
-				session.Rollback()
-				panic(err)
+			_, err = ss.UserEng.Table("deck_unit_m").Insert(&newUnitDeckData)
+			if ss.CheckErr(err) {
+				return
 			}
 		}
-	}
-
-	// 结束事务
-	if err = session.Commit(); err != nil {
-		session.Rollback()
-		panic(err)
 	}
 
 	dispResp := model.SetDeckResp{
@@ -155,24 +139,29 @@ func SetDeck(ctx *gin.Context) {
 		ReleaseInfo:  []any{},
 		StatusCode:   200,
 	}
-	resp, err := json.Marshal(dispResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(dispResp)
 }
 
 func SetDeckName(ctx *gin.Context) {
-	userId, err := strconv.Atoi(ctx.GetString("userid"))
-	utils.CheckErr(err)
+	ss := session.New(ctx)
+	defer ss.Finalize()
 
-	deckReq := model.DeckNameReq{}
-	if err := json.Unmarshal([]byte(ctx.PostForm("request_data")), &deckReq); err != nil {
-		panic(err)
+	userId, err := strconv.Atoi(ctx.GetString("userid"))
+	if ss.CheckErr(err) {
+		return
 	}
 
-	exists, err := UserEng.Table("user_deck_m").Where("user_id = ? AND deck_id = ?", userId, deckReq.UnitDeckID).Exist()
-	utils.CheckErr(err)
+	deckReq := model.DeckNameReq{}
+	err = json.Unmarshal([]byte(ctx.PostForm("request_data")), &deckReq)
+	if ss.CheckErr(err) {
+		return
+	}
+
+	exists, err := ss.UserEng.Table("user_deck_m").Where("user_id = ? AND deck_id = ?", userId, deckReq.UnitDeckID).Exist()
+	if ss.CheckErr(err) {
+		return
+	}
 	if !exists {
 		ctx.String(http.StatusForbidden, ErrorMsg)
 		return
@@ -180,49 +169,41 @@ func SetDeckName(ctx *gin.Context) {
 	userDeck := model.UserDeckData{
 		DeckName: deckReq.DeckName,
 	}
-	_, err = UserEng.Table("user_deck_m").Update(&userDeck, &model.UserDeckData{
+	_, err = ss.UserEng.Table("user_deck_m").Update(&userDeck, &model.UserDeckData{
 		UserID: userId,
 		DeckID: deckReq.UnitDeckID,
 	})
-	utils.CheckErr(err)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	dispResp := model.SetDeckResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
 		StatusCode:   200,
 	}
-	resp, err := json.Marshal(dispResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(dispResp)
 }
 
 func WearAccessory(ctx *gin.Context) {
-	fmt.Println(ctx.PostForm("request_data"))
-	req := model.WearAccessoryReq{}
-	if err := json.Unmarshal([]byte(ctx.PostForm("request_data")), &req); err != nil {
-		panic(err)
-	}
+	ss := session.New(ctx)
+	defer ss.Finalize()
 
-	// UserEng.ShowSQL(true)
-	// 开始事务
-	session := UserEng.NewSession()
-	defer session.Close()
-	if err := session.Begin(); err != nil {
-		session.Rollback()
-		panic(err)
+	req := model.WearAccessoryReq{}
+	err := json.Unmarshal([]byte(ctx.PostForm("request_data")), &req)
+	if ss.CheckErr(err) {
+		return
 	}
 
 	// 取下饰品
 	for _, v := range req.Remove {
 		fmt.Println("Remove:", v.AccessoryOwningUserID, v.UnitOwningUserID)
-		_, err := session.Table("accessory_wear_m").
+		_, err := ss.UserEng.Table("accessory_wear_m").
 			Where("accessory_owning_user_id = ? AND unit_owning_user_id = ? AND user_id = ?", v.AccessoryOwningUserID, v.UnitOwningUserID, ctx.GetString("userid")).
 			Delete()
-		if err != nil {
-			session.Rollback()
-			panic(err)
+		if ss.CheckErr(err) {
+			return
 		}
 	}
 
@@ -234,14 +215,10 @@ func WearAccessory(ctx *gin.Context) {
 			UnitOwningUserID:      v.UnitOwningUserID,
 			UserId:                ctx.GetString("userid"),
 		}
-		_, err := session.Table("accessory_wear_m").Insert(&data)
-		utils.CheckErr(err)
-	}
-
-	// 结束事务
-	if err := session.Commit(); err != nil {
-		session.Rollback()
-		panic(err)
+		_, err := ss.UserEng.Table("accessory_wear_m").Insert(&data)
+		if ss.CheckErr(err) {
+			return
+		}
 	}
 
 	wearResp := model.AwardSetResp{
@@ -249,38 +226,28 @@ func WearAccessory(ctx *gin.Context) {
 		ReleaseInfo:  []any{},
 		StatusCode:   200,
 	}
-	resp, err := json.Marshal(wearResp)
-	utils.CheckErr(err)
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(wearResp)
 }
 
 func RemoveSkillEquip(ctx *gin.Context) {
-	fmt.Println(ctx.PostForm("request_data"))
-	req := model.SkillEquipReq{}
-	if err := json.Unmarshal([]byte(ctx.PostForm("request_data")), &req); err != nil {
-		panic(err)
-	}
+	ss := session.New(ctx)
+	defer ss.Finalize()
 
-	// UserEng.ShowSQL(true)
-	// 开始事务
-	session := UserEng.NewSession()
-	defer session.Close()
-	if err := session.Begin(); err != nil {
-		session.Rollback()
-		panic(err)
+	req := model.SkillEquipReq{}
+	err := json.Unmarshal([]byte(ctx.PostForm("request_data")), &req)
+	if ss.CheckErr(err) {
+		return
 	}
 
 	// 取下宝石
 	for _, v := range req.Remove {
 		fmt.Println("Remove:", v.UnitOwningUserID, v.UnitRemovableSkillID)
-		_, err := session.Table("skill_equip_m").
+		_, err := ss.UserEng.Table("skill_equip_m").
 			Where("unit_removable_skill_id = ? AND unit_owning_user_id = ? AND user_id = ?", v.UnitRemovableSkillID, v.UnitOwningUserID, ctx.GetString("userid")).
 			Delete()
-		if err != nil {
-			session.Rollback()
-			panic(err)
+		if ss.CheckErr(err) {
+			return
 		}
 	}
 
@@ -292,14 +259,10 @@ func RemoveSkillEquip(ctx *gin.Context) {
 			UnitOwningUserID:     v.UnitOwningUserID,
 			UserId:               ctx.GetString("userid"),
 		}
-		_, err := session.Table("skill_equip_m").Insert(&data)
-		utils.CheckErr(err)
-	}
-
-	// 结束事务
-	if err := session.Commit(); err != nil {
-		session.Rollback()
-		panic(err)
+		_, err := ss.UserEng.Table("skill_equip_m").Insert(&data)
+		if ss.CheckErr(err) {
+			return
+		}
 	}
 
 	wearResp := model.AwardSetResp{
@@ -307,10 +270,6 @@ func RemoveSkillEquip(ctx *gin.Context) {
 		ReleaseInfo:  []any{},
 		StatusCode:   200,
 	}
-	resp, err := json.Marshal(wearResp)
-	utils.CheckErr(err)
-	fmt.Println(string(resp))
 
-	ctx.Header("X-Message-Sign", utils.GenXMS(resp))
-	ctx.String(http.StatusOK, string(resp))
+	ss.Respond(wearResp)
 }

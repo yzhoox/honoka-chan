@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"honoka-chan/internal/model"
 	"honoka-chan/internal/utils"
+	"honoka-chan/pkg/db"
 	"net/http"
 	"os"
 	"path"
@@ -35,7 +36,7 @@ func WebLogin(ctx *gin.Context) {
 
 	userName := " " + area + "-" + user
 	var userId int
-	exists, err := UserEng.Table("users").Where("phone = ? AND password = ?", userName, openssl.Md5ToString(pass)).Cols("userid").Get(&userId)
+	exists, err := db.UserEng.Table("users").Where("phone = ? AND password = ?", userName, openssl.Md5ToString(pass)).Cols("userid").Get(&userId)
 	utils.CheckErr(err)
 	if !exists {
 		ctx.JSON(http.StatusOK, model.Msg{
@@ -80,7 +81,7 @@ func Upload(ctx *gin.Context) {
 	err = ctx.SaveUploadedFile(file, tmpPath)
 	utils.CheckErr(err)
 
-	session := UserEng.NewSession()
+	session := db.UserEng.NewSession()
 	defer session.Close()
 	if err = session.Begin(); err != nil {
 		session.Rollback()
@@ -113,7 +114,7 @@ func Upload(ctx *gin.Context) {
 		}
 
 		var unitId, unitExp, unitRarity, unitHp, unitSigned int
-		exists, err := MainEng.Table("common_unit_m").Join("LEFT", "unit_m", "common_unit_m.unit_id = unit_m.unit_id").
+		exists, err := db.MainEng.Table("common_unit_m").Join("LEFT", "unit_m", "common_unit_m.unit_id = unit_m.unit_id").
 			Where("unit_m.unit_number = ?", rr[0]).
 			Cols("common_unit_m.unit_id,common_unit_m.exp,unit_m.rarity,common_unit_m.max_hp,common_unit_m.is_signed").
 			Get(&unitId, &unitExp, &unitRarity, &unitHp, &unitSigned)
@@ -138,7 +139,7 @@ func Upload(ctx *gin.Context) {
 		}
 
 		var diffExp, diffSmile, diffPure, diffCool int
-		_, err = MainEng.Table("unit_level_limit_pattern_m").Where("unit_level_limit_id = 1 AND unit_level = 350").
+		_, err = db.MainEng.Table("unit_level_limit_pattern_m").Where("unit_level_limit_id = 1 AND unit_level = 350").
 			Cols("next_exp,smile_diff,pure_diff,cool_diff").Get(&diffExp, &diffSmile, &diffPure, &diffCool)
 		utils.CheckErr(err)
 
