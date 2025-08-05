@@ -2,9 +2,9 @@ package main
 
 import (
 	"honoka-chan/config"
-	"honoka-chan/db"
-	"honoka-chan/router"
-	_ "honoka-chan/tools"
+	"honoka-chan/internal/router"
+	_ "honoka-chan/internal/tools"
+	"honoka-chan/pkg/db"
 	"log"
 	"os"
 	"os/signal"
