@@ -31,22 +31,21 @@ func DownloadAdditional(ctx *gin.Context) {
 	}
 
 	pkgList := []model.AdditionalRes{}
-	if SifCdnServer != "" {
-		pkgType, pkgId := downloadReq.PackageType, downloadReq.PackageID
-		var pkgInfo []PkgInfo
-		err := ss.MainEng.Table("download_m").Where("pkg_type = ? AND pkg_id = ? AND pkg_os = ?", pkgType, pkgId, downloadReq.TargetOs).
-			Cols("pkg_id,pkg_order,pkg_size").
-			OrderBy("pkg_id ASC, pkg_order ASC").Find(&pkgInfo)
-		if ss.CheckErr(err) {
-			return
-		}
+	pkgType, pkgId := downloadReq.PackageType, downloadReq.PackageID
+	var pkgInfo []PkgInfo
+	err = ss.MainEng.Table("download_m").Where("pkg_type = ? AND pkg_id = ? AND pkg_os = ?", pkgType, pkgId, downloadReq.TargetOs).
+		Cols("pkg_id,pkg_order,pkg_size").
+		OrderBy("pkg_id ASC, pkg_order ASC").Find(&pkgInfo)
+	if ss.CheckErr(err) {
+		return
+	}
 
-		for _, pkg := range pkgInfo {
-			pkgList = append(pkgList, model.AdditionalRes{
-				Size: pkg.Size,
-				URL:  fmt.Sprintf("%s/%s/archives/%d_%d_%d.zip", SifCdnServer, downloadReq.TargetOs, pkgType, pkg.Id, pkg.Order),
-			})
-		}
+	for _, pkg := range pkgInfo {
+		pkgList = append(pkgList, model.AdditionalRes{
+			Size: pkg.Size,
+			URL: fmt.Sprintf("%s/%s/archives/%d_%d_%d.zip",
+				config.Conf.Settings.CdnServer, downloadReq.TargetOs, pkgType, pkg.Id, pkg.Order),
+		})
 	}
 
 	addResp := model.AdditionalResp{
@@ -69,7 +68,7 @@ func DownloadBatch(ctx *gin.Context) {
 	}
 
 	pkgList := []model.BatchRes{}
-	if downloadReq.ClientVersion == config.PackageVersion && SifCdnServer != "" {
+	if downloadReq.ClientVersion == config.PackageVersion {
 		pkgType := downloadReq.PackageType
 		var pkgInfo []PkgInfo
 		err := ss.MainEng.Table("download_m").Where(builder.NotIn("pkg_id", downloadReq.ExcludedPackageIds)).Where("pkg_type = ? AND pkg_os = ?", pkgType, downloadReq.Os).
@@ -82,7 +81,8 @@ func DownloadBatch(ctx *gin.Context) {
 		for _, pkg := range pkgInfo {
 			pkgList = append(pkgList, model.BatchRes{
 				Size: pkg.Size,
-				URL:  fmt.Sprintf("%s/%s/archives/%d_%d_%d.zip", SifCdnServer, downloadReq.Os, pkgType, pkg.Id, pkg.Order),
+				URL: fmt.Sprintf("%s/%s/archives/%d_%d_%d.zip",
+					config.Conf.Settings.CdnServer, downloadReq.Os, pkgType, pkg.Id, pkg.Order),
 			})
 		}
 	}
@@ -107,7 +107,7 @@ func DownloadUpdate(ctx *gin.Context) {
 	}
 
 	pkgList := []model.UpdateRes{}
-	if downloadReq.ExternalVersion != config.PackageVersion && SifCdnServer != "" {
+	if downloadReq.ExternalVersion != config.PackageVersion {
 		pkgType := 99
 		var pkgInfo []PkgInfo
 		err := ss.MainEng.Table("download_m").Where("pkg_type = ? AND pkg_os = ?", pkgType, downloadReq.TargetOs).
@@ -119,13 +119,15 @@ func DownloadUpdate(ctx *gin.Context) {
 
 		for _, pkg := range pkgInfo {
 			pkgList = append(pkgList, model.UpdateRes{
-				Size:    pkg.Size,
-				URL:     fmt.Sprintf("%s/%s/archives/%d_%d_%d.zip", SifCdnServer, downloadReq.TargetOs, pkgType, pkg.Id, pkg.Order),
+				Size: pkg.Size,
+				URL: fmt.Sprintf("%s/%s/archives/%d_%d_%d.zip",
+					config.Conf.Settings.CdnServer, downloadReq.TargetOs, pkgType, pkg.Id, pkg.Order),
 				Version: config.PackageVersion,
 			})
 		}
 
-		patchFileUrl := fmt.Sprintf("%s/%s/archives/99_0_115.zip", SifCdnServer, downloadReq.TargetOs)
+		patchFileUrl := fmt.Sprintf("%s/%s/archives/99_0_115.zip",
+			config.Conf.Settings.CdnServer, downloadReq.TargetOs)
 		resp, err := http.Get(patchFileUrl)
 		if err == nil {
 			res, err := io.ReadAll(resp.Body)
@@ -150,8 +152,6 @@ func DownloadUpdate(ctx *gin.Context) {
 }
 
 func DownloadUrl(ctx *gin.Context) {
-	// Extract SQL: SELECT CAST(pkg_type AS TEXT) || '_' || CAST(pkg_id AS TEXT) || '_' || CAST(pkg_order AS TEXT) || '.zip' AS zip_name FROM download_m ORDER BY pkg_type ASC,pkg_id ASC, pkg_order ASC;
-	// Extract Cmd: cat list.txt | while read line; do; unzip -o $line; done
 	ss := session.New(ctx)
 	defer ss.Finalize()
 
@@ -163,7 +163,8 @@ func DownloadUrl(ctx *gin.Context) {
 
 	urlList := []string{}
 	for _, v := range downloadReq.PathList {
-		urlList = append(urlList, fmt.Sprintf("%s/%s/extracted/%s", SifCdnServer, downloadReq.Os, strings.ReplaceAll(v, "\\", "")))
+		urlList = append(urlList, fmt.Sprintf("%s/%s/extracted/%s",
+			config.Conf.Settings.BackupCdnServer, downloadReq.Os, strings.ReplaceAll(v, "\\", "")))
 	}
 	urlResp := model.UrlResp{
 		ResponseData: model.UrlRes{

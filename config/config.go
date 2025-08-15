@@ -24,8 +24,9 @@ type AppConfigs struct {
 }
 
 type Settings struct {
-	ListenPort   string `json:"listen_port"`
-	SifCdnServer string `json:"sif_cdn_server"`
+	ListenPort      string `json:"listen_port"`
+	CdnServer       string `json:"cdn_server"`
+	BackupCdnServer string `json:"backup_cdn_server"`
 }
 
 type UserPrefs struct {
@@ -48,8 +49,9 @@ func DefaultConfigs() *AppConfigs {
 	return &AppConfigs{
 		AppName: "honoka-chan",
 		Settings: Settings{
-			ListenPort:   "80",
-			SifCdnServer: "http://192.168.1.123/static",
+			ListenPort:      "8080",
+			CdnServer:       "http://192.168.1.123/static",
+			BackupCdnServer: "http://192.168.1.123/static",
 		},
 		UserPrefs: UserPrefs{
 			Name:           "梦路 @bilibili",
