@@ -29,7 +29,16 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	// Router
-	r := gin.Default()
+	r := gin.New()
+
+	// Logger
+	r.Use(gin.LoggerWithConfig(gin.LoggerConfig{
+		SkipPaths: []string{
+			"/agreement/all",
+			"/integration/appReport/initialize",
+			"/report/ge/app",
+		},
+	}))
 
 	// SIF
 	router.SifRouter(r)
