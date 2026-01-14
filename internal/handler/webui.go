@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/forgoer/openssl"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/go-think/openssl"
 )
 
 type ErrMsg struct {

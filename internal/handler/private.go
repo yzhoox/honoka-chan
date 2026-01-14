@@ -17,8 +17,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/forgoer/openssl"
 	"github.com/gin-gonic/gin"
+	"github.com/go-think/openssl"
 )
 
 type LoginResp struct {
