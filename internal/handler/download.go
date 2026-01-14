@@ -161,10 +161,15 @@ func DownloadUrl(ctx *gin.Context) {
 		return
 	}
 
+	cdnServer := config.Conf.Settings.BackupCdnServer
+	if cdnServer == "" {
+		cdnServer = config.Conf.Settings.CdnServer
+	}
+
 	urlList := []string{}
 	for _, v := range downloadReq.PathList {
 		urlList = append(urlList, fmt.Sprintf("%s/%s/extracted/%s",
-			config.Conf.Settings.BackupCdnServer, downloadReq.Os, strings.ReplaceAll(v, "\\", "")))
+			cdnServer, downloadReq.Os, strings.ReplaceAll(v, "\\", "")))
 	}
 	urlResp := model.UrlResp{
 		ResponseData: model.UrlRes{

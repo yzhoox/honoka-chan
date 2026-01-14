@@ -51,7 +51,7 @@ func DefaultConfigs() *AppConfigs {
 		Settings: Settings{
 			ListenPort:      "8080",
 			CdnServer:       "http://192.168.1.123/static",
-			BackupCdnServer: "http://192.168.1.123/static",
+			BackupCdnServer: "",
 		},
 		UserPrefs: UserPrefs{
 			Name:           "梦路 @bilibili",
