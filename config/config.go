@@ -87,6 +87,6 @@ func (c *AppConfigs) Save(p string) error {
 	if err != nil {
 		return err
 	}
-	utils.WriteAllText(p, string(data))
+	utils.WriteAllText(p, string(data)+"\n")
 	return nil
 }
