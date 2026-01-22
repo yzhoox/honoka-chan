@@ -11,13 +11,13 @@ var (
 	once sync.Once
 )
 
-type Instance struct {
+type LdbInstance struct {
 	db *leveldb.DB
 	mu sync.Mutex
 }
 
-func GetInstance() *Instance {
-	in := Instance{}
+func GetLdbInstance() *LdbInstance {
+	in := LdbInstance{}
 	once.Do(func() {
 		var err error
 		in.db, err = leveldb.OpenFile("./data/honoka-chan.db", nil)
@@ -28,7 +28,7 @@ func GetInstance() *Instance {
 	return &in
 }
 
-func (in *Instance) Close() error {
+func (in *LdbInstance) Close() error {
 	in.mu.Lock()
 	defer in.mu.Unlock()
 	if in.db != nil {
@@ -37,7 +37,7 @@ func (in *Instance) Close() error {
 	return nil
 }
 
-func (in *Instance) Get(key []byte) ([]byte, error) {
+func (in *LdbInstance) Get(key []byte) ([]byte, error) {
 	if len(key) == 0 {
 		return nil, errors.New("empty key")
 	}
@@ -50,7 +50,7 @@ func (in *Instance) Get(key []byte) ([]byte, error) {
 	return res, nil
 }
 
-func (in *Instance) Set(key, value []byte) error {
+func (in *LdbInstance) Set(key, value []byte) error {
 	if len(key) == 0 {
 		return errors.New("empty key")
 	}

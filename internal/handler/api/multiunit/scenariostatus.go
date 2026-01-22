@@ -1,0 +1,62 @@
+package multiunit
+
+import (
+	"honoka-chan/internal/schema/api/multiunit"
+	"honoka-chan/internal/session"
+	"strings"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+func MultiUnitScenarioStatus(ctx *gin.Context) (res any, err error) {
+	ss := session.Get(ctx)
+
+	var statusID []int
+	multiUnitsList := []multiunit.StatusList{}
+	err = ss.MainEng.Table("multi_unit_scenario_m").Cols("multi_unit_id").GroupBy("multi_unit_id").OrderBy("multi_unit_id ASC").Find(&statusID)
+	if ss.CheckErr(err) {
+		return
+	}
+
+	for _, id := range statusID {
+		var multiRes struct {
+			MultiUnitScenarioId       int    `xorm:"multi_unit_scenario_id"`
+			Chapter                   int    `xorm:"chapter"`
+			MultiUnitScenarioBtnAsset string `xorm:"multi_unit_scenario_btn_asset"`
+			OpenDate                  string `xorm:"open_date"`
+		}
+		_, err = ss.MainEng.Table("multi_unit_scenario_m").
+			Join("LEFT", "multi_unit_scenario_open_m", "multi_unit_scenario_m.multi_unit_id = multi_unit_scenario_open_m.multi_unit_id").
+			Cols("multi_unit_scenario_btn_asset,open_date,multi_unit_scenario_id,chapter").
+			Where("multi_unit_scenario_m.multi_unit_id = ?", id).Get(&multiRes)
+		if ss.CheckErr(err) {
+			return
+		}
+
+		multiUnitsList = append(multiUnitsList, multiunit.StatusList{
+			MultiUnitID:               id,
+			Status:                    2,
+			MultiUnitScenarioBtnAsset: multiRes.MultiUnitScenarioBtnAsset,
+			OpenDate:                  strings.ReplaceAll(multiRes.OpenDate, "/", "-"),
+			ChapterList: []multiunit.ChapterList{
+				{
+					MultiUnitScenarioID: multiRes.MultiUnitScenarioId,
+					Chapter:             multiRes.Chapter,
+					Status:              2,
+				},
+			},
+		})
+	}
+	res = multiunit.StatusResp{
+		Result: multiunit.StatusData{
+			MultiUnitScenarioStatusList:  multiUnitsList,
+			UnlockedMultiUnitScenarioIds: []any{},
+		},
+		Status:     200,
+		CommandNum: false,
+		TimeStamp:  time.Now().Unix(),
+	}
+
+	return res, err
+}

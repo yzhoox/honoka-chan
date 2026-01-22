@@ -2,8 +2,9 @@ package main
 
 import (
 	"honoka-chan/config"
+	_ "honoka-chan/internal/handler"
 	"honoka-chan/internal/router"
-	_ "honoka-chan/internal/tools"
+	"honoka-chan/internal/startup"
 	"honoka-chan/pkg/db"
 	"log"
 	"os"
@@ -14,6 +15,12 @@ import (
 )
 
 func main() {
+	// 初始化配置
+	config.InitConfig()
+
+	// 初始化数据库表和用户数据
+	startup.StartUp()
+
 	// 处理系统信号，确保程序退出时关闭数据库
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
@@ -21,7 +28,7 @@ func main() {
 	go func() {
 		<-signalChan
 		log.Println("Shutting down...")
-		db.DB.Close()
+		db.Ldb.Close()
 		os.Exit(0)
 	}()
 

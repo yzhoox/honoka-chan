@@ -2,17 +2,24 @@ package session
 
 import (
 	"encoding/json"
+	"errors"
+	"honoka-chan/internal/model/user"
 	"honoka-chan/internal/utils"
 	"honoka-chan/pkg/db"
+	"log"
 
 	"github.com/gin-gonic/gin"
 	"xorm.io/xorm"
 )
 
 type Session struct {
-	Ctx     *gin.Context
+	Ctx *gin.Context
+
 	MainEng *xorm.Session
 	UserEng *xorm.Session
+
+	UserID   int
+	UserPref user.UserPref
 }
 
 func New(ctx *gin.Context) *Session {
@@ -21,23 +28,39 @@ func New(ctx *gin.Context) *Session {
 	}
 
 	ss.MainEng = db.MainEng.NewSession()
-
 	ss.UserEng = db.UserEng.NewSession()
 	ss.UserEng.Begin()
+
+	userID := ctx.GetString("userid")
+	if userID != "" {
+		exist, err := ss.UserEng.Table("user_pref").Where("user_id = ?", userID).Get(&ss.UserPref)
+		if ss.CheckErr(err) {
+			return nil
+		}
+		if !exist {
+			ss.Abort(errors.New("user not exist!"))
+			return nil
+		}
+		ss.UserID = ss.UserPref.UserID
+	}
 
 	return ss
 }
 
+func Get(ctx *gin.Context) *Session {
+	return ctx.MustGet("session").(*Session)
+}
+
 func (ss *Session) Finalize() {
 	ss.MainEng.Close()
-
-	ss.UserEng.Commit()
+	if ss.CheckErr(ss.UserEng.Commit()) {
+		return
+	}
 	ss.UserEng.Close()
 }
 
 func (ss *Session) Abort(err error) {
 	ss.MainEng.Close()
-
 	ss.UserEng.Rollback()
 	ss.UserEng.Close()
 
@@ -47,16 +70,28 @@ func (ss *Session) Abort(err error) {
 
 func (ss *Session) CheckErr(err error) bool {
 	if err != nil {
+		log.Println(err.Error())
 		ss.Abort(err)
 		return true
 	}
 	return false
 }
 
+func (ss *Session) GetDeviceID() string {
+	return ss.Ctx.Request.Header.Get("X-DEVICEID")
+}
+
+func (ss *Session) GetRandKey() []byte {
+	key, err := db.Ldb.Get([]byte(ss.GetDeviceID()))
+	if ss.CheckErr(err) {
+		return nil
+	}
+	return key
+}
+
 func (ss *Session) Respond(resp any) {
 	data, err := json.Marshal(resp)
-	if err != nil {
-		ss.Abort(err)
+	if ss.CheckErr(err) {
 		return
 	}
 

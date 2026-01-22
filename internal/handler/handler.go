@@ -1,5 +1,28 @@
 package handler
 
-var (
-	ErrorMsg = `{"code":20001,"message":""}`
+import (
+	_ "honoka-chan/internal/handler/album"
+	_ "honoka-chan/internal/handler/announce"
+	_ "honoka-chan/internal/handler/api"
+	_ "honoka-chan/internal/handler/award"
+	_ "honoka-chan/internal/handler/background"
+	_ "honoka-chan/internal/handler/download"
+	_ "honoka-chan/internal/handler/event"
+	_ "honoka-chan/internal/handler/gdpr"
+	_ "honoka-chan/internal/handler/ghome"
+	_ "honoka-chan/internal/handler/lbonus"
+	_ "honoka-chan/internal/handler/live"
+	_ "honoka-chan/internal/handler/login"
+	_ "honoka-chan/internal/handler/multiunit"
+	_ "honoka-chan/internal/handler/museum"
+	_ "honoka-chan/internal/handler/notice"
+	_ "honoka-chan/internal/handler/payment"
+	_ "honoka-chan/internal/handler/personalnotice"
+	_ "honoka-chan/internal/handler/profile"
+	_ "honoka-chan/internal/handler/scenario"
+	_ "honoka-chan/internal/handler/subscenario"
+	_ "honoka-chan/internal/handler/tos"
+	_ "honoka-chan/internal/handler/unit"
+	_ "honoka-chan/internal/handler/user"
+	_ "honoka-chan/internal/handler/webui"
 )

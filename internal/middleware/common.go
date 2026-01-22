@@ -2,8 +2,7 @@ package middleware
 
 import (
 	"fmt"
-	"honoka-chan/internal/utils"
-	"honoka-chan/pkg/db"
+	"honoka-chan/internal/session"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -12,64 +11,49 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	ErrorMsg = `{"code":20001,"message":""}`
-)
-
-func CheckErr(err error) {
+func CheckErr(ctx *gin.Context, err error) bool {
 	if err != nil {
-		panic(err)
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"code":    20001,
+			"message": err.Error(),
+		})
 	}
+	return err != nil
 }
 
 func Common(ctx *gin.Context) {
-	ctx.Set("req_time", time.Now().Unix())
-
-	authorize := ctx.Request.Header.Get("Authorize")
-	if authorize == "" {
-		ctx.String(http.StatusForbidden, ErrorMsg)
-		ctx.Abort()
+	reqData := ""
+	if form, err := ctx.MultipartForm(); err == nil {
+		if v, ok := form.Value["request_data"]; ok && len(v) > 0 {
+			reqData = v[0]
+		}
 	}
-	ctx.Set("authorize", authorize)
+	if reqData == "" {
+		reqData = ctx.PostForm("request_data")
+	}
+	ctx.Set("request_data", reqData)
 
+	uid := ctx.GetHeader("User-ID")
+	ctx.Set("userid", uid)
+
+	ss := session.New(ctx)
+	ctx.Set("session", ss)
+
+	authorize := ctx.GetHeader("Authorize")
 	params, err := url.ParseQuery(authorize)
-	utils.CheckErr(err)
+	if CheckErr(ctx, err) {
+		return
+	}
 
-	nonce, err := strconv.Atoi(params.Get("nonce"))
-	utils.CheckErr(err)
+	nonce, _ := strconv.Atoi(params.Get("nonce"))
 	nonce++
 	ctx.Set("nonce", nonce)
 
 	token := params.Get("token")
 	ctx.Set("token", token)
 
-	if ctx.Request.URL.String() == "/main.php/login/authkey" ||
-		ctx.Request.URL.String() == "/main.php/login/login" {
-		// 特殊请求
-		fmt.Println("========")
-	} else {
-		userId := ctx.Request.Header.Get("User-ID")
-		if userId == "" {
-			ctx.String(http.StatusForbidden, ErrorMsg)
-			ctx.Abort()
-		}
-		ctx.Set("userid", userId)
-
-		rToken, err := db.DB.Get([]byte(userId))
-		utils.CheckErr(err)
-		if token != string(rToken) {
-			ctx.String(http.StatusForbidden, ErrorMsg)
-			ctx.Abort()
-		}
-
-		if !db.MatchTokenUid(token, userId) {
-			ctx.String(http.StatusForbidden, ErrorMsg)
-			ctx.Abort()
-		}
-
-		ctx.Header("user_id", userId)
-		ctx.Header("authorize", fmt.Sprintf("consumerKey=lovelive_test&timeStamp=%d&version=1.1&token=%s&nonce=%d&user_id=%s&requestTimeStamp=%d", time.Now().Unix(), token, nonce, userId, time.Now().Unix()))
-	}
+	ctx.Header("user_id", uid)
+	ctx.Header("authorize", fmt.Sprintf("consumerKey=lovelive_test&timeStamp=%d&version=1.1&token=%s&nonce=%d&user_id=%s&requestTimeStamp=%d", time.Now().Unix(), token, nonce, uid, time.Now().Unix()))
 
 	ctx.Header("Content-Type", "application/json; charset=utf-8")
 	ctx.Header("X-Powered-By", "KLab Native APP Platform")

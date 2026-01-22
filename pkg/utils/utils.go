@@ -38,13 +38,14 @@ func WriteAllText(path, text string) {
 	_ = os.WriteFile(path, []byte(text), 0644)
 }
 
-func SliceXor(s1, s2 []byte) (res []byte) {
-	for k, b := range s1 {
-		newBt := b ^ s2[k]
-		res = append(res, newBt)
-	}
+func XOR(s1, s2 []byte) []byte {
+	n := min(len(s1), len(s2))
 
-	return
+	res := make([]byte, n)
+	for i, b := range s1[:n] {
+		res[i] = b ^ s2[i]
+	}
+	return res
 }
 
 func Sub16(str []byte) []byte {

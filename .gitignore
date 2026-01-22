@@ -6,10 +6,5 @@ config.json
 data
 temp
 
-assets/data.db
-assets/dictionary_zh_k.db
-assets/masterdata.db
-assets/userdata
-
 .idea
 .vscode
