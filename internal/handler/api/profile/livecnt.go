@@ -1,13 +1,13 @@
 package profile
 
 import (
-	"honoka-chan/internal/schema/api/profile"
+	profileapischema "honoka-chan/internal/schema/api/profile"
 	"time"
 )
 
 func liveCnt() (res any, err error) {
-	res = profile.LiveCntResp{
-		Result: []profile.LiveCntData{
+	res = profileapischema.LiveCntResp{
+		Result: []profileapischema.LiveCntData{
 			{
 				Difficulty: 1,
 				ClearCnt:   315,

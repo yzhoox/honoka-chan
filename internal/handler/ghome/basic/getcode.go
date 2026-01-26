@@ -3,7 +3,7 @@ package basic
 import (
 	"encoding/json"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/ghome"
+	ghomeschema "honoka-chan/internal/schema/ghome"
 	"honoka-chan/internal/session"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +20,7 @@ func getCode(ctx *gin.Context) {
 		return
 	}
 
-	ss.Respond(ghome.GetCodeResp{
+	ss.Respond(ghomeschema.GetCodeResp{
 		Code: 0,
 		Msg:  "ok",
 		Data: getCodeData,

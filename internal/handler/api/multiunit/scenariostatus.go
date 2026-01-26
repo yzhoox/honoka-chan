@@ -1,7 +1,7 @@
 package multiunit
 
 import (
-	"honoka-chan/internal/schema/api/multiunit"
+	multiunitapischema "honoka-chan/internal/schema/api/multiunit"
 	"honoka-chan/internal/session"
 	"strings"
 	"time"
@@ -13,7 +13,7 @@ func MultiUnitScenarioStatus(ctx *gin.Context) (res any, err error) {
 	ss := session.Get(ctx)
 
 	var statusID []int
-	multiUnitsList := []multiunit.StatusList{}
+	multiUnitsList := []multiunitapischema.StatusList{}
 	err = ss.MainEng.Table("multi_unit_scenario_m").Cols("multi_unit_id").GroupBy("multi_unit_id").OrderBy("multi_unit_id ASC").Find(&statusID)
 	if ss.CheckErr(err) {
 		return
@@ -34,12 +34,12 @@ func MultiUnitScenarioStatus(ctx *gin.Context) (res any, err error) {
 			return
 		}
 
-		multiUnitsList = append(multiUnitsList, multiunit.StatusList{
+		multiUnitsList = append(multiUnitsList, multiunitapischema.StatusList{
 			MultiUnitID:               id,
 			Status:                    2,
 			MultiUnitScenarioBtnAsset: multiRes.MultiUnitScenarioBtnAsset,
 			OpenDate:                  strings.ReplaceAll(multiRes.OpenDate, "/", "-"),
-			ChapterList: []multiunit.ChapterList{
+			ChapterList: []multiunitapischema.ChapterList{
 				{
 					MultiUnitScenarioID: multiRes.MultiUnitScenarioId,
 					Chapter:             multiRes.Chapter,
@@ -48,8 +48,8 @@ func MultiUnitScenarioStatus(ctx *gin.Context) (res any, err error) {
 			},
 		})
 	}
-	res = multiunit.StatusResp{
-		Result: multiunit.StatusData{
+	res = multiunitapischema.StatusResp{
+		Result: multiunitapischema.StatusData{
 			MultiUnitScenarioStatusList:  multiUnitsList,
 			UnlockedMultiUnitScenarioIds: []any{},
 		},

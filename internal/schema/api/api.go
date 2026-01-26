@@ -1,4 +1,4 @@
-package api
+package apischema
 
 type ApiReq struct {
 	Module    string `json:"module"`

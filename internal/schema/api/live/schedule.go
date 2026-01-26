@@ -1,4 +1,4 @@
-package live
+package liveapischema
 
 type LiveList struct {
 	LiveDifficultyID int    `json:"live_difficulty_id"`

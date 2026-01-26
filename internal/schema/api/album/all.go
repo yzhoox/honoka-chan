@@ -1,4 +1,4 @@
-package album
+package albumapischema
 
 type UnitList struct {
 	UnitID             int  `json:"unit_id"`

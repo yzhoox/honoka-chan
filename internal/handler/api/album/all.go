@@ -1,7 +1,7 @@
 package album
 
 import (
-	"honoka-chan/internal/schema/api/album"
+	albumapischema "honoka-chan/internal/schema/api/album"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -11,7 +11,7 @@ import (
 func albumAll(ctx *gin.Context) (res any, err error) {
 	ss := session.Get(ctx)
 
-	albumLists := []album.UnitList{}
+	albumLists := []albumapischema.UnitList{}
 	var unitList []struct {
 		UnitId int `xorm:"unit_id"`
 		Rarity int `xorm:"rarity"`
@@ -22,7 +22,7 @@ func albumAll(ctx *gin.Context) (res any, err error) {
 	}
 
 	for _, unit := range unitList {
-		albumList := album.UnitList{
+		albumList := albumapischema.UnitList{
 			RankMaxFlag:      true,
 			LoveMaxFlag:      true,
 			RankLevelMaxFlag: true,
@@ -59,7 +59,7 @@ func albumAll(ctx *gin.Context) (res any, err error) {
 		albumLists = append(albumLists, albumList)
 	}
 
-	res = album.AllResp{
+	res = albumapischema.AllResp{
 		Result:     albumLists,
 		Status:     200,
 		CommandNum: false,

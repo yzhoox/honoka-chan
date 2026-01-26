@@ -1,4 +1,4 @@
-package profile
+package profileapischema
 
 type LiveCntData struct {
 	Difficulty int `json:"difficulty"`

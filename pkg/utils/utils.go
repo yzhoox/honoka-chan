@@ -5,6 +5,9 @@ package utils
 
 import (
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"log"
 	"math/rand"
 	"os"
 	"sync"
@@ -48,10 +51,6 @@ func XOR(s1, s2 []byte) []byte {
 	return res
 }
 
-func Sub16(str []byte) []byte {
-	return str[16:]
-}
-
 func RandomStr(len int) string {
 	rand.Seed(time.Now().UnixNano())
 	mRand := make([]byte, len)
@@ -59,4 +58,21 @@ func RandomStr(len int) string {
 	mRandStr := hex.EncodeToString(mRand)[0:len]
 
 	return mRandStr
+}
+
+func ToJSON(data any) string {
+	b, err := json.Marshal(data)
+	if err != nil {
+		log.Println(err.Error())
+		return "{}"
+	}
+	return string(b)
+}
+
+func PrintJSON(data any) {
+	b, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return
+	}
+	fmt.Println(string(b))
 }

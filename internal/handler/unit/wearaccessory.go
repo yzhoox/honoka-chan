@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/unit"
+	unitschema "honoka-chan/internal/schema/unit"
 	"honoka-chan/internal/session"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +14,7 @@ func wearAccessory(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	req := unit.WearAccessoryReq{}
+	req := unitschema.WearAccessoryReq{}
 	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &req)
 	if ss.CheckErr(err) {
 		return
@@ -34,7 +34,7 @@ func wearAccessory(ctx *gin.Context) {
 	// 佩戴饰品
 	for _, v := range req.Wear {
 		// fmt.Println("Wear:", v.AccessoryOwningUserID, v.UnitOwningUserID)
-		data := unit.WearAccessoryData{
+		data := unitschema.WearAccessoryData{
 			AccessoryOwningUserID: v.AccessoryOwningUserID,
 			UnitOwningUserID:      v.UnitOwningUserID,
 			UserID:                ss.UserID,
@@ -45,7 +45,7 @@ func wearAccessory(ctx *gin.Context) {
 		}
 	}
 
-	ss.Respond(unit.WearAccessoryResp{
+	ss.Respond(unitschema.WearAccessoryResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
 		StatusCode:   200,

@@ -1,13 +1,13 @@
 package notice
 
 import (
-	"honoka-chan/internal/schema/api/notice"
+	noticeapischema "honoka-chan/internal/schema/api/notice"
 	"time"
 )
 
 func noticeMarquee() (res any, err error) {
-	res = notice.MarqueeResp{
-		Result: notice.MarqueeData{
+	res = noticeapischema.MarqueeResp{
+		Result: noticeapischema.MarqueeData{
 			ItemCount:   0,
 			MarqueeList: []any{},
 		},

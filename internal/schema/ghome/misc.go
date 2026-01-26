@@ -1,4 +1,4 @@
-package ghome
+package ghomeschema
 
 type AgreementData struct {
 }

@@ -27,8 +27,9 @@ func main() {
 
 	go func() {
 		<-signalChan
-		log.Println("Shutting down...")
-		db.Ldb.Close()
+		log.Println("正在退出...")
+		db.MainEng.Close()
+		db.UserEng.Close()
 		os.Exit(0)
 	}()
 

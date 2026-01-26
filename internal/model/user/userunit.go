@@ -1,4 +1,4 @@
-package user
+package usermodel
 
 type UserUnit struct {
 	ID                          int    `xorm:"id pk autoincr"`

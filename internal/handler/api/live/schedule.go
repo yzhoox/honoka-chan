@@ -1,7 +1,7 @@
 package live
 
 import (
-	"honoka-chan/internal/schema/api/live"
+	liveapischema "honoka-chan/internal/schema/api/live"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -11,42 +11,32 @@ import (
 func liveSchedule(ctx *gin.Context) (res any, err error) {
 	ss := session.Get(ctx)
 
-	var liveDifficultyID []int
-	specialLives := []live.SpecialLiveStatusList{}
-	err = ss.MainEng.Table("special_live_m").Cols("live_difficulty_id").OrderBy("live_difficulty_id ASC").Find(&liveDifficultyID)
+	var liveID []int
+	err = ss.MainEng.Table("special_live_m").
+		Cols("live_difficulty_id").OrderBy("live_difficulty_id ASC").Find(&liveID)
 	if ss.CheckErr(err) {
 		return
 	}
-	for _, id := range liveDifficultyID {
-		specialLive := live.SpecialLiveStatusList{
-			LiveDifficultyID:   id,
-			Status:             1,
-			HiScore:            0,
-			HiComboCount:       0,
-			ClearCnt:           0,
-			AchievedGoalIDList: []int{},
-		}
-		specialLives = append(specialLives, specialLive)
-	}
 
-	livesList := []live.LiveList{}
-	for _, v := range specialLives {
-		livesList = append(livesList, live.LiveList{
-			LiveDifficultyID: v.LiveDifficultyID,
+	liveList := []liveapischema.LiveList{}
+	for _, id := range liveID {
+		liveList = append(liveList, liveapischema.LiveList{
+			LiveDifficultyID: id,
 			StartDate:        "2023-01-01 00:00:00",
 			EndDate:          "2037-01-01 00:00:00",
 			IsRandom:         false,
 		})
 	}
-	res = live.ScheduleResp{
-		Result: live.ScheduleData{
+
+	res = liveapischema.ScheduleResp{
+		Result: liveapischema.ScheduleData{
 			EventList:              []any{},
-			LiveList:               livesList,
+			LiveList:               liveList,
 			LimitedBonusList:       []any{},
-			LimitedBonusCommonList: []live.LimitedBonusCommonList{}, // 特效道具
-			RandomLiveList:         []live.RandomLiveList{},         // 随机歌曲
+			LimitedBonusCommonList: []liveapischema.LimitedBonusCommonList{},
+			RandomLiveList:         []liveapischema.RandomLiveList{},
 			FreeLiveList:           []any{},
-			TrainingLiveList:       []live.TrainingLiveList{}, // 挑战歌曲
+			TrainingLiveList:       []liveapischema.TrainingLiveList{},
 		},
 		Status:     200,
 		CommandNum: false,

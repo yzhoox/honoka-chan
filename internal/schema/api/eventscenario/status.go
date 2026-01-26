@@ -1,4 +1,4 @@
-package eventscenario
+package eventscenarioapischema
 
 type ChapterList struct {
 	EventScenarioID int    `json:"event_scenario_id"`

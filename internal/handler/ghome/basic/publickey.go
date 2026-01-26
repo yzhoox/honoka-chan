@@ -5,7 +5,7 @@ import (
 	"encoding/pem"
 	"honoka-chan/config"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/ghome"
+	ghomeschema "honoka-chan/internal/schema/ghome"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/pkg/utils"
 
@@ -18,7 +18,7 @@ func publicKey(ctx *gin.Context) {
 
 	publicKeyCode := 0
 	publicKeyMsg := "ok"
-	publicKeyData := ghome.PublicKeyData{
+	publicKeyData := ghomeschema.PublicKeyData{
 		Result:  publicKeyCode,
 		Message: publicKeyMsg,
 	}
@@ -33,7 +33,7 @@ func publicKey(ctx *gin.Context) {
 		publicKeyData.Method = "rsa"
 	}
 
-	ss.Respond(ghome.PublicKeyResp{
+	ss.Respond(ghomeschema.PublicKeyResp{
 		Code: publicKeyCode,
 		Msg:  publicKeyMsg,
 		Data: publicKeyData,

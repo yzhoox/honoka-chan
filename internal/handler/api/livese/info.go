@@ -1,13 +1,13 @@
 package livese
 
 import (
-	"honoka-chan/internal/schema/api/livese"
+	liveseapischema "honoka-chan/internal/schema/api/livese"
 	"time"
 )
 
 func LiveSeInfo() (res any, err error) {
-	res = livese.InfoResp{
-		Result: livese.InfoData{
+	res = liveseapischema.InfoResp{
+		Result: liveseapischema.InfoData{
 			LiveSeList: []int{1, 2, 3},
 		},
 		Status:     200,

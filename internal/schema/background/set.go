@@ -1,4 +1,4 @@
-package background
+package backgroundschema
 
 type SetResp struct {
 	ResponseData []any `json:"response_data"`

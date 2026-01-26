@@ -2,9 +2,9 @@ package profile
 
 import (
 	"honoka-chan/internal/middleware"
-	"honoka-chan/internal/model/user"
+	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/profile"
+	profileschema "honoka-chan/internal/schema/profile"
 	"honoka-chan/internal/session"
 
 	"github.com/gin-gonic/gin"
@@ -16,7 +16,7 @@ func register(ctx *gin.Context) {
 	defer ss.Finalize()
 
 	req := gjson.Parse(ctx.PostForm("request_data"))
-	pref := user.UserPref{
+	pref := usermodel.UserPref{
 		UserDesc: req.Get("introduction").String(),
 	}
 
@@ -25,7 +25,7 @@ func register(ctx *gin.Context) {
 		return
 	}
 
-	ss.Respond(profile.RegisterResp{
+	ss.Respond(profileschema.RegisterResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
 		StatusCode:   200,

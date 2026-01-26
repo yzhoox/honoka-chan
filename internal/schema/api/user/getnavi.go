@@ -1,4 +1,4 @@
-package user
+package userapischema
 
 type User struct {
 	UserID           int `json:"user_id"`

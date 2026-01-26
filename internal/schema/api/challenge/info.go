@@ -1,4 +1,4 @@
-package challenge
+package challengeapischema
 
 type InfoResp struct {
 	Result     []any `json:"result"`

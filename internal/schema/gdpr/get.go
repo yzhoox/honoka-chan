@@ -1,4 +1,4 @@
-package gdpr
+package gdprschema
 
 type GetData struct {
 	EnableGdpr      bool  `json:"enable_gdpr"`

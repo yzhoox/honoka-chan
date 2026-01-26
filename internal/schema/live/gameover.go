@@ -1,4 +1,4 @@
-package live
+package liveschema
 
 type GameOverResp struct {
 	ResponseData []any `json:"response_data"`

@@ -6,7 +6,7 @@ import (
 	"honoka-chan/config"
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/download"
+	downloadschema "honoka-chan/internal/schema/download"
 	"honoka-chan/internal/session"
 
 	"github.com/gin-gonic/gin"
@@ -17,13 +17,13 @@ func batch(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	downloadReq := download.BatchReq{}
+	downloadReq := downloadschema.BatchReq{}
 	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &downloadReq)
 	if ss.CheckErr(err) {
 		return
 	}
 
-	pkgList := []download.BatchData{}
+	pkgList := []downloadschema.BatchData{}
 	if downloadReq.ClientVersion == config.PackageVersion {
 		pkgType := downloadReq.PackageType
 		var pkgInfo []PkgInfo
@@ -35,7 +35,7 @@ func batch(ctx *gin.Context) {
 		}
 
 		for _, pkg := range pkgInfo {
-			pkgList = append(pkgList, download.BatchData{
+			pkgList = append(pkgList, downloadschema.BatchData{
 				Size: pkg.Size,
 				URL: fmt.Sprintf("%s/%s/archives/%d_%d_%d.zip",
 					config.Conf.Settings.CdnServer, downloadReq.Os, pkgType, pkg.Id, pkg.Order),
@@ -43,7 +43,7 @@ func batch(ctx *gin.Context) {
 		}
 	}
 
-	ss.Respond(download.BatchResp{
+	ss.Respond(downloadschema.BatchResp{
 		ResponseData: pkgList,
 		ReleaseInfo:  []any{},
 		StatusCode:   200,

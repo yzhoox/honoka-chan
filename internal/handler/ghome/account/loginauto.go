@@ -3,10 +3,12 @@ package account
 import (
 	"encoding/base64"
 	"encoding/json"
+	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/ghome"
+	ghomeschema "honoka-chan/internal/schema/ghome"
 	"honoka-chan/internal/session"
 	"net/url"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-think/openssl"
@@ -36,27 +38,27 @@ func loginAuto(ctx *gin.Context) {
 	params, _ := url.ParseQuery(queryStr)
 	autoKey := params.Get("autokey")
 
-	var uid, ticket string
-	_, err = ss.UserEng.Table("users").Cols("user_id,ticket").Where("autokey = ?", autoKey).Get(&uid, &ticket)
+	var userData usermodel.Users
+	exists, err := ss.UserEng.Table("users").Where("autokey = ?", autoKey).Get(&userData)
 	if ss.CheckErr(err) {
 		return
 	}
 
-	loginAutoData := ghome.LoginAutoData{}
+	loginAutoData := ghomeschema.LoginAutoData{}
 	loginAutoCode := 0
 	loginAutoMsg := "ok"
-	if uid != "" {
-		loginAutoData = ghome.LoginAutoData{
+	if exists {
+		loginAutoData = ghomeschema.LoginAutoData{
 			Result:  loginAutoCode,
 			Message: loginAutoMsg,
 			Autokey: autoKey,
-			UserId:  uid,
-			Ticket:  ticket,
+			UserId:  strconv.Itoa(userData.UserID),
+			Ticket:  userData.Ticket,
 		}
 	} else {
 		loginAutoCode = 31
 		loginAutoMsg = "账号不存在或者登陆状态已过期！"
-		loginAutoData = ghome.LoginAutoData{
+		loginAutoData = ghomeschema.LoginAutoData{
 			Result:  loginAutoCode,
 			Message: loginAutoMsg,
 		}
@@ -71,7 +73,7 @@ func loginAuto(ctx *gin.Context) {
 		return
 	}
 
-	ss.Respond(ghome.LoginAutoResp{
+	ss.Respond(ghomeschema.LoginAutoResp{
 		Code: loginAutoCode,
 		Msg:  loginAutoMsg,
 		Data: base64.StdEncoding.EncodeToString(encryptedData),

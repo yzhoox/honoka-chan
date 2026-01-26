@@ -2,7 +2,7 @@ package basic
 
 import (
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/ghome"
+	ghomeschema "honoka-chan/internal/schema/ghome"
 	"honoka-chan/internal/session"
 
 	"github.com/gin-gonic/gin"
@@ -12,10 +12,10 @@ func loginArea(ctx *gin.Context) {
 	ss := session.New(ctx)
 	defer ss.Finalize()
 
-	ss.Respond(ghome.LoginAreaResp{
+	ss.Respond(ghomeschema.LoginAreaResp{
 		Code: 0,
 		Msg:  "ok",
-		Data: ghome.LoginAreaData{
+		Data: ghomeschema.LoginAreaData{
 			UserID: ctx.PostForm("userid"),
 		},
 	})

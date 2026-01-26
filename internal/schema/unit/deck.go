@@ -1,4 +1,4 @@
-package unit
+package unitschema
 
 type UnitDeckDetail struct {
 	Position         int `json:"position"`

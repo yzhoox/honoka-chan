@@ -1,4 +1,9 @@
-package live
+package liveschema
+
+import (
+	"honoka-chan/internal/constant"
+	userschema "honoka-chan/internal/schema/user"
+)
 
 type RewardReq struct {
 	Module           string          `json:"module"`
@@ -31,26 +36,31 @@ type Icon struct {
 }
 
 type LiveSetting struct {
-	StringSize                 int     `json:"string_size"`
-	PreciseScoreAutoUpdateFlag bool    `json:"precise_score_auto_update_flag"`
-	SeID                       int     `json:"se_id"`
-	CutinBrightness            int     `json:"cutin_brightness"`
-	RandomValue                int     `json:"random_value"`
-	PreciseScoreUpdateType     int     `json:"precise_score_update_type"`
-	EffectFlag                 bool    `json:"effect_flag"`
-	NotesSpeed                 float64 `json:"notes_speed"`
-	Icon                       Icon    `json:"icon"`
-	CutinType                  int     `json:"cutin_type"`
+	StringSize                 int                             `json:"string_size"`
+	PreciseScoreAutoUpdateFlag bool                            `json:"precise_score_auto_update_flag"`
+	SeID                       int                             `json:"se_id"`
+	CutinBrightness            int                             `json:"cutin_brightness"`
+	RandomValue                int                             `json:"random_value"`
+	PreciseScoreUpdateType     constant.PreciseScoreUpdateType `json:"precise_score_update_type"`
+	EffectFlag                 bool                            `json:"effect_flag"`
+	NotesSpeed                 float64                         `json:"notes_speed"`
+	Icon                       Icon                            `json:"icon"`
+	CutinType                  int                             `json:"cutin_type"`
+	BackgroundID               any                             `json:"background_id"`
 }
 
 type PreciseList struct {
-	Effect     int     `json:"effect"`
 	Count      int     `json:"count"`
-	Tap        float64 `json:"tap"`
-	NoteNumber int     `json:"note_number"`
-	Position   int     `json:"position"`
+	Effect     int     `json:"effect"`
 	Accuracy   int     `json:"accuracy"`
+	Tap        float64 `json:"tap"`
 	IsSame     bool    `json:"is_same"`
+	Release    any     `json:"release"`
+	Position   int     `json:"position"`
+	NoteNumber int     `json:"note_number"`
+	FirstTouch any     `json:"first_touch"`
+	Tp         any     `json:"tp"`
+	Tpf        any     `json:"tpf"`
 }
 
 type BackgroundScore struct {
@@ -208,56 +218,6 @@ type PlayRewardUnitList struct {
 	InsertData       int64 `xorm:"insert_date" json:"-"`
 }
 
-type BeforeUserInfo struct {
-	Level                          int    `json:"level"`
-	Exp                            int    `json:"exp"`
-	PreviousExp                    int    `json:"previous_exp"`
-	NextExp                        int    `json:"next_exp"`
-	GameCoin                       int    `json:"game_coin"`
-	SnsCoin                        int    `json:"sns_coin"`
-	FreeSnsCoin                    int    `json:"free_sns_coin"`
-	PaidSnsCoin                    int    `json:"paid_sns_coin"`
-	SocialPoint                    int    `json:"social_point"`
-	UnitMax                        int    `json:"unit_max"`
-	WaitingUnitMax                 int    `json:"waiting_unit_max"`
-	CurrentEnergy                  int    `json:"current_energy"`
-	EnergyMax                      int    `json:"energy_max"`
-	TrainingEnergy                 int    `json:"training_energy"`
-	TrainingEnergyMax              int    `json:"training_energy_max"`
-	EnergyFullTime                 string `json:"energy_full_time"`
-	LicenseLiveEnergyRecoverlyTime int    `json:"license_live_energy_recoverly_time"`
-	FriendMax                      int    `json:"friend_max"`
-	TutorialState                  int    `json:"tutorial_state"`
-	OverMaxEnergy                  int    `json:"over_max_energy"`
-	UnlockRandomLiveMuse           int    `json:"unlock_random_live_muse"`
-	UnlockRandomLiveAqours         int    `json:"unlock_random_live_aqours"`
-}
-
-type AfterUserInfo struct {
-	Level                          int    `json:"level"`
-	Exp                            int    `json:"exp"`
-	PreviousExp                    int    `json:"previous_exp"`
-	NextExp                        int    `json:"next_exp"`
-	GameCoin                       int    `json:"game_coin"`
-	SnsCoin                        int    `json:"sns_coin"`
-	FreeSnsCoin                    int    `json:"free_sns_coin"`
-	PaidSnsCoin                    int    `json:"paid_sns_coin"`
-	SocialPoint                    int    `json:"social_point"`
-	UnitMax                        int    `json:"unit_max"`
-	WaitingUnitMax                 int    `json:"waiting_unit_max"`
-	CurrentEnergy                  int    `json:"current_energy"`
-	EnergyMax                      int    `json:"energy_max"`
-	TrainingEnergy                 int    `json:"training_energy"`
-	TrainingEnergyMax              int    `json:"training_energy_max"`
-	EnergyFullTime                 string `json:"energy_full_time"`
-	LicenseLiveEnergyRecoverlyTime int    `json:"license_live_energy_recoverly_time"`
-	FriendMax                      int    `json:"friend_max"`
-	TutorialState                  int    `json:"tutorial_state"`
-	OverMaxEnergy                  int    `json:"over_max_energy"`
-	UnlockRandomLiveMuse           int    `json:"unlock_random_live_muse"`
-	UnlockRandomLiveAqours         int    `json:"unlock_random_live_aqours"`
-}
-
 type NextLevelInfo struct {
 	Level   int `json:"level"`
 	FromExp int `json:"from_exp"`
@@ -335,8 +295,8 @@ type RewardData struct {
 	IsEffortPointVisible         bool                          `json:"is_effort_point_visible"`
 	LimitedEffortBox             []any                         `json:"limited_effort_box"`
 	UnitList                     []PlayRewardUnitList          `json:"unit_list"`
-	BeforeUserInfo               BeforeUserInfo                `json:"before_user_info"`
-	AfterUserInfo                AfterUserInfo                 `json:"after_user_info"`
+	BeforeUserInfo               userschema.UserInfo           `json:"before_user_info"`
+	AfterUserInfo                userschema.UserInfo           `json:"after_user_info"`
 	NextLevelInfo                []NextLevelInfo               `json:"next_level_info"`
 	GoalAccompInfo               GoalAccompInfo                `json:"goal_accomp_info"`
 	SpecialRewardInfo            []any                         `json:"special_reward_info"`

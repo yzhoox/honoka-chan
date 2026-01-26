@@ -1,4 +1,4 @@
-package download
+package downloadschema
 
 type EventResp struct {
 	ResponseData []any `json:"response_data"`

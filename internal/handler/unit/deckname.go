@@ -5,7 +5,7 @@ import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
 	unitapischema "honoka-chan/internal/schema/api/unit"
-	"honoka-chan/internal/schema/unit"
+	unitschema "honoka-chan/internal/schema/unit"
 	"honoka-chan/internal/session"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +15,7 @@ func deckName(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	deckReq := unit.DeckNameReq{}
+	deckReq := unitschema.DeckNameReq{}
 	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &deckReq)
 	if ss.CheckErr(err) {
 		return
@@ -37,7 +37,7 @@ func deckName(ctx *gin.Context) {
 		return
 	}
 
-	ss.Respond(unit.DeckResp{
+	ss.Respond(unitschema.DeckResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
 		StatusCode:   200,

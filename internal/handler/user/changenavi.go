@@ -2,7 +2,7 @@ package user
 
 import (
 	"honoka-chan/internal/middleware"
-	"honoka-chan/internal/model/user"
+	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
 	userschema "honoka-chan/internal/schema/user"
 	"honoka-chan/internal/session"
@@ -16,7 +16,7 @@ func changeNavi(ctx *gin.Context) {
 	defer ss.Finalize()
 
 	req := gjson.Parse(ctx.MustGet("request_data").(string))
-	pref := user.UserPref{
+	pref := usermodel.UserPref{
 		UnitOwningUserID: int(req.Get("unit_owning_user_id").Int()),
 	}
 	_, err := ss.UserEng.Table("user_pref").Where("user_id = ?", ss.UserID).Update(&pref)

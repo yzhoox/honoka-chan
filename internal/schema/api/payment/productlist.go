@@ -1,4 +1,4 @@
-package payment
+package paymentapischema
 
 type RestrictionInfo struct {
 	Restricted bool `json:"restricted"`
@@ -84,7 +84,7 @@ type UserStatus struct {
 type SubscriptionStatus struct {
 	LicenseID     int         `json:"license_id"`
 	LicenseType   int         `json:"license_type"`
-	LicenseInfo   LicenseInfo `json:"license_info,omitempty"`
+	LicenseInfo   LicenseInfo `json:"license_info"`
 	UserStatus    UserStatus  `json:"user_status"`
 	PurchaseCount int         `json:"purchase_count"`
 	BadgeFlag     bool        `json:"badge_flag"`

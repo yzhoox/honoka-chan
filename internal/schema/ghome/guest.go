@@ -1,4 +1,4 @@
-package ghome
+package ghomeschema
 
 type GuestStatusData struct {
 	Disablead   int    `json:"disablead"`

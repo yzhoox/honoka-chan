@@ -1,4 +1,4 @@
-package login
+package loginapischema
 
 type Notification struct {
 	Push       bool `json:"push"`

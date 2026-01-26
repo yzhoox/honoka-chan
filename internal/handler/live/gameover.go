@@ -3,7 +3,7 @@ package live
 import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/live"
+	liveschema "honoka-chan/internal/schema/live"
 	"honoka-chan/internal/session"
 
 	"github.com/gin-gonic/gin"
@@ -11,9 +11,12 @@ import (
 
 func gameOver(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer func() {
+		ss.ClearLiveInProgress()
+		ss.Finalize()
+	}()
 
-	ss.Respond(live.GameOverResp{
+	ss.Respond(liveschema.GameOverResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
 		StatusCode:   200,

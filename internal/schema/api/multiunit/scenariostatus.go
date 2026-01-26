@@ -1,4 +1,4 @@
-package multiunit
+package multiunitapischema
 
 type ChapterList struct {
 	MultiUnitScenarioID int `json:"multi_unit_scenario_id"`

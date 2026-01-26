@@ -1,4 +1,4 @@
-package ghome
+package ghomeschema
 
 type GetCodeResp struct {
 	Code int            `json:"code"`

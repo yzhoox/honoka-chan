@@ -2,11 +2,13 @@ package live
 
 import (
 	"encoding/json"
+	"honoka-chan/internal/constant"
 	"honoka-chan/internal/middleware"
+	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/live"
+	liveschema "honoka-chan/internal/schema/live"
 	"honoka-chan/internal/session"
-	honokautils "honoka-chan/pkg/utils"
+	"honoka-chan/pkg/utils"
 	"strconv"
 	"time"
 
@@ -17,90 +19,225 @@ func preciseScore(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	playScoreReq := live.PlayScoreReq{}
+	playScoreReq := liveschema.PlayScoreReq{}
 	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &playScoreReq)
 	if ss.CheckErr(err) {
 		return
 	}
+	// fmt.Println(ctx.MustGet("request_data").(string))
 
-	tDifficultyId := playScoreReq.LiveDifficultyID
-	difficultyId, err := strconv.Atoi(tDifficultyId)
+	difficultyID, _ := strconv.Atoi(playScoreReq.LiveDifficultyID)
+
+	// 歌曲类型: normal / special
+	// sqlite3 不支持 FULL OUTER JOIN 所以这里使用 UNION ALL
+	var liveSetting struct {
+		NotesSettingAsset string `xorm:"notes_setting_asset"`
+		ARankScore        int    `xorm:"a_rank_score"`
+		BRankScore        int    `xorm:"b_rank_score"`
+		CRankScore        int    `xorm:"c_rank_score"`
+		SRankScore        int    `xorm:"s_rank_score"`
+		AcFlag            int    `xorm:"ac_flag"`
+		SwingFlag         int    `xorm:"swing_flag"`
+	}
+	sql := `
+		SELECT notes_setting_asset,
+			a_rank_score,
+			b_rank_score,
+			c_rank_score,
+			s_rank_score,
+			ac_flag,
+			swing_flag
+		FROM live_setting_m
+		WHERE live_setting_id IN (
+			SELECT live_setting_id
+			FROM normal_live_m
+			WHERE live_difficulty_id = ?
+			UNION ALL
+			SELECT live_setting_id
+			FROM special_live_m
+			WHERE live_difficulty_id = ?
+		)
+		`
+	_, err = ss.MainEng.SQL(sql, difficultyID, difficultyID).Get(&liveSetting)
 	if ss.CheckErr(err) {
 		return
 	}
+	// fmt.Println("liveSetting", liveSetting)
 
-	// Song type: normal / special
-	// sqlite3 doesn't support FULL OUTER JOIN so use UNION ALL here.
-	sql := `SELECT notes_setting_asset,c_rank_score,b_rank_score,a_rank_score,s_rank_score,ac_flag,swing_flag FROM live_setting_m WHERE live_setting_id IN (SELECT live_setting_id FROM normal_live_m WHERE live_difficulty_id = ? UNION ALL SELECT live_setting_id FROM special_live_m WHERE live_difficulty_id = ?)`
-	var notes_setting_asset string
-	var c_rank_score, b_rank_score, a_rank_score, s_rank_score, ac_flag, swing_flag int
-	err = ss.MainEng.DB().QueryRow(sql, difficultyId, difficultyId).Scan(&notes_setting_asset, &c_rank_score, &b_rank_score, &a_rank_score, &s_rank_score, &ac_flag, &swing_flag)
-	if ss.CheckErr(err) {
-		return
-	}
-
-	// fmt.Println(notes_setting_asset)
-	// fmt.Println(c_rank_score, b_rank_score, a_rank_score, s_rank_score)
-
-	notes := []live.NotesList{}
-	// fmt.Println("./assets/serverdata/beatmaps/" + notes_setting_asset)
-	notes_list := honokautils.ReadAllText("./assets/serverdata/beatmaps/" + notes_setting_asset)
+	notes := []liveschema.NotesList{}
+	notes_list := utils.ReadAllText("./assets/serverdata/beatmaps/" + liveSetting.NotesSettingAsset)
 	err = json.Unmarshal([]byte(notes_list), &notes)
 	if ss.CheckErr(err) {
 		return
 	}
 
-	ranks := []live.RankInfo{}
-	ranks = append(ranks, live.RankInfo{
+	ranks := []liveschema.RankInfo{}
+	ranks = append(ranks, liveschema.RankInfo{
 		Rank:    5,
 		RankMin: 0,
-		RankMax: c_rank_score,
-	}, live.RankInfo{
+		RankMax: liveSetting.CRankScore,
+	}, liveschema.RankInfo{
 		Rank:    4,
-		RankMin: c_rank_score + 1,
-		RankMax: b_rank_score,
-	}, live.RankInfo{
+		RankMin: liveSetting.CRankScore + 1,
+		RankMax: liveSetting.BRankScore,
+	}, liveschema.RankInfo{
 		Rank:    3,
-		RankMin: b_rank_score + 1,
-		RankMax: a_rank_score,
-	}, live.RankInfo{
+		RankMin: liveSetting.BRankScore + 1,
+		RankMax: liveSetting.ARankScore,
+	}, liveschema.RankInfo{
 		Rank:    2,
-		RankMin: a_rank_score + 1,
-		RankMax: s_rank_score,
-	}, live.RankInfo{
+		RankMin: liveSetting.ARankScore + 1,
+		RankMax: liveSetting.SRankScore,
+	}, liveschema.RankInfo{
 		Rank:    1,
-		RankMin: s_rank_score + 1,
+		RankMin: liveSetting.SRankScore + 1,
 		RankMax: 0,
 	})
 
-	playResp := live.PreciseScoreResp{
-		ResponseData: live.PreciseScoreData{
-			On: live.On{
-				HasRecord: false,
-				LiveInfo: live.LiveInfo{
-					LiveDifficultyID: difficultyId,
-					IsRandom:         false,
-					AcFlag:           ac_flag,
-					SwingFlag:        swing_flag,
-					NotesList:        notes,
+	// 检查是否正在进行 Live
+	progress, _ := ss.GetLiveInProgress()
+
+	// 检查是否有 Live 记录
+	liveRecord := ss.GetUserLiveRecord(difficultyID)
+
+	var skillOn liveschema.Skill
+	var skillOff liveschema.Skill
+	var playResp liveschema.PreciseScoreResp
+
+	// 正在进行 Live
+	if progress {
+		// 返回默认
+		playResp = liveschema.PreciseScoreResp{
+			ResponseData: liveschema.PreciseScoreData{
+				On: liveschema.Skill{
+					HasRecord: false,
+					LiveInfo: liveschema.LiveInfo{
+						LiveDifficultyID: difficultyID,
+						IsRandom:         false,
+						AcFlag:           liveSetting.AcFlag,
+						SwingFlag:        liveSetting.SwingFlag,
+						NotesList:        notes,
+					},
 				},
-			},
-			Off: live.Off{
-				HasRecord: false,
-				LiveInfo: live.LiveInfo{
-					LiveDifficultyID: difficultyId,
-					IsRandom:         false,
-					AcFlag:           ac_flag,
-					SwingFlag:        swing_flag,
-					NotesList:        notes,
+				Off: liveschema.Skill{
+					HasRecord: false,
+					LiveInfo: liveschema.LiveInfo{
+						LiveDifficultyID: difficultyID,
+						IsRandom:         false,
+						AcFlag:           liveSetting.AcFlag,
+						SwingFlag:        liveSetting.SwingFlag,
+						NotesList:        notes,
+					},
 				},
+				RankInfo:          ranks,
+				CanActivateEffect: true,
+				ServerTimestamp:   time.Now().Unix(),
 			},
-			RankInfo:          ranks,
-			CanActivateEffect: true,
-			ServerTimestamp:   time.Now().Unix(),
-		},
-		ReleaseInfo: []any{},
-		StatusCode:  200,
+			ReleaseInfo: []any{},
+			StatusCode:  200,
+		}
+	} else {
+		// 如果有 Live 记录
+		if len(liveRecord) > 0 {
+			skillOn = liveschema.Skill{
+				HasRecord:   false,
+				RandomSeed:  nil,
+				MaxCombo:    nil,
+				UpdateDate:  nil,
+				PreciseList: nil,
+				DeckInfo:    nil,
+				TapAdjust:   nil,   // TODO: 不知道保存在哪里
+				CanReplay:   false, // TODO: 不知道保存在哪里
+			}
+			skillOff = skillOn
+
+			// 已完成的 Live 判断技能开关情况
+			for _, record := range liveRecord {
+				// LiveInfo
+				var liveInfo liveschema.LiveInfo
+				err = json.Unmarshal([]byte(record.LiveInfoJSON), &liveInfo)
+				if ss.CheckErr(err) {
+					return
+				}
+				liveInfo.NotesList = notes
+
+				// PreciseList
+				var preciseList []liveschema.PreciseList
+				err = json.Unmarshal([]byte(record.PreciseListJSON), &preciseList)
+				if ss.CheckErr(err) {
+					return
+				}
+
+				// DeckInfo
+				var deckInfo usermodel.DeckInfo
+				err = json.Unmarshal([]byte(record.DeckInfoJSON), &deckInfo)
+				if ss.CheckErr(err) {
+					return
+				}
+
+				// LiveSetting
+				var liveSetting liveschema.LiveSetting
+				err = json.Unmarshal([]byte(record.LiveSettingJSON), &liveSetting)
+				if ss.CheckErr(err) {
+					return
+				}
+
+				// TriggerLog
+				var triggerLog []liveschema.TriggerLog
+				err = json.Unmarshal([]byte(record.TriggerLogJSON), &triggerLog)
+				if ss.CheckErr(err) {
+					return
+				}
+
+				if record.IsSkillOn {
+					// 技能开
+					skillOn.HasRecord = true
+					skillOn.LiveInfo = liveInfo
+					skillOn.RandomSeed = time.Now().Unix() // TODO: 从 /live/play 的 Timestamp 字段获取
+					skillOn.MaxCombo = record.MaxCombo
+					skillOn.UpdateDate = record.UpdateDate
+					skillOn.PreciseList = preciseList
+					skillOn.DeckInfo = deckInfo
+					skillOn.LiveSetting = liveSetting
+					skillOn.TriggerLog = triggerLog
+					skillOn.TapAdjust = record.TapAdjust
+					skillOn.CanReplay = record.CanReplay
+				} else {
+					// 技能关
+					skillOff.HasRecord = true
+					skillOff.LiveInfo = liveInfo
+					skillOff.RandomSeed = time.Now().Unix() // TODO: 从 /live/play 的 Timestamp 字段获取
+					skillOff.MaxCombo = record.MaxCombo
+					skillOff.UpdateDate = record.UpdateDate
+					skillOff.PreciseList = preciseList
+					skillOff.DeckInfo = deckInfo
+					skillOff.LiveSetting = liveSetting
+					skillOff.TriggerLog = triggerLog
+					skillOff.TapAdjust = record.TapAdjust
+					skillOff.CanReplay = record.CanReplay
+				}
+			}
+
+			playResp = liveschema.PreciseScoreResp{
+				ResponseData: liveschema.PreciseScoreData{
+					On:                skillOn,
+					Off:               skillOff,
+					RankInfo:          ranks,
+					CanActivateEffect: true,
+					ServerTimestamp:   time.Now().Unix(),
+				},
+				ReleaseInfo: []any{},
+				StatusCode:  200,
+			}
+		} else {
+			playResp = liveschema.PreciseScoreResp{
+				ResponseData: map[string]constant.ErrorCode{
+					"error_code": constant.ErrorCodeLivePreciseListNotFound,
+				},
+				ReleaseInfo: []any{},
+				StatusCode:  600,
+			}
+		}
 	}
 
 	ss.Respond(playResp)

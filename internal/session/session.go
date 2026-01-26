@@ -2,8 +2,7 @@ package session
 
 import (
 	"encoding/json"
-	"errors"
-	"honoka-chan/internal/model/user"
+	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/utils"
 	"honoka-chan/pkg/db"
 	"log"
@@ -19,7 +18,7 @@ type Session struct {
 	UserEng *xorm.Session
 
 	UserID   int
-	UserPref user.UserPref
+	UserPref usermodel.UserPref
 }
 
 func New(ctx *gin.Context) *Session {
@@ -33,14 +32,7 @@ func New(ctx *gin.Context) *Session {
 
 	userID := ctx.GetString("userid")
 	if userID != "" {
-		exist, err := ss.UserEng.Table("user_pref").Where("user_id = ?", userID).Get(&ss.UserPref)
-		if ss.CheckErr(err) {
-			return nil
-		}
-		if !exist {
-			ss.Abort(errors.New("user not exist!"))
-			return nil
-		}
+		ss.UserPref = ss.GetUserPref(userID)
 		ss.UserID = ss.UserPref.UserID
 	}
 
@@ -75,18 +67,6 @@ func (ss *Session) CheckErr(err error) bool {
 		return true
 	}
 	return false
-}
-
-func (ss *Session) GetDeviceID() string {
-	return ss.Ctx.Request.Header.Get("X-DEVICEID")
-}
-
-func (ss *Session) GetRandKey() []byte {
-	key, err := db.Ldb.Get([]byte(ss.GetDeviceID()))
-	if ss.CheckErr(err) {
-		return nil
-	}
-	return key
 }
 
 func (ss *Session) Respond(resp any) {

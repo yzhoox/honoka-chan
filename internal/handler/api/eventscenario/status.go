@@ -2,7 +2,7 @@ package eventscenario
 
 import (
 	"fmt"
-	"honoka-chan/internal/schema/api/eventscenario"
+	eventscenarioapischema "honoka-chan/internal/schema/api/eventscenario"
 	"honoka-chan/internal/session"
 	"strings"
 	"time"
@@ -14,7 +14,7 @@ func eventScenarioStatus(ctx *gin.Context) (res any, err error) {
 	ss := session.Get(ctx)
 
 	var eventID []int
-	eventsList := []eventscenario.EventScenarioList{}
+	eventsList := []eventscenarioapischema.EventScenarioList{}
 	err = ss.MainEng.Table("event_scenario_m").Cols("event_id").GroupBy("event_id").OrderBy("event_id DESC").Find(&eventID)
 	if ss.CheckErr(err) {
 		return
@@ -27,7 +27,7 @@ func eventScenarioStatus(ctx *gin.Context) (res any, err error) {
 			ChapterAsset    string `xorm:"chapter_asset"`
 			OpenDate        string `xorm:"open_date"`
 		}
-		chapsList := []eventscenario.ChapterList{}
+		chapsList := []eventscenarioapischema.ChapterList{}
 		err = ss.MainEng.Table("event_scenario_m").Where("event_id = ?", id).Cols("event_scenario_id,chapter,chapter_asset,open_date").
 			OrderBy("chapter DESC").Find(&eventRes)
 		if ss.CheckErr(err) {
@@ -35,7 +35,7 @@ func eventScenarioStatus(ctx *gin.Context) (res any, err error) {
 		}
 
 		for _, res := range eventRes {
-			chapList := eventscenario.ChapterList{
+			chapList := eventscenarioapischema.ChapterList{
 				EventScenarioID: res.EventScenarioId,
 				Chapter:         res.Chapter,
 				ChapterAsset:    res.ChapterAsset,
@@ -49,7 +49,7 @@ func eventScenarioStatus(ctx *gin.Context) (res any, err error) {
 			chapsList = append(chapsList, chapList)
 		}
 
-		event := eventscenario.EventScenarioList{
+		event := eventscenarioapischema.EventScenarioList{
 			EventID:     id,
 			OpenDate:    strings.ReplaceAll(eventRes[0].OpenDate, "/", "-"),
 			ChapterList: chapsList,
@@ -67,8 +67,8 @@ func eventScenarioStatus(ctx *gin.Context) (res any, err error) {
 
 		eventsList = append(eventsList, event)
 	}
-	res = eventscenario.StatusResp{
-		Result: eventscenario.StatusData{
+	res = eventscenarioapischema.StatusResp{
+		Result: eventscenarioapischema.StatusData{
 			EventScenarioList: eventsList,
 		},
 		Status:     200,

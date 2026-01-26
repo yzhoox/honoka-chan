@@ -1,7 +1,7 @@
 package user
 
 import (
-	"honoka-chan/internal/schema/api/user"
+	userapischema "honoka-chan/internal/schema/api/user"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -17,9 +17,9 @@ func userGetNavi(ctx *gin.Context) (res any, err error) {
 		return
 	}
 
-	res = user.GetNaviResp{
-		Result: user.GetNaviData{
-			User: user.User{
+	res = userapischema.GetNaviResp{
+		Result: userapischema.GetNaviData{
+			User: userapischema.User{
 				UserID:           uID,
 				UnitOwningUserID: oID,
 			},

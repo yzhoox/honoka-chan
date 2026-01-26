@@ -2,12 +2,12 @@ package unit
 
 import (
 	"encoding/json"
-	"errors"
 	"honoka-chan/internal/middleware"
+	unitmodel "honoka-chan/internal/model/unit"
+	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
-	profileapischema "honoka-chan/internal/schema/api/profile"
 	unitapischema "honoka-chan/internal/schema/api/unit"
-	"honoka-chan/internal/schema/unit"
+	unitschema "honoka-chan/internal/schema/unit"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -18,7 +18,7 @@ func deck(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	deckReq := unit.DeckReq{}
+	deckReq := unitschema.DeckReq{}
 	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &deckReq)
 	if ss.CheckErr(err) {
 		return
@@ -63,53 +63,34 @@ func deck(ctx *gin.Context) {
 		// 队伍成员信息
 		for _, u := range deck.UnitDeckDetail {
 			// 成员信息
-			newUnitData := profileapischema.UnitData{}
-			exists, err := ss.UserEng.Table("user_unit").Where("unit_owning_user_id = ?", u.UnitOwningUserID).Exist()
+			unitData := unitmodel.UnitDataMap{}
+			_, err = ss.GetBasicUnitInfo().
+				Where("a.unit_owning_user_id = ?", u.UnitOwningUserID).Get(&unitData)
 			if ss.CheckErr(err) {
 				return
 			}
-			if exists {
-				// fmt.Println("新成员为用户增加成员")
-				_, err = ss.UserEng.Table("user_unit").Where("unit_owning_user_id = ?", u.UnitOwningUserID).Get(&newUnitData)
-				if ss.CheckErr(err) {
-					return
-				}
-			} else {
-				exists, err := ss.MainEng.Table("common_unit_m").Where("unit_owning_user_id = ?", u.UnitOwningUserID).Exist()
-				if ss.CheckErr(err) {
-					return
-				}
-				if exists {
-					// fmt.Println("新成员为公共成员")
-					_, err = ss.MainEng.Table("common_unit_m").Where("unit_owning_user_id = ?", u.UnitOwningUserID).Get(&newUnitData)
-					if ss.CheckErr(err) {
-						return
-					}
-				} else {
-					// fmt.Println("新成员不存在")
-					err = errors.New("新成员不存在")
-				}
-				if ss.CheckErr(err) {
-					return
-				}
-			}
-			// fmt.Println("新的成员信息:", newUnitData)
+			// fmt.Println("新的成员信息:", unitData)
 
 			// 插入新成员信息
-			newUnitDeckData := unitapischema.UnitDeckData{}
-			b, err := json.Marshal(newUnitData)
-			if ss.CheckErr(err) {
-				return
+			newUnitDeckData := usermodel.UserDeckUnit{
+				UserDeckID:       userDeckId,
+				UnitOwningUserID: unitData.UnitOwningUserID,
+				UnitID:           unitData.UnitID,
+				Position:         u.Position,
+				Level:            unitData.Level,
+				LevelLimitID:     unitData.LevelLimitID,
+				DisplayRank:      unitData.DisplayRank,
+				Love:             unitData.Love,
+				UnitSkillLevel:   unitData.UnitSkillLevel,
+				IsRankMax:        unitData.IsRankMax,
+				IsLoveMax:        unitData.IsLoveMax,
+				IsLevelMax:       unitData.IsLevelMax,
+				IsSigned:         unitData.IsSigned,
+				BeforeLove:       unitData.MaxLove,
+				MaxLove:          unitData.MaxLove,
+				UserID:           ss.UserID,
+				InsertDate:       time.Now().Unix(),
 			}
-			err = json.Unmarshal(b, &newUnitDeckData)
-			if ss.CheckErr(err) {
-				return
-			}
-			newUnitDeckData.BeforeLove = newUnitDeckData.MaxLove
-			newUnitDeckData.Position = u.Position
-			newUnitDeckData.UserDeckID = userDeckId
-			newUnitDeckData.InsertData = time.Now().Unix()
-
 			_, err = ss.UserEng.Table("user_deck_unit").Insert(&newUnitDeckData)
 			if ss.CheckErr(err) {
 				return
@@ -117,7 +98,7 @@ func deck(ctx *gin.Context) {
 		}
 	}
 
-	ss.Respond(unit.DeckResp{
+	ss.Respond(unitschema.DeckResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
 		StatusCode:   200,

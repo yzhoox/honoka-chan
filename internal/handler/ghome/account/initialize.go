@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/ghome"
+	ghomeschema "honoka-chan/internal/schema/ghome"
 	"honoka-chan/internal/session"
 	"strings"
 
@@ -16,7 +16,7 @@ func initialize(ctx *gin.Context) {
 	ss := session.New(ctx)
 	defer ss.Finalize()
 
-	initData := ghome.InitializeData{
+	initData := ghomeschema.InitializeData{
 		BrandLogo:                 "http://gskd.sdo.com/ghome/ztc/logo/og/logo_xhdpi.png",
 		BrandName:                 "盛趣游戏",
 		ForceShowAgreement:        1,
@@ -38,7 +38,7 @@ func initialize(ctx *gin.Context) {
 		return
 	}
 
-	ss.Respond(ghome.InitializeResp{
+	ss.Respond(ghomeschema.InitializeResp{
 		Code: 0,
 		Msg:  "ok",
 		Data: base64.StdEncoding.EncodeToString(encryptedData),

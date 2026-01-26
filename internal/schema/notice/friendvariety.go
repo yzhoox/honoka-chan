@@ -1,4 +1,4 @@
-package notice
+package noticeschema
 
 type FriendVarietyData struct {
 	ItemCount       int   `json:"item_count"`

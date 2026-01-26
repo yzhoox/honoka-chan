@@ -1,4 +1,4 @@
-package banner
+package bannerapischema
 
 type BannerList struct {
 	BannerType       int    `json:"banner_type"`

@@ -1,4 +1,4 @@
-package download
+package downloadschema
 
 type UpdateReq struct {
 	Module          string `json:"module"`

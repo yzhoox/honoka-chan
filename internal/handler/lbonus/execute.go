@@ -3,7 +3,7 @@ package lbonus
 import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/lbonus"
+	lbonusschema "honoka-chan/internal/schema/lbonus"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -35,7 +35,7 @@ func execute(ctx *gin.Context) {
 	d2 := d1.AddDate(0, 1, -1)
 	// fmt.Println(d2)
 
-	weeksList := []lbonus.Day{}
+	weeksList := []lbonusschema.Day{}
 	for c := d1; ; c = c.AddDate(0, 0, 1) {
 		_, _, rd := c.Date()
 		received := false
@@ -43,14 +43,14 @@ func execute(ctx *gin.Context) {
 			received = true
 		}
 		rw := weeks[c.Weekday().String()]
-		weeksList = append(weeksList, lbonus.Day{
+		weeksList = append(weeksList, lbonusschema.Day{
 			Day:               rd,
 			DayOfTheWeek:      rw,
 			SpecialDay:        false,
 			SpecialImageAsset: "",
 			Received:          received,
 			AdReceived:        false,
-			Item: lbonus.Item{
+			Item: lbonusschema.Item{
 				ItemID:  4,
 				AddType: 3001,
 				Amount:  1,
@@ -72,18 +72,18 @@ func execute(ctx *gin.Context) {
 	d2 = d1.AddDate(0, 1, -1)
 	// fmt.Println(d2)
 
-	nextWeeksList := []lbonus.Day{}
+	nextWeeksList := []lbonusschema.Day{}
 	for c := d1; ; c = c.AddDate(0, 0, 1) {
 		_, _, rd := c.Date()
 		rw := weeks[c.Weekday().String()]
-		nextWeeksList = append(nextWeeksList, lbonus.Day{
+		nextWeeksList = append(nextWeeksList, lbonusschema.Day{
 			Day:               rd,
 			DayOfTheWeek:      rw,
 			SpecialDay:        false,
 			SpecialImageAsset: "",
 			Received:          false,
 			AdReceived:        false,
-			Item: lbonus.Item{
+			Item: lbonusschema.Item{
 				ItemID:  4,
 				AddType: 3001,
 				Amount:  1,
@@ -94,26 +94,26 @@ func execute(ctx *gin.Context) {
 		}
 	}
 
-	resp := lbonus.ExecuteResp{
-		ResponseData: lbonus.ExecuteData{
+	resp := lbonusschema.ExecuteResp{
+		ResponseData: lbonusschema.ExecuteData{
 			Sheets: []any{},
-			CalendarInfo: lbonus.CalendarInfo{
+			CalendarInfo: lbonusschema.CalendarInfo{
 				CurrentDate: time.Now().Format("2006-01-02 03:04:05"),
-				CurrentMonth: lbonus.Month{
+				CurrentMonth: lbonusschema.Month{
 					Year:  y,
 					Month: int(cm),
 					Days:  weeksList,
 				},
-				NextMonth: lbonus.Month{
+				NextMonth: lbonusschema.Month{
 					Year:  y,
 					Month: int(m),
 					Days:  nextWeeksList,
 				},
 			},
-			TotalLoginInfo: lbonus.TotalLoginInfo{
+			TotalLoginInfo: lbonusschema.TotalLoginInfo{
 				LoginCount:     2626,
 				RemainingCount: 74,
-				Reward: []lbonus.Reward{
+				Reward: []lbonusschema.Reward{
 					{
 						ItemID:  5,
 						AddType: 1000,
@@ -122,8 +122,8 @@ func execute(ctx *gin.Context) {
 				},
 			},
 			LicenseLbonusList: []any{},
-			ClassSystem: lbonus.ClassSystem{
-				RankInfo: lbonus.RankInfo{
+			ClassSystem: lbonusschema.ClassSystem{
+				RankInfo: lbonusschema.RankInfo{
 					BeforeClassRankID: 10,
 					AfterClassRankID:  10,
 					RankUpDate:        "2020-02-12 11:57:15",
@@ -133,17 +133,17 @@ func execute(ctx *gin.Context) {
 				IsVisible:    true,
 			},
 			StartDashSheets: []any{},
-			EffortPoint: []lbonus.EffortPoint{
+			EffortPoint: []lbonusschema.EffortPoint{
 				{
 					LiveEffortPointBoxSpecID: 5,
 					Capacity:                 4000000,
 					Before:                   1400116,
 					After:                    1400116,
-					Rewards:                  []lbonus.Rewards{},
+					Rewards:                  []lbonusschema.Rewards{},
 				},
 			},
 			LimitedEffortBox: []any{},
-			MuseumInfo:       lbonus.Museum{},
+			MuseumInfo:       lbonusschema.Museum{},
 			ServerTimestamp:  time.Now().Unix(),
 			PresentCnt:       0,
 		},

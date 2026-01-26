@@ -3,7 +3,7 @@ package event
 import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/event"
+	eventschema "honoka-chan/internal/schema/event"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -14,9 +14,9 @@ func list(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	targets := []event.TargetList{}
+	targets := []eventschema.TargetList{}
 	for i := range 6 {
-		targets = append(targets, event.TargetList{
+		targets = append(targets, eventschema.TargetList{
 			Position:      i + 1,
 			IsDisplayable: false,
 		})
@@ -30,8 +30,8 @@ func list(ctx *gin.Context) {
 	// 	StatusCode:  600,
 	// })
 
-	ss.Respond(event.ListResp{
-		ResponseData: event.ListData{
+	ss.Respond(eventschema.ListResp{
+		ResponseData: eventschema.ListData{
 			TargetList:      targets,
 			ServerTimestamp: time.Now().Unix(),
 		},

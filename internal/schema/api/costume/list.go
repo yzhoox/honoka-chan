@@ -1,4 +1,4 @@
-package costume
+package costumeapischema
 
 type CostumeList struct {
 	UnitID    int  `json:"unit_id"`

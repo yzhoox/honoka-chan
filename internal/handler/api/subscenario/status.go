@@ -1,7 +1,7 @@
 package subscenario
 
 import (
-	"honoka-chan/internal/schema/api/subscenario"
+	subscenarioapischema "honoka-chan/internal/schema/api/subscenario"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -12,20 +12,20 @@ func subscenarioStatus(ctx *gin.Context) (res any, err error) {
 	ss := session.Get(ctx)
 
 	var subScenarioID []int
-	subScenarioLists := []subscenario.StatusList{}
+	subScenarioLists := []subscenarioapischema.StatusList{}
 	err = ss.MainEng.Table("subscenario_m").Cols("subscenario_id").OrderBy("subscenario_id ASC").Find(&subScenarioID)
 	if ss.CheckErr(err) {
 		return
 	}
 
 	for _, id := range subScenarioID {
-		subScenarioLists = append(subScenarioLists, subscenario.StatusList{
+		subScenarioLists = append(subScenarioLists, subscenarioapischema.StatusList{
 			SubscenarioID: id,
 			Status:        2,
 		})
 	}
-	res = subscenario.StatusResp{
-		Result: subscenario.StatusData{
+	res = subscenarioapischema.StatusResp{
+		Result: subscenarioapischema.StatusData{
 			SubscenarioStatusList:  subScenarioLists,
 			UnlockedSubscenarioIds: []any{},
 		},

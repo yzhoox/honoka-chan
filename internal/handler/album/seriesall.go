@@ -3,7 +3,7 @@ package album
 import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/album"
+	albumschema "honoka-chan/internal/schema/album"
 	"honoka-chan/internal/session"
 
 	"github.com/gin-gonic/gin"
@@ -19,7 +19,7 @@ func seriesAll(ctx *gin.Context) {
 		return
 	}
 
-	albumSeriesAllRes := []album.SeriesAllData{}
+	albumSeriesAllRes := []albumschema.SeriesAllData{}
 	for _, id := range albumID {
 		var unitList []struct {
 			UnitId int `xorm:"unit_id"`
@@ -30,9 +30,9 @@ func seriesAll(ctx *gin.Context) {
 			return
 		}
 
-		albumSeriesAll := []album.UnitList{}
+		albumSeriesAll := []albumschema.UnitList{}
 		for _, unit := range unitList {
-			albumSeries := album.UnitList{
+			albumSeries := albumschema.UnitList{
 				UnitID:           unit.UnitId,
 				RankMaxFlag:      true,
 				LoveMaxFlag:      true,
@@ -72,13 +72,13 @@ func seriesAll(ctx *gin.Context) {
 			albumSeriesAll = append(albumSeriesAll, albumSeries)
 		}
 
-		albumSeriesAllRes = append(albumSeriesAllRes, album.SeriesAllData{
+		albumSeriesAllRes = append(albumSeriesAllRes, albumschema.SeriesAllData{
 			SeriesID: id,
 			UnitList: albumSeriesAll,
 		})
 	}
 
-	ss.Respond(album.SeriesAllResp{
+	ss.Respond(albumschema.SeriesAllResp{
 		ResponseData: albumSeriesAllRes,
 		ReleaseInfo:  []any{},
 		StatusCode:   200,

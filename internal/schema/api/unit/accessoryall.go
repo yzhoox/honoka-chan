@@ -1,4 +1,4 @@
-package unit
+package unitapischema
 
 type AccessoryList struct {
 	AccessoryOwningUserID int  `json:"accessory_owning_user_id" xorm:"accessory_owning_user_id"`

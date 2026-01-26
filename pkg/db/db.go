@@ -1,15 +1,11 @@
 package db
 
 import (
-	"fmt"
-
 	_ "modernc.org/sqlite"
 	"xorm.io/xorm"
 )
 
 var (
-	Ldb *LdbInstance
-
 	MainDb  = "assets/main.db"
 	UserDb  = "assets/data.db"
 	MainEng *xorm.Engine
@@ -17,8 +13,6 @@ var (
 )
 
 func init() {
-	Ldb = GetLdbInstance()
-
 	eng, err := xorm.NewEngine("sqlite", MainDb)
 	if err != nil {
 		panic(err)
@@ -42,14 +36,4 @@ func init() {
 	eng.SetMaxOpenConns(10)
 	eng.SetMaxIdleConns(5)
 	UserEng = eng
-}
-
-func MatchTokenUid(token, uid string) bool {
-	res, err := Ldb.Get([]byte(uid))
-	if err != nil {
-		fmt.Println(err)
-		return false
-	}
-
-	return string(res) == token
 }

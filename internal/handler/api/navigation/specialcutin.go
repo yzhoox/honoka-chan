@@ -1,13 +1,13 @@
 package navigation
 
 import (
-	"honoka-chan/internal/schema/api/navigation"
+	navigationapischema "honoka-chan/internal/schema/api/navigation"
 	"time"
 )
 
 func SpecialCutin() (res any, err error) {
-	res = navigation.SpecialCutinResp{
-		Result: navigation.SpecialCutinData{
+	res = navigationapischema.SpecialCutinResp{
+		Result: navigationapischema.SpecialCutinData{
 			SpecialCutinList: []any{},
 		},
 		Status:     200,

@@ -1,4 +1,4 @@
-package login
+package loginschema
 
 type LoginData struct {
 	AuthorizeToken  string `json:"authorize_token"`

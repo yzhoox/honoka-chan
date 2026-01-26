@@ -1,4 +1,4 @@
-package exchange
+package exchangeapischema
 
 type ExchangePointList struct {
 	Rarity        int `json:"rarity"`

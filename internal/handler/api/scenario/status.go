@@ -1,7 +1,7 @@
 package scenario
 
 import (
-	"honoka-chan/internal/schema/api/scenario"
+	scenarioapischema "honoka-chan/internal/schema/api/scenario"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -12,20 +12,20 @@ func scenarioStatus(ctx *gin.Context) (res any, err error) {
 	ss := session.Get(ctx)
 
 	var scenarioID []int
-	scenarioLists := []scenario.StatusList{}
+	scenarioLists := []scenarioapischema.StatusList{}
 	err = ss.MainEng.Table("scenario_m").Cols("scenario_id").OrderBy("scenario_id ASC").Find(&scenarioID)
 	if ss.CheckErr(err) {
 		return
 	}
 
 	for _, id := range scenarioID {
-		scenarioLists = append(scenarioLists, scenario.StatusList{
+		scenarioLists = append(scenarioLists, scenarioapischema.StatusList{
 			ScenarioID: id,
 			Status:     2,
 		})
 	}
-	res = scenario.StatusResp{
-		Result: scenario.StatusData{
+	res = scenarioapischema.StatusResp{
+		Result: scenarioapischema.StatusData{
 			ScenarioStatusList: scenarioLists,
 		},
 		Status:     200,

@@ -3,7 +3,7 @@ package user
 import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/user"
+	userschema "honoka-chan/internal/schema/user"
 	"honoka-chan/internal/session"
 
 	"github.com/gin-gonic/gin"
@@ -13,7 +13,7 @@ func setNotificationToken(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	ss.Respond(user.SetNotificationTokenResp{
+	ss.Respond(userschema.SetNotificationTokenResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
 		StatusCode:   200,

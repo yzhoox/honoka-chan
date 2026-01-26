@@ -1,4 +1,4 @@
-package unit
+package unitschema
 
 type DeckNameReq struct {
 	Module     string `json:"module"`

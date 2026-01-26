@@ -1,4 +1,4 @@
-package user
+package userschema
 
 type SetNotificationTokenResp struct {
 	ResponseData []any `json:"response_data"`

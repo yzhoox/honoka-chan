@@ -6,7 +6,7 @@ import (
 	"honoka-chan/config"
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/download"
+	downloadschema "honoka-chan/internal/schema/download"
 	"honoka-chan/internal/session"
 	"strings"
 
@@ -17,7 +17,7 @@ func url(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	downloadReq := download.UrlReq{}
+	downloadReq := downloadschema.UrlReq{}
 	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &downloadReq)
 	if ss.CheckErr(err) {
 		return
@@ -34,8 +34,8 @@ func url(ctx *gin.Context) {
 			cdnServer, downloadReq.Os, strings.ReplaceAll(v, "\\", "")))
 	}
 
-	ss.Respond(download.UrlResp{
-		ResponseData: download.UrlData{
+	ss.Respond(downloadschema.UrlResp{
+		ResponseData: downloadschema.UrlData{
 			UrlList: urlList,
 		},
 		ReleaseInfo: []any{},

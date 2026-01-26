@@ -1,13 +1,13 @@
 package login
 
 import (
-	"honoka-chan/internal/schema/api/login"
+	loginapischema "honoka-chan/internal/schema/api/login"
 	"time"
 )
 
 func loginTopInfo() (res any, err error) {
-	res = login.TopInfoResp{
-		Result: login.TopInfoData{
+	res = loginapischema.TopInfoResp{
+		Result: loginapischema.TopInfoData{
 			FriendActionCnt:        0,
 			FriendGreetCnt:         0,
 			FriendVarietyCnt:       0,
@@ -21,7 +21,7 @@ func loginTopInfo() (res any, err error) {
 			FriendsApprovalWaitCnt: 0,
 			FriendsRequestCnt:      0,
 			IsTodayBirthday:        false,
-			LicenseInfo: login.LicenseInfo{
+			LicenseInfo: loginapischema.LicenseInfo{
 				LicenseList:  []any{},
 				LicensedInfo: []any{},
 				ExpiredInfo:  []any{},

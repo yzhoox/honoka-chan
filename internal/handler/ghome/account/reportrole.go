@@ -3,7 +3,7 @@ package account
 import (
 	"encoding/base64"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/ghome"
+	ghomeschema "honoka-chan/internal/schema/ghome"
 	"honoka-chan/internal/session"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +21,7 @@ func reportRole(ctx *gin.Context) {
 		return
 	}
 
-	ss.Respond(ghome.ReportRoleResp{
+	ss.Respond(ghomeschema.ReportRoleResp{
 		Code: 0,
 		Msg:  "ok",
 		Data: base64.StdEncoding.EncodeToString(encryptedToken),

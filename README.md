@@ -14,6 +14,4 @@ LoveLive! 学园偶像祭 自用私服。
  - 虹原翼 (yazawa@niconi.co.ni) @ [LLSIF 查卡器
 ](https://card.niconi.co.ni/) 的技术支持。
  - tungnotpunk @ LL Hax 在 iOS 客户端修改方面的支持。
- - reversing-sifas (https://github.com/Francesco149/reversing-sifas) 项目的灵感和技术细节。
- - LLAS WiKi (https://wiki.loveliv.es/) 提供的全量 AS Live Stage 信息。
  - 其他可能一时没想起来的大佬们和项目。

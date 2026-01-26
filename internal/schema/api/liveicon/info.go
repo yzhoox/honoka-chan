@@ -1,4 +1,4 @@
-package liveicon
+package liveiconapischema
 
 type InfoData struct {
 	LiveNotesIconList []int `json:"live_notes_icon_list"`

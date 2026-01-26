@@ -3,7 +3,7 @@ package announce
 import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/announce"
+	announceschema "honoka-chan/internal/schema/announce"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -14,8 +14,8 @@ func checkState(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	ss.Respond(announce.CheckStateDataResp{
-		ResponseData: announce.CheckStateData{
+	ss.Respond(announceschema.CheckStateDataResp{
+		ResponseData: announceschema.CheckStateData{
 			HasUnreadAnnounce: false,
 			ServerTimestamp:   time.Now().Unix(),
 		},

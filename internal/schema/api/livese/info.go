@@ -1,4 +1,4 @@
-package livese
+package liveseapischema
 
 type InfoData struct {
 	LiveSeList []int `json:"live_se_list"`

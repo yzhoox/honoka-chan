@@ -1,6 +1,6 @@
 package startup
 
 func StartUp() {
-	CreateTable()
-	InitUserData(0)
+	CreateTables()
+	LoadUnitData()
 }

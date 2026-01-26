@@ -4,9 +4,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/ghome"
+	ghomeschema "honoka-chan/internal/schema/ghome"
 	"honoka-chan/internal/session"
-	"honoka-chan/pkg/db"
 	"honoka-chan/pkg/encrypt"
 	honokautils "honoka-chan/pkg/utils"
 	"net/url"
@@ -34,21 +33,16 @@ func handshake(ctx *gin.Context) {
 
 	params, _ := url.ParseQuery(string(decryptedData))
 
-	randKey := []byte(params.Get("randkey"))
-	deviceID := ss.GetDeviceID()
-
-	err = db.Ldb.Set([]byte(deviceID), randKey)
-	if ss.CheckErr(err) {
-		return
-	}
+	randKey := params.Get("randkey")
+	ss.SetRandKey(randKey)
 
 	token := fmt.Sprintf(`{"message":"ok","result":0,"token":"%s"}`, strings.ToUpper(honokautils.RandomStr(33)))
-	encryptedToken, err := openssl.Des3ECBEncrypt([]byte(token), randKey[0:24], openssl.PKCS7_PADDING)
+	encryptedToken, err := openssl.Des3ECBEncrypt([]byte(token), []byte(randKey)[0:24], openssl.PKCS7_PADDING)
 	if ss.CheckErr(err) {
 		return
 	}
 
-	ss.Respond(ghome.HandshakeResp{
+	ss.Respond(ghomeschema.HandshakeResp{
 		Code: 0,
 		Msg:  "ok",
 		Data: base64.StdEncoding.EncodeToString(encryptedToken),

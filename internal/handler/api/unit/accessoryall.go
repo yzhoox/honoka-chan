@@ -1,7 +1,7 @@
 package unit
 
 import (
-	"honoka-chan/internal/schema/api/unit"
+	unitapischema "honoka-chan/internal/schema/api/unit"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -11,7 +11,7 @@ import (
 func unitAccessoryAll(ctx *gin.Context) (res any, err error) {
 	ss := session.Get(ctx)
 
-	accessoryList := []unit.AccessoryList{}
+	accessoryList := []unitapischema.AccessoryList{}
 	err = ss.MainEng.Table("common_accessory_m").Find(&accessoryList)
 	if ss.CheckErr(err) {
 		return
@@ -23,13 +23,13 @@ func unitAccessoryAll(ctx *gin.Context) (res any, err error) {
 		accessoryList[k].RankUpCount = 4
 		accessoryList[k].FavoriteFlag = true
 	}
-	wearingInfo := []unit.WearingInfo{}
+	wearingInfo := []unitapischema.WearingInfo{}
 	err = ss.UserEng.Table("user_accessory_wear").Where("user_id = ?", ss.UserID).Find(&wearingInfo)
 	if ss.CheckErr(err) {
 		return
 	}
-	res = unit.AccessoryAllResp{
-		Result: unit.AccessoryAllData{
+	res = unitapischema.AccessoryAllResp{
+		Result: unitapischema.AccessoryAllData{
 			AccessoryList:      accessoryList,
 			WearingInfo:        wearingInfo,
 			EspecialCreateFlag: false,

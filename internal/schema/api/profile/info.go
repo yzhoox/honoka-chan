@@ -1,4 +1,4 @@
-package profile
+package profileapischema
 
 type UnitData struct {
 	UnitOwningUserID            int    `xorm:"unit_owning_user_id pk autoincr" json:"unit_owning_user_id"`

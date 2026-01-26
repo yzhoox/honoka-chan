@@ -1,4 +1,4 @@
-package marathon
+package marathonapischema
 
 type InfoResp struct {
 	Result     []any `json:"result"`

@@ -1,4 +1,4 @@
-package unit
+package unitschema
 
 type AccessoryRemove struct {
 	AccessoryOwningUserID int `json:"accessory_owning_user_id"`

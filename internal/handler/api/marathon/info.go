@@ -1,12 +1,12 @@
 package marathon
 
 import (
-	"honoka-chan/internal/schema/api/marathon"
+	marathonapischema "honoka-chan/internal/schema/api/marathon"
 	"time"
 )
 
 func marathonInfo() (res any, err error) {
-	res = marathon.InfoResp{
+	res = marathonapischema.InfoResp{
 		Result:     []any{},
 		Status:     200,
 		CommandNum: false,

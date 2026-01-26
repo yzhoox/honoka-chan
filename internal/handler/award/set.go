@@ -2,9 +2,9 @@ package award
 
 import (
 	"honoka-chan/internal/middleware"
-	"honoka-chan/internal/model/user"
+	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/award"
+	awardschema "honoka-chan/internal/schema/award"
 	"honoka-chan/internal/session"
 
 	"github.com/gin-gonic/gin"
@@ -16,7 +16,7 @@ func set(ctx *gin.Context) {
 	defer ss.Finalize()
 
 	reqData := gjson.Parse(ctx.MustGet("request_data").(string))
-	pref := user.UserPref{
+	pref := usermodel.UserPref{
 		AwardID: int(reqData.Get("award_id").Int()),
 	}
 
@@ -25,7 +25,7 @@ func set(ctx *gin.Context) {
 		return
 	}
 
-	ss.Respond(award.SetResp{
+	ss.Respond(awardschema.SetResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
 		StatusCode:   200,

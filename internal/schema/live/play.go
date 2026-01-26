@@ -1,4 +1,4 @@
-package live
+package liveschema
 
 type PlayReq struct {
 	Module           string `json:"module"`
@@ -31,6 +31,14 @@ type NotesList struct {
 type LiveInfo struct {
 	LiveDifficultyID int         `json:"live_difficulty_id"`
 	IsRandom         bool        `json:"is_random"`
+	ARankScore       int         `json:"-"`
+	BRankScore       int         `json:"-"`
+	CRankScore       int         `json:"-"`
+	SRankScore       int         `json:"-"`
+	ARankCombo       int         `json:"-"`
+	BRankCombo       int         `json:"-"`
+	CRankCombo       int         `json:"-"`
+	SRankCombo       int         `json:"-"`
 	AcFlag           int         `json:"ac_flag"`
 	SwingFlag        int         `json:"swing_flag"`
 	NotesList        []NotesList `json:"notes_list"`

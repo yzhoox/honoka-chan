@@ -1,4 +1,4 @@
-package scenario
+package scenarioschema
 
 type StartUpReq struct {
 	Module     string `json:"module"`

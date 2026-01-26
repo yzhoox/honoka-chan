@@ -4,7 +4,7 @@ import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
 	paymentapischema "honoka-chan/internal/schema/api/payment"
-	"honoka-chan/internal/schema/payment"
+	paymentschema "honoka-chan/internal/schema/payment"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -15,8 +15,8 @@ func productList(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	prodResp := payment.ProductListResp{
-		ResponseData: payment.ProductListData{
+	prodResp := paymentschema.ProductListResp{
+		ResponseData: paymentschema.ProductListData{
 			RestrictionInfo: paymentapischema.RestrictionInfo{
 				Restricted: false,
 			},

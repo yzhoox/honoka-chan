@@ -3,7 +3,7 @@ package museum
 import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/museum"
+	museumschema "honoka-chan/internal/schema/museum"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -33,10 +33,10 @@ func info(ctx *gin.Context) {
 		coolBuff += content.CoolBuff
 		contentsList = append(contentsList, content.MuseumContentsId)
 	}
-	museumResp := museum.InfoResp{
-		ResponseData: museum.InfoData{
-			MuseumInfo: museum.Museum{
-				Parameter: museum.Parameter{
+	museumResp := museumschema.InfoResp{
+		ResponseData: museumschema.InfoData{
+			MuseumInfo: museumschema.Museum{
+				Parameter: museumschema.Parameter{
 					Smile: smileBuff,
 					Pure:  pureBuff,
 					Cool:  coolBuff,

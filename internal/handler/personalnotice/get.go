@@ -3,7 +3,7 @@ package personalnotice
 import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/personalnotice"
+	personalnoticeschema "honoka-chan/internal/schema/personalnotice"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -14,8 +14,8 @@ func get(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	noticeResp := personalnotice.GetResp{
-		ResponseData: personalnotice.GetData{
+	noticeResp := personalnoticeschema.GetResp{
+		ResponseData: personalnoticeschema.GetData{
 			HasNotice:       false,
 			NoticeID:        0,
 			Type:            0,

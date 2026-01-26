@@ -1,4 +1,4 @@
-package notice
+package noticeschema
 
 type FriendGreetingData struct {
 	NextId          int   `json:"next_id"`

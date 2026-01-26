@@ -1,4 +1,4 @@
-package museum
+package museumschema
 
 type Parameter struct {
 	Smile int `json:"smile"`

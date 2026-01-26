@@ -1,4 +1,4 @@
-package subscenario
+package subscenarioapischema
 
 type StatusList struct {
 	SubscenarioID int `json:"subscenario_id"`

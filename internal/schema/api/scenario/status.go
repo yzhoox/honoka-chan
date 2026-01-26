@@ -1,4 +1,4 @@
-package scenario
+package scenarioapischema
 
 type StatusList struct {
 	ScenarioID int `json:"scenario_id"`

@@ -1,4 +1,4 @@
-package unit
+package unitschema
 
 type SkillRemove struct {
 	UnitRemovableSkillID int `json:"unit_removable_skill_id"`

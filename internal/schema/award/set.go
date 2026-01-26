@@ -1,4 +1,4 @@
-package award
+package awardschema
 
 type SetResp struct {
 	ResponseData []any `json:"response_data"`

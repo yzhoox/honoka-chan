@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/unit"
+	unitschema "honoka-chan/internal/schema/unit"
 	"honoka-chan/internal/session"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +14,7 @@ func removableSkillEquipment(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	req := unit.RemovableSkillEquipmentReq{}
+	req := unitschema.RemovableSkillEquipmentReq{}
 	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &req)
 	if ss.CheckErr(err) {
 		return
@@ -34,7 +34,7 @@ func removableSkillEquipment(ctx *gin.Context) {
 	// 佩戴宝石
 	for _, v := range req.Equip {
 		// fmt.Println("Equip:", v.UnitOwningUserID, v.UnitRemovableSkillID)
-		data := unit.RemovableSkillEquipmentData{
+		data := unitschema.RemovableSkillEquipmentData{
 			UnitRemovableSkillId: v.UnitRemovableSkillID,
 			UnitOwningUserID:     v.UnitOwningUserID,
 			UserID:               ss.UserID,
@@ -45,7 +45,7 @@ func removableSkillEquipment(ctx *gin.Context) {
 		}
 	}
 
-	ss.Respond(unit.RemovableSkillEquipmentResp{
+	ss.Respond(unitschema.RemovableSkillEquipmentResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
 		StatusCode:   200,

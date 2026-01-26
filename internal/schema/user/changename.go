@@ -1,4 +1,4 @@
-package user
+package userschema
 
 type ChangeNameData struct {
 	BeforeName      string `json:"before_name"`

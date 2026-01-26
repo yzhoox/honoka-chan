@@ -1,15 +1,15 @@
 package banner
 
 import (
-	"honoka-chan/internal/schema/api/banner"
+	bannerapischema "honoka-chan/internal/schema/api/banner"
 	"time"
 )
 
 func bannerList() (res any, err error) {
-	res = banner.ListResp{
-		Result: banner.ListData{
+	res = bannerapischema.ListResp{
+		Result: bannerapischema.ListData{
 			TimeLimit: "2037-12-31 23:59:59",
-			BannerList: []banner.BannerList{
+			BannerList: []bannerapischema.BannerList{
 				{
 					BannerType:       1,
 					TargetID:         1743,

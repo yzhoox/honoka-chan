@@ -2,7 +2,7 @@ package profile
 
 import (
 	"encoding/json"
-	"honoka-chan/internal/schema/api/profile"
+	profileapischema "honoka-chan/internal/schema/api/profile"
 	honokautils "honoka-chan/pkg/utils"
 	"time"
 )
@@ -15,7 +15,7 @@ func cardRanking() (res any, err error) {
 		return nil, err
 	}
 
-	res = profile.CardRankingResp{
+	res = profileapischema.CardRankingResp{
 		Result:     result,
 		Status:     200,
 		CommandNum: false,

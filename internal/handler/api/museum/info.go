@@ -1,7 +1,7 @@
 package museum
 
 import (
-	"honoka-chan/internal/schema/api/museum"
+	museumapischema "honoka-chan/internal/schema/api/museum"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -31,10 +31,10 @@ func museumInfo(ctx *gin.Context) (res any, err error) {
 		coolBuff += res.CoolBuff
 		museumID = append(museumID, res.MuseumContentsId)
 	}
-	res = museum.InfoResp{
-		Result: museum.InfoData{
-			MuseumInfo: museum.Info{
-				Parameter: museum.Parameter{
+	res = museumapischema.InfoResp{
+		Result: museumapischema.InfoData{
+			MuseumInfo: museumapischema.Info{
+				Parameter: museumapischema.Parameter{
 					Smile: smileBuff,
 					Pure:  pureBuff,
 					Cool:  coolBuff,

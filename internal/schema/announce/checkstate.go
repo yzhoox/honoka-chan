@@ -1,4 +1,4 @@
-package announce
+package announceschema
 
 type CheckStateData struct {
 	HasUnreadAnnounce bool  `json:"has_unread_announce"`

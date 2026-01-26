@@ -1,12 +1,12 @@
 package challenge
 
 import (
-	"honoka-chan/internal/schema/api/challenge"
+	challengeapischema "honoka-chan/internal/schema/api/challenge"
 	"time"
 )
 
 func challengeInfo() (res any, err error) {
-	res = challenge.InfoResp{
+	res = challengeapischema.InfoResp{
 		Result:     []any{},
 		Status:     200,
 		CommandNum: false,

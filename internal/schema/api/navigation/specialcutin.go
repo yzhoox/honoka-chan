@@ -1,4 +1,4 @@
-package navigation
+package navigationapischema
 
 type SpecialCutinData struct {
 	SpecialCutinList []any `json:"special_cutin_list"`

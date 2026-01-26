@@ -1,4 +1,4 @@
-package album
+package albumschema
 
 type UnitList struct {
 	UnitID             int  `json:"unit_id"`

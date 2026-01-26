@@ -3,7 +3,7 @@ package tos
 import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/tos"
+	tosschema "honoka-chan/internal/schema/tos"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -14,8 +14,8 @@ func check(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	ss.Respond(tos.CheckResp{
-		ResponseData: tos.CheckData{
+	ss.Respond(tosschema.CheckResp{
+		ResponseData: tosschema.CheckData{
 			TosID:           1,
 			TosType:         1,
 			IsAgreed:        true,

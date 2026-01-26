@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/scenario"
+	scenarioschema "honoka-chan/internal/schema/scenario"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -15,14 +15,14 @@ func startup(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	startReq := scenario.StartUpReq{}
+	startReq := scenarioschema.StartUpReq{}
 	err := json.Unmarshal([]byte(ctx.PostForm("request_data")), &startReq)
 	if ss.CheckErr(err) {
 		return
 	}
 
-	ss.Respond(scenario.StartUpResp{
-		ResponseData: scenario.StartUpData{
+	ss.Respond(scenarioschema.StartUpResp{
+		ResponseData: scenarioschema.StartUpData{
 			ScenarioID:         startReq.ScenarioID,
 			ScenarioAdjustment: 50,
 			ServerTimestamp:    time.Now().Unix(),

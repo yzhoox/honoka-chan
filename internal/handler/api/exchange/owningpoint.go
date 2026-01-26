@@ -1,7 +1,7 @@
 package exchange
 
 import (
-	"honoka-chan/internal/schema/api/exchange"
+	exchangeapischema "honoka-chan/internal/schema/api/exchange"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -12,20 +12,20 @@ func owningPoint(ctx *gin.Context) (res any, err error) {
 	ss := session.Get(ctx)
 
 	var exchangeID []int
-	exPointsList := []exchange.ExchangePointList{}
+	exPointsList := []exchangeapischema.ExchangePointList{}
 	err = ss.MainEng.Table("exchange_point_m").Cols("exchange_point_id").OrderBy("exchange_point_id ASC").Find(&exchangeID)
 	if ss.CheckErr(err) {
 		return
 	}
 
 	for _, id := range exchangeID {
-		exPointsList = append(exPointsList, exchange.ExchangePointList{
+		exPointsList = append(exPointsList, exchangeapischema.ExchangePointList{
 			Rarity:        id,
 			ExchangePoint: 9999,
 		})
 	}
-	res = exchange.OwningPointResp{
-		Result: exchange.OwningPointData{
+	res = exchangeapischema.OwningPointResp{
+		Result: exchangeapischema.OwningPointData{
 			ExchangePointList: exPointsList,
 		},
 		Status:     200,

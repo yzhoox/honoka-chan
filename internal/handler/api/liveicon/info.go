@@ -1,13 +1,13 @@
 package liveicon
 
 import (
-	"honoka-chan/internal/schema/api/liveicon"
+	liveiconapischema "honoka-chan/internal/schema/api/liveicon"
 	"time"
 )
 
 func liveIconInfo() (res any, err error) {
-	res = liveicon.InfoResp{
-		Result: liveicon.InfoData{
+	res = liveiconapischema.InfoResp{
+		Result: liveiconapischema.InfoData{
 			LiveNotesIconList: []int{1, 2, 3},
 		},
 		Status:     200,

@@ -1,7 +1,7 @@
 package background
 
 import (
-	"honoka-chan/internal/schema/api/background"
+	backgroundapischema "honoka-chan/internal/schema/api/background"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -23,21 +23,21 @@ func backgroundInfo(ctx *gin.Context) (res any, err error) {
 		return
 	}
 
-	backgroundsList := []background.Info{}
+	backgroundsList := []backgroundapischema.Info{}
 	for _, id := range backgroundList {
 		isSet := false
 		if id == backgroundID {
 			isSet = true
 		}
-		backgroundsList = append(backgroundsList, background.Info{
+		backgroundsList = append(backgroundsList, backgroundapischema.Info{
 			BackgroundID: id,
 			IsSet:        isSet,
-			InsertDate:   time.Now().Format("2006-01-02 03:04:05"),
+			InsertDate:   "2023-03-20 03:58:55",
 		})
 	}
 
-	res = background.InfoResp{
-		Result: background.InfoData{
+	res = backgroundapischema.InfoResp{
+		Result: backgroundapischema.InfoData{
 			BackgroundInfo: backgroundsList,
 		},
 		Status:     200,

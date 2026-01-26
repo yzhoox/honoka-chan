@@ -1,4 +1,4 @@
-package unit
+package unitapischema
 
 type UserDeckData struct {
 	ID         int    `xorm:"id pk autoincr"`
@@ -26,7 +26,7 @@ type UnitDeckData struct {
 	IsSigned         bool  `xorm:"is_signed" json:"is_signed"`
 	BeforeLove       int   `xorm:"before_love" json:"before_love"`
 	MaxLove          int   `xorm:"max_love" json:"max_love"`
-	InsertData       int64 `xorm:"insert_date" json:"-"`
+	InsertDate       int64 `xorm:"insert_date" json:"-"`
 }
 
 type UnitOwningUserIds struct {

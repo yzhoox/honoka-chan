@@ -2,14 +2,14 @@ package login
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"honoka-chan/internal/middleware"
+	loginmodel "honoka-chan/internal/model/login"
 	"honoka-chan/internal/router"
 	loginschema "honoka-chan/internal/schema/login"
 	"honoka-chan/internal/session"
-	"honoka-chan/pkg/db"
 	"honoka-chan/pkg/encrypt"
 	honokautils "honoka-chan/pkg/utils"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
@@ -38,18 +38,12 @@ func authKey(ctx *gin.Context) {
 	serverToken := base64.StdEncoding.EncodeToString([]byte(honokautils.RandomStr(32)))
 	authorizeToken := base64.StdEncoding.EncodeToString([]byte(honokautils.RandomStr(32)))
 
-	authJson, err := json.Marshal(map[string]any{
-		"client_token": clientToken,
-		"server_token": serverToken,
+	ss.SetAuthKey(&loginmodel.AuthKey{
+		AuthorizeToken: authorizeToken,
+		ClientToken:    clientToken,
+		ServerToken:    serverToken,
+		InsertDate:     time.Now().Format("2006-01-02 15:04:05"),
 	})
-	if ss.CheckErr(err) {
-		return
-	}
-
-	err = db.Ldb.Set([]byte(authorizeToken), authJson)
-	if ss.CheckErr(err) {
-		return
-	}
 
 	ss.Respond(loginschema.AuthKeyResp{
 		ResponseData: loginschema.AuthKeyData{

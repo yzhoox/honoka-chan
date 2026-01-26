@@ -1,4 +1,4 @@
-package background
+package backgroundapischema
 
 type Info struct {
 	BackgroundID int    `json:"background_id"`

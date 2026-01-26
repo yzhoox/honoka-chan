@@ -1,4 +1,4 @@
-package award
+package awardapischema
 
 type Info struct {
 	AwardID    int    `json:"award_id"`

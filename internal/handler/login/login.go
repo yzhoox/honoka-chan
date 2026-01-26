@@ -7,10 +7,8 @@ import (
 	"honoka-chan/internal/router"
 	loginschema "honoka-chan/internal/schema/login"
 	"honoka-chan/internal/session"
-	"honoka-chan/pkg/db"
 	"honoka-chan/pkg/encrypt"
 	honokautils "honoka-chan/pkg/utils"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,16 +19,17 @@ func login(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	authData, err := db.Ldb.Get([]byte(ctx.MustGet("token").(string)))
-	if ss.CheckErr(err) {
+	has, authKeyData := ss.GetAuthKey(ctx.MustGet("token").(string))
+	if !has {
+		ss.Abort(errors.New("invalid token"))
 		return
 	}
 
-	clientToken, err := base64.StdEncoding.DecodeString(gjson.Get(string(authData), "client_token").String())
+	clientToken, err := base64.StdEncoding.DecodeString(authKeyData.ClientToken)
 	if ss.CheckErr(err) {
 		return
 	}
-	serverToken, err := base64.StdEncoding.DecodeString(gjson.Get(string(authData), "server_token").String())
+	serverToken, err := base64.StdEncoding.DecodeString(authKeyData.ServerToken)
 	if ss.CheckErr(err) {
 		return
 	}
@@ -55,7 +54,7 @@ func login(ctx *gin.Context) {
 
 	authorizeToken := base64.StdEncoding.EncodeToString([]byte(honokautils.RandomStr(32)))
 
-	var userID int // 需要更新为字符串
+	var userID int
 	exists, err := ss.UserEng.Table("user_key").Where("key = ?", string(loginKey)).Cols("user_id").Get(&userID)
 	if ss.CheckErr(err) {
 		return
@@ -63,11 +62,6 @@ func login(ctx *gin.Context) {
 
 	if !exists || userID == 0 {
 		ss.Abort(errors.New("invalid user"))
-		return
-	}
-
-	err = db.Ldb.Set([]byte(strconv.Itoa(userID)), []byte(authorizeToken))
-	if ss.CheckErr(err) {
 		return
 	}
 

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/multiunit"
+	multiunitschema "honoka-chan/internal/schema/multiunit"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -15,14 +15,14 @@ func scenarioStartup(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	startReq := multiunit.ScenarioStartUpReq{}
+	startReq := multiunitschema.ScenarioStartUpReq{}
 	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &startReq)
 	if ss.CheckErr(err) {
 		return
 	}
 
-	ss.Respond(multiunit.ScenarioStartUpResp{
-		ResponseData: multiunit.ScenarioStartUpData{
+	ss.Respond(multiunitschema.ScenarioStartUpResp{
+		ResponseData: multiunitschema.ScenarioStartUpData{
 			MultiUnitScenarioID: startReq.MultiUnitScenarioID,
 			ScenarioAdjustment:  50,
 			ServerTimestamp:     time.Now().Unix(),

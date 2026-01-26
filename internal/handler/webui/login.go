@@ -3,7 +3,7 @@ package webui
 import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/webui"
+	webuischema "honoka-chan/internal/schema/webui"
 	"honoka-chan/internal/utils"
 	"honoka-chan/pkg/db"
 	"net/http"
@@ -18,7 +18,7 @@ func login(ctx *gin.Context) {
 	user := ctx.PostForm("user")
 	pass := ctx.PostForm("pass")
 	if area == "" || user == "" || pass == "" {
-		ctx.JSON(http.StatusOK, webui.Msg{
+		ctx.JSON(http.StatusOK, webuischema.Msg{
 			Code:     1,
 			Message:  "参数不完整！",
 			Redirect: "",
@@ -28,10 +28,12 @@ func login(ctx *gin.Context) {
 
 	userName := " " + area + "-" + user
 	var userId int
-	exists, err := db.UserEng.Table("users").Where("phone = ? AND password = ?", userName, openssl.Md5ToString(pass)).Cols("user_id").Get(&userId)
+	exists, err := db.UserEng.Table("users").
+		Where("phone = ? AND password = ?", userName, openssl.Md5ToString(pass)).
+		Cols("user_id").Get(&userId)
 	utils.CheckErr(err)
 	if !exists {
-		ctx.JSON(http.StatusOK, webui.Msg{
+		ctx.JSON(http.StatusOK, webuischema.Msg{
 			Code:     1,
 			Message:  "账号不存在或者密码有误！",
 			Redirect: "",
@@ -46,7 +48,7 @@ func login(ctx *gin.Context) {
 	session.Set("userid", userId)
 	session.Save()
 
-	ctx.JSON(http.StatusOK, webui.Msg{
+	ctx.JSON(http.StatusOK, webuischema.Msg{
 		Code:     0,
 		Message:  "登录成功！",
 		Redirect: "/admin/index",

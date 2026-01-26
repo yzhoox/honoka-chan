@@ -1,4 +1,4 @@
-package notice
+package noticeschema
 
 type UserGreetingData struct {
 	ItemCount       int   `json:"item_count"`

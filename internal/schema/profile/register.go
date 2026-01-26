@@ -1,4 +1,4 @@
-package profile
+package profileschema
 
 type RegisterResp struct {
 	ResponseData []any `json:"response_data"`

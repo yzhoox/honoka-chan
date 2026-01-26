@@ -1,4 +1,4 @@
-package tos
+package tosschema
 
 type CheckData struct {
 	TosID           int   `json:"tos_id"`

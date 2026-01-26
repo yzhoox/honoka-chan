@@ -1,4 +1,4 @@
-package notice
+package noticeapischema
 
 type MarqueeData struct {
 	ItemCount   int   `json:"item_count"`

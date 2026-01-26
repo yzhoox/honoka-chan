@@ -1,4 +1,4 @@
-package webui
+package webuischema
 
 type Msg struct {
 	Code     int    `json:"code"`

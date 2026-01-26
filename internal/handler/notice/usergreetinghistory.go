@@ -3,7 +3,7 @@ package notice
 import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/notice"
+	noticeschema "honoka-chan/internal/schema/notice"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -14,8 +14,8 @@ func userGreetingHistory(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	ss.Respond(notice.UserGreetingResp{
-		ResponseData: notice.UserGreetingData{
+	ss.Respond(noticeschema.UserGreetingResp{
+		ResponseData: noticeschema.UserGreetingData{
 			ItemCount:       0,
 			HasNext:         false,
 			NoticeList:      []any{},

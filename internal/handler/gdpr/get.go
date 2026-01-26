@@ -3,7 +3,7 @@ package gdpr
 import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/gdpr"
+	gdprschema "honoka-chan/internal/schema/gdpr"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -14,8 +14,8 @@ func get(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	ss.Respond(gdpr.GetResp{
-		ResponseData: gdpr.GetData{
+	ss.Respond(gdprschema.GetResp{
+		ResponseData: gdprschema.GetData{
 			EnableGdpr:      true,
 			IsEea:           false,
 			ServerTimestamp: time.Now().Unix(),

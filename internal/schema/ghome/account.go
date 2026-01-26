@@ -1,4 +1,4 @@
-package ghome
+package ghomeschema
 
 type ActiveData struct {
 	Message string `json:"message"`

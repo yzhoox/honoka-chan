@@ -1,4 +1,4 @@
-package event
+package eventschema
 
 type TargetList struct {
 	Position      int  `json:"position"`

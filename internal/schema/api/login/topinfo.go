@@ -1,4 +1,4 @@
-package login
+package loginapischema
 
 type LicenseInfo struct {
 	LicenseList  []any `json:"license_list"`

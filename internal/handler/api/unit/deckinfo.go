@@ -1,7 +1,7 @@
 package unit
 
 import (
-	"honoka-chan/internal/schema/api/unit"
+	unitapischema "honoka-chan/internal/schema/api/unit"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -11,23 +11,23 @@ import (
 func unitDeckInfo(ctx *gin.Context) (res any, err error) {
 	ss := session.Get(ctx)
 
-	userDeck := []unit.UserDeckData{}
+	userDeck := []unitapischema.UserDeckData{}
 	err = ss.UserEng.Table("user_deck").Where("user_id = ?", ss.UserID).Asc("deck_id").Find(&userDeck)
 	if ss.CheckErr(err) {
 		return
 	}
 
-	unitDeckInfo := []unit.DeckInfoData{}
+	unitDeckInfo := []unitapischema.DeckInfoData{}
 	for _, deck := range userDeck {
-		deckUnit := []unit.UnitDeckData{}
+		deckUnit := []unitapischema.UnitDeckData{}
 		err = ss.UserEng.Table("user_deck_unit").Where("user_deck_id = ?", deck.ID).Asc("position").Find(&deckUnit)
 		if ss.CheckErr(err) {
 			return
 		}
 
-		oUID := []unit.UnitOwningUserIds{}
+		oUID := []unitapischema.UnitOwningUserIds{}
 		for _, u := range deckUnit {
-			oUID = append(oUID, unit.UnitOwningUserIds{
+			oUID = append(oUID, unitapischema.UnitOwningUserIds{
 				Position:         u.Position,
 				UnitOwningUserID: u.UnitOwningUserID,
 			})
@@ -37,14 +37,14 @@ func unitDeckInfo(ctx *gin.Context) (res any, err error) {
 		if deck.MainFlag == 1 {
 			mainFlag = true
 		}
-		unitDeckInfo = append(unitDeckInfo, unit.DeckInfoData{
+		unitDeckInfo = append(unitDeckInfo, unitapischema.DeckInfoData{
 			UnitDeckID:        deck.DeckID,
 			MainFlag:          mainFlag,
 			DeckName:          deck.DeckName,
 			UnitOwningUserIds: oUID,
 		})
 	}
-	res = unit.DeckInfoResp{
+	res = unitapischema.DeckInfoResp{
 		Result:     unitDeckInfo,
 		Status:     200,
 		CommandNum: false,

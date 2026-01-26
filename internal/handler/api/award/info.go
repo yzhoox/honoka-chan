@@ -1,7 +1,7 @@
 package award
 
 import (
-	"honoka-chan/internal/schema/api/award"
+	awardapischema "honoka-chan/internal/schema/api/award"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -23,21 +23,21 @@ func awardInfo(ctx *gin.Context) (res any, err error) {
 		return
 	}
 
-	awardsList := []award.Info{}
+	awardsList := []awardapischema.Info{}
 	for _, id := range awardList {
 		isSet := false
 		if id == awardID {
 			isSet = true
 		}
-		awardsList = append(awardsList, award.Info{
+		awardsList = append(awardsList, awardapischema.Info{
 			AwardID:    id,
 			IsSet:      isSet,
-			InsertDate: time.Now().Format("2006-01-02 03:04:05"),
+			InsertDate: "2023-03-20 03:58:55",
 		})
 	}
 
-	res = award.InfoResp{
-		Result: award.InfoData{
+	res = awardapischema.InfoResp{
+		Result: awardapischema.InfoData{
 			AwardInfo: awardsList,
 		},
 		Status:     200,

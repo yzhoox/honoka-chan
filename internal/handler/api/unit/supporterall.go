@@ -1,14 +1,14 @@
 package unit
 
 import (
-	"honoka-chan/internal/schema/api/unit"
+	unitapischema "honoka-chan/internal/schema/api/unit"
 	"time"
 )
 
 func unitSupporterAll() (res any, err error) {
-	res = unit.SupporterAllResp{
-		Result: unit.SupporterAllData{
-			UnitSupportList: []unit.SupporterList{},
+	res = unitapischema.SupporterAllResp{
+		Result: unitapischema.SupporterAllData{
+			UnitSupportList: []unitapischema.SupporterList{},
 		}, // 练习道具
 		Status:     200,
 		CommandNum: false,

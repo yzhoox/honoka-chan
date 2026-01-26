@@ -1,4 +1,4 @@
-package download
+package downloadschema
 
 type BatchReq struct {
 	ClientVersion      string `json:"client_version"`

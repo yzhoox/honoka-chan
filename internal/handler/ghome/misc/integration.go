@@ -2,7 +2,7 @@ package misc
 
 import (
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/ghome"
+	ghomeschema "honoka-chan/internal/schema/ghome"
 	"honoka-chan/internal/session"
 
 	"github.com/gin-gonic/gin"
@@ -12,10 +12,10 @@ func appReport(ctx *gin.Context) {
 	ss := session.New(ctx)
 	defer ss.Finalize()
 
-	ss.Respond(ghome.AppReportResp{
+	ss.Respond(ghomeschema.AppReportResp{
 		Code: 0,
 		Msg:  "",
-		Data: ghome.AppReportData{
+		Data: ghomeschema.AppReportData{
 			NeedReport: 0,
 		},
 	})

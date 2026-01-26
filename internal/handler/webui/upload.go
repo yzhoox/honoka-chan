@@ -3,8 +3,9 @@ package webui
 import (
 	"encoding/csv"
 	"honoka-chan/internal/middleware"
+	unitmodel "honoka-chan/internal/model/unit"
+	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/api/profile"
 	"honoka-chan/internal/utils"
 	"honoka-chan/pkg/db"
 	"net/http"
@@ -34,11 +35,16 @@ func upload(ctx *gin.Context) {
 	defer session.Close()
 	if err = session.Begin(); err != nil {
 		session.Rollback()
-		panic(err)
+		ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: err.Error()})
+		return
 	}
 
 	f, err := os.Open(tmpPath)
-	utils.CheckErr(err)
+	if err != nil {
+		session.Rollback()
+		ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "文件创建失败！"})
+		return
+	}
 	defer f.Close()
 
 	r := csv.NewReader(f)
@@ -55,95 +61,57 @@ func upload(ctx *gin.Context) {
 			return
 		}
 
-		skillLv, err := strconv.Atoi(rr[1])
+		skLv, err := strconv.Atoi(rr[1])
 		if err != nil {
 			session.Rollback()
 			ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "文件解析失败！"})
 			return
 		}
 
-		var unitId, unitExp, unitRarity, unitHp, unitSigned int
-		exists, err := db.MainEng.Table("common_unit_m").Join("LEFT", "unit_m", "common_unit_m.unit_id = unit_m.unit_id").
-			Where("unit_m.unit_number = ?", rr[0]).
-			Cols("common_unit_m.unit_id,common_unit_m.exp,unit_m.rarity,common_unit_m.max_hp,common_unit_m.is_signed").
-			Get(&unitId, &unitExp, &unitRarity, &unitHp, &unitSigned)
-		utils.CheckErr(err)
-
+		uData := unitmodel.CommonUnitData{}
+		exists, err := session.Table(new(unitmodel.CommonUnitData)).Where("unit_number = ?", rr[0]).Get(&uData)
 		if !exists {
 			session.Rollback()
 			ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "卡片不存在！"})
 			return
 		}
 
-		if unitRarity != 4 {
+		if uData.Rarity != 4 {
 			session.Rollback()
 			ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "仅支持导入UR卡片！"})
 			return
 		}
 
-		if skillLv < 0 || skillLv > 8 {
+		if skLv < 0 || skLv > 8 {
 			session.Rollback()
 			ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "技能等级设置有误！"})
 			return
 		}
 
-		var diffExp, diffSmile, diffPure, diffCool int
-		_, err = db.MainEng.Table("unit_level_limit_pattern_m").Where("unit_level_limit_id = 1 AND unit_level = 350").
-			Cols("next_exp,smile_diff,pure_diff,cool_diff").Get(&diffExp, &diffSmile, &diffPure, &diffCool)
-		utils.CheckErr(err)
-
-		isSigned := false
-		if unitSigned == 1 {
-			isSigned = true
+		unitData := usermodel.UserUnitData{
+			UnitID:       uData.UnitID,
+			FavoriteFlag: false,
+			DisplayRank:  uData.MaxRank,
+			UserID:       ctx.GetInt("userid"),
+			InsertDate:   time.Now().Unix(),
+			UpdateDate:   time.Now().Unix(),
 		}
 
-		var skillExp int
-		if skillLv != 8 {
-			skillExp = 0
-		} else {
-			skillExp = 29900
-		}
-
-		unitData := profile.UnitData{
-			UserID:                      ctx.GetInt("userid"),
-			UnitID:                      unitId,
-			Exp:                         unitExp + diffExp,
-			NextExp:                     0,
-			Level:                       350,
-			MaxLevel:                    350,
-			LevelLimitID:                1,
-			Rank:                        2,
-			MaxRank:                     2,
-			Love:                        1000,
-			MaxLove:                     1000,
-			UnitSkillExp:                skillExp,
-			UnitSkillLevel:              skillLv,
-			MaxHp:                       unitHp,
-			UnitRemovableSkillCapacity:  8,
-			FavoriteFlag:                false,
-			DisplayRank:                 2,
-			IsRankMax:                   true,
-			IsLoveMax:                   true,
-			IsLevelMax:                  true,
-			IsSigned:                    isSigned,
-			IsSkillLevelMax:             true,
-			IsRemovableSkillCapacityMax: true,
-			InsertDate:                  time.Now().Format("2006-01-02 03:04:05"),
-		}
-
-		_, err = session.Table("user_unit").Insert(&unitData)
+		_, err = session.Table(new(usermodel.UserUnitData)).Insert(&unitData)
 		if err != nil {
 			session.Rollback()
-			panic(err)
+			ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "卡片添加失败！"})
+			return
 		}
 
 		if err = session.Commit(); err != nil {
 			session.Rollback()
-			panic(err)
+			ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "卡片添加失败！"})
+			return
 		}
 	}
 
-	ctx.JSON(http.StatusOK, ErrMsg{Error: 0, Msg: "上传成功！"})
+	ctx.JSON(http.StatusOK, ErrMsg{Error: 0, Msg: "导入成功，请重新打开游戏！"})
 }
 
 func init() {

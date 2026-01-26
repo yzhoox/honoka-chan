@@ -4,13 +4,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"honoka-chan/internal/model/user"
+	unitmodel "honoka-chan/internal/model/unit"
+	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/api/profile"
-	"honoka-chan/internal/schema/api/unit"
+	unitapischema "honoka-chan/internal/schema/api/unit"
 	ghomeschema "honoka-chan/internal/schema/ghome"
 	"honoka-chan/internal/session"
-	honokautils "honoka-chan/pkg/utils"
+	"honoka-chan/pkg/utils"
 	"net/url"
 	"strconv"
 	"strings"
@@ -62,10 +62,10 @@ func login(ctx *gin.Context) {
 		userID, _ = checkUserID(ss, int(loginTime))
 
 		pass = openssl.Md5ToString(password)
-		autoKey = "AUTO" + strings.ToUpper(honokautils.RandomStr(32))
+		autoKey = "AUTO" + strings.ToUpper(utils.RandomStr(32))
 		ticket = fmt.Sprintf("9999999%d%d", userID, userID)
 
-		userData := user.Users{
+		userData := usermodel.Users{
 			Phone:         phone,
 			Password:      pass,
 			Autokey:       autoKey,
@@ -80,7 +80,7 @@ func login(ctx *gin.Context) {
 
 		// 方便起见初始化 userid 和 key 一样
 		// 注意：user_key 表中的 key 是上文生成的用于登录的 userid，而 userid 则是用于 Authorize Token 生成用的
-		userKey := user.UserKey{
+		userKey := usermodel.UserKey{
 			UserID: userID,
 			Key:    userID,
 		}
@@ -96,20 +96,59 @@ func login(ctx *gin.Context) {
 		}
 
 		if !exists {
-			// 默认中心成员
-			var unitOwningUserID int
-			_, err = ss.MainEng.Table("common_unit_m").Cols("unit_owning_user_id").Where("unit_id = ?", 31).Get(&unitOwningUserID)
+			// 生成用于卡片
+			var unitData []unitmodel.CommonUnitData
+			err = ss.UserEng.Table(new(unitmodel.CommonUnitData)).Find(&unitData)
 			if ss.CheckErr(err) {
 				return
 			}
 
-			userPref := user.UserPref{
+			checked := false
+			for _, u := range unitData {
+				userUnit := usermodel.UserUnitData{
+					UnitID:       u.UnitID,
+					FavoriteFlag: false,
+					DisplayRank:  u.MaxRank,
+					UserID:       userID,
+					InsertDate:   time.Now().Unix(),
+					UpdateDate:   time.Now().Unix(),
+				}
+
+				// 检查表里是否已经有数据
+				if !checked {
+					ct, err := ss.UserEng.Table(new(usermodel.UserUnitData)).Count()
+					if ss.CheckErr(err) {
+						return
+					}
+
+					if ct == 0 {
+						userUnit.UnitOwningUserID = 38383
+					}
+
+					checked = true
+				}
+
+				_, err = ss.UserEng.Table(new(usermodel.UserUnitData)).Insert(&userUnit)
+				if ss.CheckErr(err) {
+					return
+				}
+			}
+
+			// 默认中心成员
+			var unitOwningUserID int
+			_, err = ss.UserEng.Table(new(usermodel.UserUnitData)).
+				Cols("unit_owning_user_id").Where("unit_id = ?", 31).Get(&unitOwningUserID)
+			if ss.CheckErr(err) {
+				return
+			}
+
+			userPref := usermodel.UserPref{
 				UserID:           userID,
 				AwardID:          1, // 音乃木坂学生
 				BackgroundID:     1, // 初始背景
 				UnitOwningUserID: unitOwningUserID,
 				UserName:         "音乃木坂学生",
-				UserLevel:        1,
+				UserLevel:        1028,
 				UserDesc:         "你好。",
 				InviteCode:       strconv.Itoa(userID),
 				UpdateTime:       time.Now().Unix(),
@@ -128,7 +167,7 @@ func login(ctx *gin.Context) {
 
 		if !exists {
 			// 默认队伍
-			userDeck := unit.UserDeckData{
+			userDeck := unitapischema.UserDeckData{
 				DeckID:     1,
 				MainFlag:   1,
 				DeckName:   "队伍A",
@@ -139,44 +178,37 @@ func login(ctx *gin.Context) {
 			userDeckID := userDeck.ID
 
 			// 默认卡组 - 仆光
-			unitID := []int{}
-			err = ss.MainEng.Table("unit_m").Cols("unit_id").Where("album_series_id = ?", 615).Find(&unitID)
+			unitID := []int{3465, 3466, 3467, 3468, 3469, 3470, 3471, 3472, 3473}
+			var unitData []unitmodel.UnitDataMap
+			err = ss.GetBasicUnitInfo().In("a.unit_id", unitID).Find(&unitData)
 			if ss.CheckErr(err) {
 				return
 			}
 
-			unitData := []profile.UnitData{}
-			err = ss.MainEng.Table("common_unit_m").In("unit_id", unitID).Find(&unitData)
-			if ss.CheckErr(err) {
-				return
-			}
-
-			position := 1
-			for _, u := range unitData {
-				unitDeckData := unit.UnitDeckData{
+			for i, u := range unitData {
+				unitDeckData := usermodel.UserDeckUnit{
 					UserDeckID:       userDeckID,
 					UnitOwningUserID: u.UnitOwningUserID,
 					UnitID:           u.UnitID,
-					Position:         position,
-					Level:            100,
-					LevelLimitID:     1,
-					DisplayRank:      2,
-					Love:             1000,
-					UnitSkillLevel:   8,
-					IsRankMax:        true,
-					IsLoveMax:        true,
-					IsLevelMax:       true,
+					Position:         i + 1,
+					Level:            u.Level,
+					LevelLimitID:     u.LevelLimitID,
+					DisplayRank:      u.DisplayRank,
+					Love:             u.MaxLove,
+					UnitSkillLevel:   u.UnitSkillLevel,
+					IsRankMax:        u.IsRankMax,
+					IsLoveMax:        u.IsLoveMax,
+					IsLevelMax:       u.IsLevelMax,
 					IsSigned:         u.IsSigned,
-					BeforeLove:       1000,
-					MaxLove:          1000,
-					InsertData:       time.Now().Unix(),
+					BeforeLove:       u.MaxLove,
+					MaxLove:          u.MaxLove,
+					UserID:           userID,
+					InsertDate:       time.Now().Unix(),
 				}
 				_, err = ss.UserEng.Table("user_deck_unit").Insert(&unitDeckData)
 				if ss.CheckErr(err) {
 					return
 				}
-
-				position++
 			}
 		}
 
@@ -193,7 +225,7 @@ func login(ctx *gin.Context) {
 			loginCode = 31
 			loginMsg = "账号不存在或者密码有误！"
 		} else {
-			userData := user.Users{
+			userData := usermodel.Users{
 				Autokey:       autoKey,
 				Ticket:        ticket,
 				LastLoginTime: loginTime,

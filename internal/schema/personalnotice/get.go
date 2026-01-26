@@ -1,4 +1,4 @@
-package personalnotice
+package personalnoticeschema
 
 type GetData struct {
 	HasNotice       bool   `json:"has_notice"`

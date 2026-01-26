@@ -1,4 +1,4 @@
-package unit
+package unitapischema
 
 type SkillEquipCount struct {
 	UnitRemovableSkillId int `xorm:"unit_removable_skill_id"`

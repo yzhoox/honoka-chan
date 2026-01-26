@@ -2,7 +2,7 @@ package user
 
 import (
 	"honoka-chan/internal/middleware"
-	"honoka-chan/internal/model/user"
+	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
 	userschema "honoka-chan/internal/schema/user"
 	"honoka-chan/internal/session"
@@ -23,7 +23,7 @@ func changeName(ctx *gin.Context) {
 		return
 	}
 
-	pref := user.UserPref{
+	pref := usermodel.UserPref{
 		UserName: req.Get("name").String(),
 	}
 	_, err = ss.UserEng.Table("user_pref").Where("user_id = ?", ss.UserID).Update(&pref)

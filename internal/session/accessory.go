@@ -1,0 +1,53 @@
+package session
+
+import (
+	accessorymodel "honoka-chan/internal/model/accessory"
+	usermodel "honoka-chan/internal/model/user"
+)
+
+func (ss *Session) GetUserAccessoryWearByUnitOwningUserID(unitOwningUserID int) (bool, *usermodel.UserAccessoryWear) {
+	wearData := usermodel.UserAccessoryWear{}
+	has, err := ss.UserEng.Table(new(usermodel.UserAccessoryWear)).
+		Where("unit_owning_user_id = ?", unitOwningUserID).Get(&wearData)
+	if ss.CheckErr(err) {
+		return false, nil
+	}
+
+	return has, &wearData
+}
+
+func (ss *Session) GetAccessoryByAccessoryOwningUserID(accessoryOwningUserID int) (bool, *accessorymodel.Accessory) {
+	accessoryData := accessorymodel.Accessory{}
+	has, err := ss.MainEng.Table("common_accessory_m").Alias("a").
+		Join("LEFT", "accessory_m", "a.accessory_id = accessory_m.accessory_id").
+		Where("a.accessory_owning_user_id = ?", accessoryOwningUserID).
+		Cols("accessory_m.*,a.exp").Get(&accessoryData)
+	if ss.CheckErr(err) {
+		return false, nil
+	}
+
+	return has, &accessoryData
+}
+
+func (ss *Session) GetUserAccessoryInfoByUnitOwningUserID(unitOwningUserID int) (bool, *usermodel.AccessoryInfo) {
+	has, wearData := ss.GetUserAccessoryWearByUnitOwningUserID(unitOwningUserID)
+	if !has {
+		return false, nil
+	}
+
+	has, accessoryData := ss.GetAccessoryByAccessoryOwningUserID(wearData.AccessoryOwningUserID)
+	if !has {
+		return false, nil
+	}
+
+	return has, &usermodel.AccessoryInfo{
+		AccessoryOwningUserID: wearData.AccessoryOwningUserID,
+		AccessoryID:           accessoryData.AccessoryID,
+		Exp:                   accessoryData.Exp,
+		NextExp:               0,
+		Level:                 accessoryData.MaxLevel,
+		MaxLevel:              accessoryData.MaxLevel,
+		RankUpCount:           accessoryData.MaxLevel - accessoryData.DefaultMaxLevel,
+		FavoriteFlag:          true,
+	}
+}

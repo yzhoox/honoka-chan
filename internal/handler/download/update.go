@@ -6,7 +6,7 @@ import (
 	"honoka-chan/config"
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/download"
+	downloadschema "honoka-chan/internal/schema/download"
 	"honoka-chan/internal/session"
 	"io"
 	"net/http"
@@ -18,13 +18,13 @@ func update(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	downloadReq := download.UpdateReq{}
+	downloadReq := downloadschema.UpdateReq{}
 	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &downloadReq)
 	if ss.CheckErr(err) {
 		return
 	}
 
-	pkgList := []download.UpdateData{}
+	pkgList := []downloadschema.UpdateData{}
 	if downloadReq.ExternalVersion != config.PackageVersion {
 		pkgType := 99
 		var pkgInfo []PkgInfo
@@ -36,7 +36,7 @@ func update(ctx *gin.Context) {
 		}
 
 		for _, pkg := range pkgInfo {
-			pkgList = append(pkgList, download.UpdateData{
+			pkgList = append(pkgList, downloadschema.UpdateData{
 				Size: pkg.Size,
 				URL: fmt.Sprintf("%s/%s/archives/%d_%d_%d.zip",
 					config.Conf.Settings.CdnServer, downloadReq.TargetOs, pkgType, pkg.Id, pkg.Order),
@@ -60,7 +60,7 @@ func update(ctx *gin.Context) {
 		}
 	}
 
-	ss.Respond(download.UpdateResp{
+	ss.Respond(downloadschema.UpdateResp{
 		ResponseData: pkgList,
 		ReleaseInfo:  []any{},
 		StatusCode:   200,

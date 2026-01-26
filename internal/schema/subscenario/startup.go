@@ -1,4 +1,4 @@
-package subscenario
+package subscenarioschema
 
 type StartUpReq struct {
 	Module        string `json:"module"`

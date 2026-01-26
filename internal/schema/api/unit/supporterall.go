@@ -1,4 +1,4 @@
-package unit
+package unitapischema
 
 type SupporterList struct {
 	UnitID int `json:"unit_id"`

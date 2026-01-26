@@ -1,4 +1,4 @@
-package lbonus
+package lbonusschema
 
 type Item struct {
 	ItemID  int `json:"item_id"`

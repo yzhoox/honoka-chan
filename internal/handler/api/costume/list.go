@@ -1,14 +1,14 @@
 package costume
 
 import (
-	"honoka-chan/internal/schema/api/costume"
+	costumeapischema "honoka-chan/internal/schema/api/costume"
 	"time"
 )
 
 func costumeList() (res any, err error) {
-	res = costume.ListResp{
-		Result: costume.ListData{
-			CostumeList: []costume.CostumeList{},
+	res = costumeapischema.ListResp{
+		Result: costumeapischema.ListData{
+			CostumeList: []costumeapischema.CostumeList{},
 		},
 		Status:     200,
 		CommandNum: false,

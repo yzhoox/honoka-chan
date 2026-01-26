@@ -1,4 +1,4 @@
-package museum
+package museumapischema
 
 type Parameter struct {
 	Smile int `json:"smile"`

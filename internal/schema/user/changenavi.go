@@ -1,4 +1,4 @@
-package user
+package userschema
 
 type ChangeNaviResp struct {
 	ResponseData []any `json:"response_data"`

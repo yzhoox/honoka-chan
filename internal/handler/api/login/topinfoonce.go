@@ -1,19 +1,19 @@
 package login
 
 import (
-	"honoka-chan/internal/schema/api/login"
+	loginapischema "honoka-chan/internal/schema/api/login"
 	"time"
 )
 
 func loginTopInfoOnce() (res any, err error) {
-	res = login.TopInfoOnceResp{
-		Result: login.TopInfoOnceData{
+	res = loginapischema.TopInfoOnceResp{
+		Result: loginapischema.TopInfoOnceData{
 			NewAchievementCnt:            0,
 			UnaccomplishedAchievementCnt: 0,
 			LiveDailyRewardExist:         false,
 			TrainingEnergy:               10,
 			TrainingEnergyMax:            10,
-			Notification: login.Notification{
+			Notification: loginapischema.Notification{
 				Push:       false,
 				Lp:         false,
 				UpdateInfo: false,

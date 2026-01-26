@@ -1,4 +1,4 @@
-package download
+package downloadschema
 
 type AdditionalReq struct {
 	Module      string `json:"module"`

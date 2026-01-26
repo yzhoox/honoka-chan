@@ -3,7 +3,7 @@ package notice
 import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/schema/notice"
+	noticeschema "honoka-chan/internal/schema/notice"
 	"honoka-chan/internal/session"
 	"time"
 
@@ -14,8 +14,8 @@ func friendVariety(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	ss.Respond(notice.FriendVarietyResp{
-		ResponseData: notice.FriendVarietyData{
+	ss.Respond(noticeschema.FriendVarietyResp{
+		ResponseData: noticeschema.FriendVarietyData{
 			ItemCount:       1,
 			NoticeList:      []any{},
 			ServerTimestamp: time.Now().Unix(),

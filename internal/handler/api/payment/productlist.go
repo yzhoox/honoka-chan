@@ -1,25 +1,25 @@
 package payment
 
 import (
-	"honoka-chan/internal/schema/api/payment"
+	paymentapischema "honoka-chan/internal/schema/api/payment"
 	"time"
 )
 
 func productList() (res any, err error) {
-	res = payment.ProductListResp{
-		Result: payment.ProductListData{
-			RestrictionInfo: payment.RestrictionInfo{
+	res = paymentapischema.ProductListResp{
+		Result: paymentapischema.ProductListData{
+			RestrictionInfo: paymentapischema.RestrictionInfo{
 				Restricted: false,
 			},
-			UnderAgeInfo: payment.UnderAgeInfo{
+			UnderAgeInfo: paymentapischema.UnderAgeInfo{
 				BirthSet:    false,
 				HasLimit:    false,
 				LimitAmount: nil,
 				MonthUsed:   0,
 			},
-			SnsProductList:   []payment.SnsProduct{},
-			ProductList:      []payment.Product{},
-			SubscriptionList: []payment.Subscription{},
+			SnsProductList:   []paymentapischema.SnsProduct{},
+			ProductList:      []paymentapischema.Product{},
+			SubscriptionList: []paymentapischema.Subscription{},
 			ShowPointShop:    false,
 		},
 		Status:     200,

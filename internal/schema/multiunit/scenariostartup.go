@@ -1,4 +1,4 @@
-package multiunit
+package multiunitschema
 
 type ScenarioStartUpReq struct {
 	Module              string `json:"module"`
