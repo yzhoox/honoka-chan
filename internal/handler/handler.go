@@ -13,6 +13,7 @@ import (
 	_ "honoka-chan/internal/handler/lbonus"
 	_ "honoka-chan/internal/handler/live"
 	_ "honoka-chan/internal/handler/login"
+	_ "honoka-chan/internal/handler/maintenance"
 	_ "honoka-chan/internal/handler/multiunit"
 	_ "honoka-chan/internal/handler/museum"
 	_ "honoka-chan/internal/handler/notice"
