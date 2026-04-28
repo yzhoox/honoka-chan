@@ -6,6 +6,7 @@ import (
 	"honoka-chan/internal/utils"
 	"honoka-chan/pkg/db"
 	"log"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"xorm.io/xorm"
@@ -75,6 +76,7 @@ func (ss *Session) Respond(resp any) {
 		return
 	}
 
+	ss.Ctx.Header("Content-Type", "application/json")
 	ss.Ctx.Header("X-Message-Sign", utils.GenXMS(data))
-	ss.Ctx.String(200, string(data))
+	ss.Ctx.String(http.StatusOK, string(data))
 }

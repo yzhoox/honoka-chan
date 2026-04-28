@@ -7,3 +7,7 @@ type AuthKey struct {
 	ServerToken    string `xorm:"server_token"`
 	InsertDate     string `xorm:"insert_date"`
 }
+
+func (AuthKey) TableName() string {
+	return "auth_key"
+}

@@ -8,3 +8,7 @@ type UserUnitData struct {
 	UserID           int   `xorm:"user_id"`
 	InsertDate       int64 `xorm:"insert_date"`
 }
+
+func (UserUnitData) TableName() string {
+	return "user_unit_data"
+}

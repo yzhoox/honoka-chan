@@ -23,6 +23,10 @@ type UserLiveRecord struct {
 	UpdateDate       string `xorm:"insert_date"`
 }
 
+func (UserLiveRecord) TableName() string {
+	return "user_live_record"
+}
+
 // TODO: 转移到 schema 下
 type NotesList struct {
 	TimingSec      float64 `json:"timing_sec"`

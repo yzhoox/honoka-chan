@@ -34,8 +34,8 @@ func upload(ctx *gin.Context) {
 		return
 	}
 
-	lines := strings.Split(content, "\n")
-	for _, rawLine := range lines {
+	lines := strings.SplitSeq(content, "\n")
+	for rawLine := range lines {
 		line := strings.TrimSpace(rawLine)
 		if line == "" {
 			continue

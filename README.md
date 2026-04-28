@@ -7,7 +7,7 @@ LoveLive! 学园偶像祭 自用私服。
 详见 `doc` 目录。
 
 ## 视频教程
- - [合集·SIF、AS 私服（本地服）搭建教程](https://space.bilibili.com/671443/channel/collectiondetail?sid=2148053)
+ - [合集·SIF、AS 私服（本地服）搭建教程](https://space.bilibili.com/671443/lists/2148053)
 
 ## 特别感谢
 

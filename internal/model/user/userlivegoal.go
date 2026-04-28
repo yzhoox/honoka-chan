@@ -9,3 +9,7 @@ type UserLiveGoal struct {
 	GoalType         constant.LiveGoalType `xorm:"goal_type"`
 	CompletedAt      int64                 `xorm:"completed_at"`
 }
+
+func (UserLiveGoal) TableName() string {
+	return "user_live_goal"
+}

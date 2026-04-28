@@ -45,6 +45,7 @@ func main() {
 			"/agreement/all",
 			"/integration/appReport/initialize",
 			"/report/ge/app",
+			"/v1/account/reportRole",
 		},
 	}))
 

@@ -7,6 +7,6 @@ type UserAccessoryWear struct {
 	UserID                int `xorm:"user_id"`
 }
 
-func (u *UserAccessoryWear) TableName() string {
+func (UserAccessoryWear) TableName() string {
 	return "user_accessory_wear"
 }

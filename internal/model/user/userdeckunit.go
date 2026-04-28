@@ -21,6 +21,6 @@ type UserDeckUnit struct {
 	InsertDate       int64 `xorm:"insert_date"`
 }
 
-func (u *UserDeckUnit) TableName() string {
+func (UserDeckUnit) TableName() string {
 	return "user_deck_unit"
 }
