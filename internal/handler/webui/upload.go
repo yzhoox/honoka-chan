@@ -94,7 +94,6 @@ func upload(ctx *gin.Context) {
 			DisplayRank:  uData.MaxRank,
 			UserID:       ctx.GetInt("userid"),
 			InsertDate:   time.Now().Unix(),
-			UpdateDate:   time.Now().Unix(),
 		}
 
 		_, err = session.Table(new(usermodel.UserUnitData)).Insert(&unitData)

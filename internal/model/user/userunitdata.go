@@ -7,5 +7,4 @@ type UserUnitData struct {
 	DisplayRank      int   `xorm:"display_rank"`
 	UserID           int   `xorm:"user_id"`
 	InsertDate       int64 `xorm:"insert_date"`
-	UpdateDate       int64 `xorm:"update_date"`
 }

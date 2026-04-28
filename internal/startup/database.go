@@ -193,7 +193,6 @@ func LoadUnitData() {
 					DisplayRank:  u.RankMax,
 					UserID:       id,
 					InsertDate:   time.Now().Unix(),
-					UpdateDate:   time.Now().Unix(),
 				}
 
 				// 检查表里是否已经有数据

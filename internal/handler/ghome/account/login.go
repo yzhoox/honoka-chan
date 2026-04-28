@@ -11,6 +11,7 @@ import (
 	unitapischema "honoka-chan/internal/schema/api/unit"
 	ghomeschema "honoka-chan/internal/schema/ghome"
 	"honoka-chan/internal/session"
+	"honoka-chan/pkg/db"
 	"honoka-chan/pkg/utils"
 	"net/url"
 	"strconv"
@@ -19,6 +20,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-think/openssl"
+)
+
+const (
+	defaultUserID       = 377385143
+	defaultAwardID      = 113 // 极推穗乃果
+	defaultBackgroundID = 65  // 穗乃果的房间
+	defaultUnitID       = 338 // 高坂穂乃果 直到那天来临
+	defaultUserName     = "梦路"
+	defaultUserDesc     = "你好。"
 )
 
 func login(ctx *gin.Context) {
@@ -58,24 +68,74 @@ func login(ctx *gin.Context) {
 		return
 	}
 
-	var userID int
-	var pass, autoKey, ticket string
-	_, err = ss.UserEng.Table("users").Cols("password,autokey,ticket,user_id").
-		Where("phone = ?", phone).Get(&pass, &autoKey, &ticket, &userID)
+	loginData, loginCode, loginMsg, _, err := AddUser(phone, password, false)
 	if ss.CheckErr(err) {
 		return
 	}
 
+	data, err = json.Marshal(loginData)
+	if ss.CheckErr(err) {
+		return
+	}
+	encryptedData, err := openssl.Des3ECBEncrypt([]byte(data), randKey, openssl.PKCS7_PADDING)
+	if ss.CheckErr(err) {
+		return
+	}
+
+	ss.Respond(ghomeschema.LoginResp{
+		Code: loginCode,
+		Msg:  loginMsg,
+		Data: base64.StdEncoding.EncodeToString(encryptedData),
+	})
+}
+
+func AddUser(phone, password string, isDefault bool) (ghomeschema.LoginData, int, string, bool, error) {
 	loginData := ghomeschema.LoginData{}
 	loginCode := 0
 	loginMsg := "ok"
 	loginTime := time.Now().Unix()
+	created := false
+
+	var userID int
+	var pass, autoKey, ticket string
+
+	session := db.UserEng.NewSession()
+	defer session.Close()
+
+	if err := session.Begin(); err != nil {
+		return loginData, loginCode, loginMsg, created, err
+	}
+
+	_, err := session.Table("users").Cols("password,autokey,ticket,user_id").
+		Where("phone = ?", phone).Get(&pass, &autoKey, &ticket, &userID)
+	if err != nil {
+		session.Rollback()
+		return loginData, loginCode, loginMsg, created, err
+	}
+
 	if pass == "" {
 		// 未注册 - 自动注册
-		// 检查是否 userID 已经注册
-		userID, err = getAvailableUserID(ss, int(loginTime))
-		if ss.CheckErr(err) {
-			return
+		awardID := 1      // 音乃木坂学生
+		backgroundID := 1 // 初始背景
+		unitID := 31      // 初始高坂穂乃果
+		userName := "音乃木坂学生"
+		userDesc := "你好。"
+		// 是否初始化
+		if isDefault {
+			// 初始化默认用户
+			userID = defaultUserID
+			awardID = defaultAwardID
+			backgroundID = defaultBackgroundID
+			unitID = defaultUnitID
+			userName = defaultUserName
+			userDesc = defaultUserDesc
+		} else {
+			// 检查是否 userID 已经注册
+			userID, err = getAvailableUserID(int(loginTime))
+			if err != nil {
+				session.Rollback()
+				return loginData, loginCode, loginMsg, created, err
+			}
 		}
 
 		pass = openssl.Md5ToString(password)
@@ -90,10 +150,12 @@ func login(ctx *gin.Context) {
 			UserID:        userID,
 			LastLoginTime: loginTime,
 		}
-		_, err = ss.UserEng.Table("users").Insert(&userData)
-		if ss.CheckErr(err) {
-			return
+		_, err = session.Table("users").Insert(&userData)
+		if err != nil {
+			session.Rollback()
+			return loginData, loginCode, loginMsg, created, err
 		}
+		created = true
 
 		// 方便起见初始化 userid 和 key 一样
 		// 注意：user_key 表中的 key 是上文生成的用于登录的 userid，而 userid 则是用于 Authorize Token 生成用的
@@ -101,23 +163,26 @@ func login(ctx *gin.Context) {
 			UserID: userID,
 			Key:    userID,
 		}
-		_, err = ss.UserEng.Table("user_key").Insert(&userKey)
-		if ss.CheckErr(err) {
-			return
+		_, err = session.Table("user_key").Insert(&userKey)
+		if err != nil {
+			session.Rollback()
+			return loginData, loginCode, loginMsg, created, err
 		}
 
 		// 检查用户配置
-		exists, err := ss.UserEng.Table("user_pref").Where("user_id = ?", userID).Exist()
-		if ss.CheckErr(err) {
-			return
+		exists, err := session.Table("user_pref").Where("user_id = ?", userID).Exist()
+		if err != nil {
+			session.Rollback()
+			return loginData, loginCode, loginMsg, created, err
 		}
 
 		if !exists {
 			// 生成用于卡片
 			var unitData []unitmodel.CommonUnitData
-			err = ss.UserEng.Table(new(unitmodel.CommonUnitData)).Find(&unitData)
-			if ss.CheckErr(err) {
-				return
+			err = session.Table(new(unitmodel.CommonUnitData)).Find(&unitData)
+			if err != nil {
+				session.Rollback()
+				return loginData, loginCode, loginMsg, created, err
 			}
 
 			checked := false
@@ -128,58 +193,65 @@ func login(ctx *gin.Context) {
 					DisplayRank:  u.MaxRank,
 					UserID:       userID,
 					InsertDate:   time.Now().Unix(),
-					UpdateDate:   time.Now().Unix(),
 				}
 
 				// 检查表里是否已经有数据
 				if !checked {
-					ct, err := ss.UserEng.Table(new(usermodel.UserUnitData)).Count()
-					if ss.CheckErr(err) {
-						return
+					ct, err := session.Table(new(usermodel.UserUnitData)).Count()
+					if err != nil {
+						session.Rollback()
+						return loginData, loginCode, loginMsg, created, err
 					}
 
 					if ct == 0 {
 						userUnit.UnitOwningUserID = 38383
 					}
-
-					checked = true
 				}
 
-				_, err = ss.UserEng.Table(new(usermodel.UserUnitData)).Insert(&userUnit)
-				if ss.CheckErr(err) {
-					return
+				_, err = session.Table(new(usermodel.UserUnitData)).Insert(&userUnit)
+				if err != nil {
+					session.Rollback()
+					return loginData, loginCode, loginMsg, created, err
 				}
+
+				checked = true
 			}
 
 			// 默认中心成员
 			var unitOwningUserID int
-			_, err = ss.UserEng.Table(new(usermodel.UserUnitData)).
-				Cols("unit_owning_user_id").Where("unit_id = ?", 31).Get(&unitOwningUserID)
-			if ss.CheckErr(err) {
-				return
+			_, err = session.Table(new(usermodel.UserUnitData)).
+				Cols("unit_owning_user_id").
+				Where("user_id = ?", userID).
+				Where("unit_id = ?", unitID).
+				Get(&unitOwningUserID)
+			if err != nil {
+				session.Rollback()
+				return loginData, loginCode, loginMsg, created, err
 			}
 
 			userPref := usermodel.UserPref{
 				UserID:           userID,
-				AwardID:          1, // 音乃木坂学生
-				BackgroundID:     1, // 初始背景
+				AwardID:          awardID,
+				BackgroundID:     backgroundID,
 				UnitOwningUserID: unitOwningUserID,
-				UserName:         "音乃木坂学生",
+				UserName:         userName,
 				UserLevel:        1028,
-				UserDesc:         "你好。",
+				UserDesc:         userDesc,
 				InviteCode:       strconv.Itoa(userID),
 				UpdateTime:       time.Now().Unix(),
 			}
-			_, err = ss.UserEng.Table("user_pref").Insert(&userPref)
-			if ss.CheckErr(err) {
-				return
+			_, err = session.Table("user_pref").Insert(&userPref)
+			if err != nil {
+				session.Rollback()
+				return loginData, loginCode, loginMsg, created, err
 			}
 		}
 
 		// 检查用户卡组配置
-		exists, err = ss.UserEng.Table("user_deck").Where("user_id = ?", userID).Exist()
-		if ss.CheckErr(err) {
-			return
+		exists, err = session.Table("user_deck").Where("user_id = ?", userID).Exist()
+		if err != nil {
+			session.Rollback()
+			return loginData, loginCode, loginMsg, created, err
 		}
 
 		if !exists {
@@ -191,15 +263,24 @@ func login(ctx *gin.Context) {
 				UserID:     userID,
 				InsertDate: time.Now().Unix(),
 			}
-			_, err = ss.UserEng.Table("user_deck").Insert(&userDeck)
+			_, err = session.Table("user_deck").Insert(&userDeck)
+			if err != nil {
+				session.Rollback()
+				return loginData, loginCode, loginMsg, created, err
+			}
 			userDeckID := userDeck.ID
 
 			// 默认卡组 - 仆光
 			unitID := []int{3465, 3466, 3467, 3468, 3469, 3470, 3471, 3472, 3473}
 			var unitData []unitmodel.UnitDataMap
-			err = ss.GetBasicUnitInfo().In("a.unit_id", unitID).Find(&unitData)
-			if ss.CheckErr(err) {
-				return
+			err = session.Table("user_unit_data").Alias("a").
+				Join("LEFT", "common_unit_data", "a.unit_id = common_unit_data.unit_id").
+				Cols(`a.unit_owning_user_id,a.favorite_flag,a.display_rank,common_unit_data.*`).
+				Where("a.user_id = ?", userID).
+				In("a.unit_id", unitID).Find(&unitData)
+			if err != nil {
+				session.Rollback()
+				return loginData, loginCode, loginMsg, created, err
 			}
 
 			for i, u := range unitData {
@@ -222,9 +303,10 @@ func login(ctx *gin.Context) {
 					UserID:           userID,
 					InsertDate:       time.Now().Unix(),
 				}
-				_, err = ss.UserEng.Table("user_deck_unit").Insert(&unitDeckData)
-				if ss.CheckErr(err) {
-					return
+				_, err = session.Table("user_deck_unit").Insert(&unitDeckData)
+				if err != nil {
+					session.Rollback()
+					return loginData, loginCode, loginMsg, created, err
 				}
 			}
 		}
@@ -247,9 +329,10 @@ func login(ctx *gin.Context) {
 				Ticket:        ticket,
 				LastLoginTime: loginTime,
 			}
-			_, err = ss.UserEng.Table("users").Where("user_id = ?", userID).Update(&userData)
-			if ss.CheckErr(err) {
-				return
+			_, err = session.Table("users").Where("user_id = ?", userID).Update(&userData)
+			if err != nil {
+				session.Rollback()
+				return loginData, loginCode, loginMsg, created, err
 			}
 
 			loginData.Autokey = autoKey // 注意：更换设备（deviceId 发生变化）应重新生成 autokey
@@ -262,28 +345,20 @@ func login(ctx *gin.Context) {
 		}
 	}
 
-	data, err = json.Marshal(loginData)
-	if ss.CheckErr(err) {
-		return
-	}
-	encryptedData, err := openssl.Des3ECBEncrypt([]byte(data), randKey, openssl.PKCS7_PADDING)
-	if ss.CheckErr(err) {
-		return
+	if err := session.Commit(); err != nil {
+		session.Rollback()
+		return loginData, loginCode, loginMsg, created, err
 	}
 
-	ss.Respond(ghomeschema.LoginResp{
-		Code: loginCode,
-		Msg:  loginMsg,
-		Data: base64.StdEncoding.EncodeToString(encryptedData),
-	})
+	return loginData, loginCode, loginMsg, created, nil
 }
 
-func getAvailableUserID(ss *session.Session, seed int) (int, error) {
+func getAvailableUserID(seed int) (int, error) {
 	const maxAttempts = 16
 
 	userID := seed
 	for attempt := range maxAttempts {
-		exist, err := ss.UserEng.Table("users").Where("user_id = ?", userID).Exist()
+		exist, err := db.UserEng.Table("users").Where("user_id = ?", userID).Exist()
 		if err != nil {
 			return 0, err
 		}
