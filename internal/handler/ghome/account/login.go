@@ -73,7 +73,10 @@ func login(ctx *gin.Context) {
 	if pass == "" {
 		// 未注册 - 自动注册
 		// 检查是否 userID 已经注册
-		userID, _ = checkUserID(ss, int(loginTime))
+		userID, err = getAvailableUserID(ss, int(loginTime))
+		if ss.CheckErr(err) {
+			return
+		}
 
 		pass = openssl.Md5ToString(password)
 		autoKey = "AUTO" + strings.ToUpper(utils.RandomStr(32))
@@ -275,18 +278,24 @@ func login(ctx *gin.Context) {
 	})
 }
 
-func checkUserID(ss *session.Session, userID int) (int, bool) {
-	exist, err := ss.UserEng.Table("users").Where("user_id = ?", userID).Exist()
-	if ss.CheckErr(err) {
-		return 0, false
+func getAvailableUserID(ss *session.Session, seed int) (int, error) {
+	const maxAttempts = 16
+
+	userID := seed
+	for attempt := range maxAttempts {
+		exist, err := ss.UserEng.Table("users").Where("user_id = ?", userID).Exist()
+		if err != nil {
+			return 0, err
+		}
+		if !exist {
+			return userID, nil
+		}
+
+		// Move to millisecond precision to reduce repeated collisions.
+		userID = int(time.Now().UnixMilli()) + attempt + 1
 	}
 
-	if exist {
-		userID = int(time.Now().Unix())
-		return checkUserID(ss, userID)
-	}
-
-	return userID, true
+	return 0, errors.New("failed to allocate user id")
 }
 
 func init() {
