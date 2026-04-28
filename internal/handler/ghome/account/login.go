@@ -3,6 +3,7 @@ package account
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	unitmodel "honoka-chan/internal/model/unit"
 	usermodel "honoka-chan/internal/model/user"
@@ -43,9 +44,19 @@ func login(ctx *gin.Context) {
 		return
 	}
 
-	queryStr, _ := url.QueryUnescape(string(decryptedData))
-	params, _ := url.ParseQuery(queryStr)
-	phone, password := params.Get("phone"), params.Get("password")
+	queryStr, err := url.QueryUnescape(string(decryptedData))
+	if ss.CheckErr(err) {
+		return
+	}
+	params, err := url.ParseQuery(queryStr)
+	if ss.CheckErr(err) {
+		return
+	}
+	phone, password := strings.TrimSpace(params.Get("phone")), params.Get("password")
+	if phone == "" || password == "" {
+		ss.Abort(errors.New("invalid login params"))
+		return
+	}
 
 	var userID int
 	var pass, autoKey, ticket string
