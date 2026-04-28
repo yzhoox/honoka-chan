@@ -10,9 +10,13 @@ import (
 	"honoka-chan/internal/session"
 	"io"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+const overrideServerConfigFileName = "99_0_115.zip"
 
 func update(ctx *gin.Context) {
 	ss := session.Get(ctx)
@@ -35,28 +39,48 @@ func update(ctx *gin.Context) {
 			return
 		}
 
+		pkgMap := map[string]int{}
 		for _, pkg := range pkgInfo {
+			fileName := fmt.Sprintf("%d_%d_%d.zip", pkgType, pkg.Id, pkg.Order)
+			url := fmt.Sprintf("%s/%s/archives/%s",
+				config.Conf.Settings.CdnServer, downloadReq.TargetOs, fileName)
+
 			pkgList = append(pkgList, downloadschema.UpdateData{
-				Size: pkg.Size,
-				URL: fmt.Sprintf("%s/%s/archives/%d_%d_%d.zip",
-					config.Conf.Settings.CdnServer, downloadReq.TargetOs, pkgType, pkg.Id, pkg.Order),
+				Size:    pkg.Size,
+				URL:     url,
 				Version: config.PackageVersion,
 			})
+			pkgMap[fileName] = len(pkgList) - 1
 		}
 
-		patchFileURL := fmt.Sprintf("%s/%s/archives/99_0_115.zip",
-			config.Conf.Settings.CdnServer, downloadReq.TargetOs)
-		resp, err := http.Get(patchFileURL)
-		if err == nil {
-			res, err := io.ReadAll(resp.Body)
-			if err == nil {
-				pkgList = append(pkgList, download.UpdateData{
-					Size:    len(res),
-					URL:     patchFileURL,
-					Version: config.PackageVersion,
-				})
+		serverConfigURL := fmt.Sprintf("%s/%s/archives/%s",
+			config.Conf.Settings.CdnServer, downloadReq.TargetOs, overrideServerConfigFileName)
+		serverConfigSize := getRemoteFileSize(serverConfigURL)
+
+		overrideSource := getOverrideSource(downloadReq.TargetOs)
+		if config.Conf.Settings.OverrideServerConfig.Enable && overrideSource.URL != "" {
+			serverConfigURL = overrideSource.URL
+			if overrideSource.Size > 0 {
+				serverConfigSize = overrideSource.Size
+			} else {
+				overrideSize := getRemoteFileSize(serverConfigURL)
+				if overrideSize > 0 {
+					serverConfigSize = overrideSize
+				}
 			}
-			defer resp.Body.Close()
+		}
+
+		if index, ok := pkgMap[overrideServerConfigFileName]; ok {
+			pkgList[index].URL = serverConfigURL
+			if serverConfigSize > 0 {
+				pkgList[index].Size = serverConfigSize
+			}
+		} else {
+			pkgList = append(pkgList, downloadschema.UpdateData{
+				Size:    serverConfigSize,
+				URL:     serverConfigURL,
+				Version: config.PackageVersion,
+			})
 		}
 	}
 
@@ -65,6 +89,43 @@ func update(ctx *gin.Context) {
 		ReleaseInfo:  []any{},
 		StatusCode:   200,
 	})
+}
+
+func getOverrideSource(targetOs string) config.OverrideFileSource {
+	if strings.EqualFold(targetOs, "Android") {
+		return config.Conf.Settings.OverrideServerConfig.Android
+	}
+	if strings.EqualFold(targetOs, "iOS") {
+		return config.Conf.Settings.OverrideServerConfig.IOS
+	}
+	return config.OverrideFileSource{}
+}
+
+func getRemoteFileSize(url string) int {
+	client := &http.Client{Timeout: 5 * time.Second}
+
+	headReq, err := http.NewRequest(http.MethodHead, url, nil)
+	if err == nil {
+		if resp, err := client.Do(headReq); err == nil {
+			_ = resp.Body.Close()
+			if resp.ContentLength > 0 {
+				return int(resp.ContentLength)
+			}
+		}
+	}
+
+	getResp, err := client.Get(url)
+	if err != nil {
+		return 0
+	}
+	defer getResp.Body.Close()
+
+	dataLen, err := io.Copy(io.Discard, getResp.Body)
+	if err != nil {
+		return 0
+	}
+
+	return int(dataLen)
 }
 
 func init() {

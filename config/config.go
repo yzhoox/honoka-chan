@@ -23,9 +23,21 @@ type AppConfigs struct {
 }
 
 type Settings struct {
-	ListenPort      string `json:"listen_port"`
-	CdnServer       string `json:"cdn_server"`
-	BackupCdnServer string `json:"backup_cdn_server"`
+	ListenPort           string               `json:"listen_port"`
+	CdnServer            string               `json:"cdn_server"`
+	BackupCdnServer      string               `json:"backup_cdn_server"`
+	OverrideServerConfig OverrideServerConfig `json:"override_server_config"`
+}
+
+type OverrideServerConfig struct {
+	Enable  bool               `json:"enable"`
+	Android OverrideFileSource `json:"android"`
+	IOS     OverrideFileSource `json:"ios"`
+}
+
+type OverrideFileSource struct {
+	URL  string `json:"url"`
+	Size int    `json:"size"`
 }
 
 func InitConfig() {
@@ -39,6 +51,17 @@ func DefaultConfigs() *AppConfigs {
 			ListenPort:      "8080",
 			CdnServer:       "http://127.0.0.1:8080/static",
 			BackupCdnServer: "",
+			OverrideServerConfig: OverrideServerConfig{
+				Enable: false,
+				Android: OverrideFileSource{
+					URL:  "",
+					Size: 0,
+				},
+				IOS: OverrideFileSource{
+					URL:  "",
+					Size: 0,
+				},
+			},
 		},
 	}
 }
