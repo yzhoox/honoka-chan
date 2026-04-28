@@ -62,7 +62,7 @@ func login(ctx *gin.Context) {
 	if ss.CheckErr(err) {
 		return
 	}
-	phone, password := strings.TrimSpace(params.Get("phone")), params.Get("password")
+	phone, password := normalizePhone(params.Get("phone")), params.Get("password")
 	if phone == "" || password == "" {
 		ss.Abort(errors.New("invalid login params"))
 		return
@@ -95,6 +95,10 @@ func AddUser(phone, password string, isDefault bool) (ghomeschema.LoginData, int
 	loginMsg := "ok"
 	loginTime := time.Now().Unix()
 	created := false
+	phone = normalizePhone(phone)
+	if phone == "" {
+		return loginData, loginCode, loginMsg, created, errors.New("invalid phone")
+	}
 
 	var userID int
 	var pass, autoKey, ticket string
@@ -371,6 +375,19 @@ func getAvailableUserID(seed int) (int, error) {
 	}
 
 	return 0, errors.New("failed to allocate user id")
+}
+
+func normalizePhone(phone string) string {
+	phone = strings.TrimSpace(phone)
+	if phone == "" {
+		return ""
+	}
+
+	// 客户端上传的手机号可能带国家/地区区号，如 "86-13800000000"。
+	if idx := strings.Index(phone, "-"); idx >= 0 && idx+1 < len(phone) {
+		return strings.TrimSpace(phone[idx+1:])
+	}
+	return phone
 }
 
 func init() {

@@ -14,10 +14,9 @@ import (
 )
 
 func login(ctx *gin.Context) {
-	area := ctx.PostForm("area")
 	user := ctx.PostForm("user")
 	pass := ctx.PostForm("pass")
-	if area == "" || user == "" || pass == "" {
+	if user == "" || pass == "" {
 		ctx.JSON(http.StatusOK, webuischema.Msg{
 			Code:     1,
 			Message:  "参数不完整！",
@@ -26,10 +25,9 @@ func login(ctx *gin.Context) {
 		return
 	}
 
-	userName := " " + area + "-" + user
 	var userId int
 	exists, err := db.UserEng.Table("users").
-		Where("phone = ? AND password = ?", userName, openssl.Md5ToString(pass)).
+		Where("phone = ? AND password = ?", user, openssl.Md5ToString(pass)).
 		Cols("user_id").Get(&userId)
 	utils.CheckErr(err)
 	if !exists {

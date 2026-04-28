@@ -44,7 +44,7 @@
             $(".login-btn").click(function () {
                 layer.open({
                     type: 1,
-                    area: ['600px', '280px'],
+                    area: ['600px', '230px'],
                     title: "登录",
                     content: $('#login-form'),
                     shade: 0
@@ -52,13 +52,11 @@
             })
 
             $("#login-submit").click(function () {
-                let area = $("#area option:selected").val();
                 let user = $("#sifuser").val();
                 let pass = $("#sifpass").val();
-                console.log(area)
                 console.log(user)
                 console.log(pass)
-                $.post("/admin/login", { area: area, user: user, pass: pass }, function (data) {
+                $.post("/admin/login", { user: user, pass: pass }, function (data) {
                     if (data.code != 0) {
                         layer.msg(data.message)
                         return
@@ -75,20 +73,6 @@
 
 <div id="login-form" style="display: none; padding: 10px;">
     <form class="layui-form">
-        <div class="layui-form-item">
-            <label class="layui-form-label">地区</label>
-            <div class="layui-input-block">
-                <select name="area" id="area" lay-verify="required">
-                    <option value="86" selected>中国大陆（+86）</option>
-                    <option value="852">中国香港（+852）</option>
-                    <option value="853">中国澳门（+853）</option>
-                    <option value="886">中国台湾（+886）</option>
-                    <option value="1">美国（+1）</option>
-                    <option value="81">日本（+81）</option>
-                    <option value="82">韩国（+82）</option>
-                </select>
-            </div>
-        </div>
         <div class="layui-form-item">
             <label class="layui-form-label">账号</label>
             <div class="layui-input-block">

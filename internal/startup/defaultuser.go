@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	defaultPhone    = "86-1"
+	defaultPhone    = "1"
 	defaultPassword = "klsbgames"
 )
 
