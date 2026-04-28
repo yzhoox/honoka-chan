@@ -1,6 +1,7 @@
 package session
 
 import (
+	"errors"
 	ghomemodel "honoka-chan/internal/model/ghome"
 )
 
@@ -36,4 +37,12 @@ func (ss *Session) SetRandKey(key string) {
 	if ss.CheckErr(err) {
 		return
 	}
+}
+
+func (ss *Session) Get3DESRandKey() ([]byte, error) {
+	randKey := ss.GetRandKey()
+	if len(randKey) < 24 {
+		return nil, errors.New("invalid rand key")
+	}
+	return randKey[:24], nil
 }

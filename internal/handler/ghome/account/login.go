@@ -34,8 +34,11 @@ func login(ctx *gin.Context) {
 		return
 	}
 
-	randKey := ss.GetRandKey()
-	decryptedData, err := openssl.Des3ECBDecrypt(data, randKey[0:24], openssl.PKCS7_PADDING)
+	randKey, err := ss.Get3DESRandKey()
+	if ss.CheckErr(err) {
+		return
+	}
+	decryptedData, err := openssl.Des3ECBDecrypt(data, randKey, openssl.PKCS7_PADDING)
 	if ss.CheckErr(err) {
 		return
 	}
@@ -249,7 +252,7 @@ func login(ctx *gin.Context) {
 	if ss.CheckErr(err) {
 		return
 	}
-	encryptedData, err := openssl.Des3ECBEncrypt([]byte(data), randKey[0:24], openssl.PKCS7_PADDING)
+	encryptedData, err := openssl.Des3ECBEncrypt([]byte(data), randKey, openssl.PKCS7_PADDING)
 	if ss.CheckErr(err) {
 		return
 	}

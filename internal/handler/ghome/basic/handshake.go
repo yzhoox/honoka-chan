@@ -2,6 +2,7 @@ package basic
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"honoka-chan/internal/router"
 	ghomeschema "honoka-chan/internal/schema/ghome"
@@ -31,13 +32,20 @@ func handshake(ctx *gin.Context) {
 
 	decryptedData := encrypt.RSADecrypt(data)
 
-	params, _ := url.ParseQuery(string(decryptedData))
+	params, err := url.ParseQuery(string(decryptedData))
+	if ss.CheckErr(err) {
+		return
+	}
 
 	randKey := params.Get("randkey")
+	if len(randKey) < 24 {
+		ss.Abort(errors.New("invalid rand key"))
+		return
+	}
 	ss.SetRandKey(randKey)
 
 	token := fmt.Sprintf(`{"message":"ok","result":0,"token":"%s"}`, strings.ToUpper(honokautils.RandomStr(33)))
-	encryptedToken, err := openssl.Des3ECBEncrypt([]byte(token), []byte(randKey)[0:24], openssl.PKCS7_PADDING)
+	encryptedToken, err := openssl.Des3ECBEncrypt([]byte(token), []byte(randKey[:24]), openssl.PKCS7_PADDING)
 	if ss.CheckErr(err) {
 		return
 	}

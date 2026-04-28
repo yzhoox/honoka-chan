@@ -14,9 +14,12 @@ func reportRole(ctx *gin.Context) {
 	ss := session.New(ctx)
 	defer ss.Finalize()
 
-	randKey := ss.GetRandKey()
+	randKey, err := ss.Get3DESRandKey()
+	if ss.CheckErr(err) {
+		return
+	}
 	token := `{"message":"ok"}`
-	encryptedToken, err := openssl.Des3ECBEncrypt([]byte(token), randKey[0:24], openssl.PKCS7_PADDING)
+	encryptedToken, err := openssl.Des3ECBEncrypt([]byte(token), randKey, openssl.PKCS7_PADDING)
 	if ss.CheckErr(err) {
 		return
 	}

@@ -33,7 +33,11 @@ func initialize(ctx *gin.Context) {
 	if ss.CheckErr(err) {
 		return
 	}
-	encryptedData, err := openssl.Des3ECBEncrypt([]byte(data), ss.GetRandKey()[0:24], openssl.PKCS7_PADDING)
+	randKey, err := ss.Get3DESRandKey()
+	if ss.CheckErr(err) {
+		return
+	}
+	encryptedData, err := openssl.Des3ECBEncrypt([]byte(data), randKey, openssl.PKCS7_PADDING)
 	if ss.CheckErr(err) {
 		return
 	}
