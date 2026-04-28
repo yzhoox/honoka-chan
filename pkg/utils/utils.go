@@ -4,14 +4,13 @@
 package utils
 
 import (
+	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"sync"
-	"time"
 )
 
 var (
@@ -51,13 +50,16 @@ func XOR(s1, s2 []byte) []byte {
 	return res
 }
 
-func RandomStr(len int) string {
-	rand.Seed(time.Now().UnixNano())
-	mRand := make([]byte, len)
-	rand.Read(mRand)
-	mRandStr := hex.EncodeToString(mRand)[0:len]
+func RandomStr(length int) string {
+	if length <= 0 {
+		return ""
+	}
 
-	return mRandStr
+	mRand := make([]byte, length)
+	if _, err := rand.Read(mRand); err != nil {
+		return ""
+	}
+	return hex.EncodeToString(mRand)[:length]
 }
 
 func ToJSON(data any) string {
