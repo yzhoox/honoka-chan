@@ -12,6 +12,13 @@ var (
 	UserEng *xorm.Engine
 )
 
+func userSQLiteDSN(dbPath string) string {
+	return dbPath +
+		"?_pragma=busy_timeout(5000)" +
+		"&_pragma=journal_mode(WAL)" +
+		"&_pragma=synchronous(NORMAL)"
+}
+
 func init() {
 	eng, err := xorm.NewEngine("sqlite", MainDb)
 	if err != nil {
@@ -25,7 +32,7 @@ func init() {
 	eng.SetMaxIdleConns(5)
 	MainEng = eng
 
-	eng, err = xorm.NewEngine("sqlite", UserDb)
+	eng, err = xorm.NewEngine("sqlite", userSQLiteDSN(UserDb))
 	if err != nil {
 		panic(err)
 	}

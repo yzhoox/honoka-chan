@@ -20,6 +20,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-think/openssl"
+	"xorm.io/xorm"
 )
 
 const (
@@ -49,6 +50,7 @@ func login(ctx *gin.Context) {
 	if ss.CheckErr(err) {
 		return
 	}
+
 	decryptedData, err := openssl.Des3ECBDecrypt(data, randKey, openssl.PKCS7_PADDING)
 	if ss.CheckErr(err) {
 		return
@@ -68,7 +70,7 @@ func login(ctx *gin.Context) {
 		return
 	}
 
-	loginData, loginCode, loginMsg, _, err := AddUser(phone, password, false)
+	loginData, loginCode, loginMsg, _, err := AddUserWithSession(ss.UserEng, phone, password, false)
 	if ss.CheckErr(err) {
 		return
 	}
@@ -90,6 +92,14 @@ func login(ctx *gin.Context) {
 }
 
 func AddUser(phone, password string, isDefault bool) (ghomeschema.LoginData, int, string, bool, error) {
+	return addUser(nil, phone, password, isDefault)
+}
+
+func AddUserWithSession(dbSession *xorm.Session, phone, password string, isDefault bool) (ghomeschema.LoginData, int, string, bool, error) {
+	return addUser(dbSession, phone, password, isDefault)
+}
+
+func addUser(dbSession *xorm.Session, phone, password string, isDefault bool) (ghomeschema.LoginData, int, string, bool, error) {
 	loginData := ghomeschema.LoginData{}
 	loginCode := 0
 	loginMsg := "ok"
@@ -103,17 +113,21 @@ func AddUser(phone, password string, isDefault bool) (ghomeschema.LoginData, int
 	var userID int
 	var pass, autoKey, ticket string
 
-	session := db.UserEng.NewSession()
-	defer session.Close()
-
-	if err := session.Begin(); err != nil {
-		return loginData, loginCode, loginMsg, created, err
+	localSession := dbSession == nil
+	if localSession {
+		dbSession = db.UserEng.NewSession()
+		defer dbSession.Close()
+		if err := dbSession.Begin(); err != nil {
+			return loginData, loginCode, loginMsg, created, err
+		}
 	}
 
-	_, err := session.Table("users").Cols("password,autokey,ticket,user_id").
+	_, err := dbSession.Table("users").Cols("password,autokey,ticket,user_id").
 		Where("phone = ?", phone).Get(&pass, &autoKey, &ticket, &userID)
 	if err != nil {
-		session.Rollback()
+		if localSession {
+			dbSession.Rollback()
+		}
 		return loginData, loginCode, loginMsg, created, err
 	}
 
@@ -137,7 +151,9 @@ func AddUser(phone, password string, isDefault bool) (ghomeschema.LoginData, int
 			// 检查是否 userID 已经注册
 			userID, err = getAvailableUserID(int(loginTime))
 			if err != nil {
-				session.Rollback()
+				if localSession {
+					dbSession.Rollback()
+				}
 				return loginData, loginCode, loginMsg, created, err
 			}
 		}
@@ -154,9 +170,11 @@ func AddUser(phone, password string, isDefault bool) (ghomeschema.LoginData, int
 			UserID:        userID,
 			LastLoginTime: loginTime,
 		}
-		_, err = session.Table("users").Insert(&userData)
+		_, err = dbSession.Table("users").Insert(&userData)
 		if err != nil {
-			session.Rollback()
+			if localSession {
+				dbSession.Rollback()
+			}
 			return loginData, loginCode, loginMsg, created, err
 		}
 		created = true
@@ -167,25 +185,31 @@ func AddUser(phone, password string, isDefault bool) (ghomeschema.LoginData, int
 			UserID: userID,
 			Key:    userID,
 		}
-		_, err = session.Table("user_key").Insert(&userKey)
+		_, err = dbSession.Table("user_key").Insert(&userKey)
 		if err != nil {
-			session.Rollback()
+			if localSession {
+				dbSession.Rollback()
+			}
 			return loginData, loginCode, loginMsg, created, err
 		}
 
 		// 检查用户配置
-		exists, err := session.Table("user_pref").Where("user_id = ?", userID).Exist()
+		exists, err := dbSession.Table("user_pref").Where("user_id = ?", userID).Exist()
 		if err != nil {
-			session.Rollback()
+			if localSession {
+				dbSession.Rollback()
+			}
 			return loginData, loginCode, loginMsg, created, err
 		}
 
 		if !exists {
 			// 生成用于卡片
 			var unitData []unitmodel.CommonUnitData
-			err = session.Table(new(unitmodel.CommonUnitData)).Find(&unitData)
+			err = dbSession.Table(new(unitmodel.CommonUnitData)).Find(&unitData)
 			if err != nil {
-				session.Rollback()
+				if localSession {
+					dbSession.Rollback()
+				}
 				return loginData, loginCode, loginMsg, created, err
 			}
 
@@ -201,9 +225,11 @@ func AddUser(phone, password string, isDefault bool) (ghomeschema.LoginData, int
 
 				// 检查表里是否已经有数据
 				if !checked {
-					ct, err := session.Table(new(usermodel.UserUnitData)).Count()
+					ct, err := dbSession.Table(new(usermodel.UserUnitData)).Count()
 					if err != nil {
-						session.Rollback()
+						if localSession {
+							dbSession.Rollback()
+						}
 						return loginData, loginCode, loginMsg, created, err
 					}
 
@@ -212,9 +238,11 @@ func AddUser(phone, password string, isDefault bool) (ghomeschema.LoginData, int
 					}
 				}
 
-				_, err = session.Table(new(usermodel.UserUnitData)).Insert(&userUnit)
+				_, err = dbSession.Table(new(usermodel.UserUnitData)).Insert(&userUnit)
 				if err != nil {
-					session.Rollback()
+					if localSession {
+						dbSession.Rollback()
+					}
 					return loginData, loginCode, loginMsg, created, err
 				}
 
@@ -223,13 +251,15 @@ func AddUser(phone, password string, isDefault bool) (ghomeschema.LoginData, int
 
 			// 默认中心成员
 			var unitOwningUserID int
-			_, err = session.Table(new(usermodel.UserUnitData)).
+			_, err = dbSession.Table(new(usermodel.UserUnitData)).
 				Cols("unit_owning_user_id").
 				Where("user_id = ?", userID).
 				Where("unit_id = ?", unitID).
 				Get(&unitOwningUserID)
 			if err != nil {
-				session.Rollback()
+				if localSession {
+					dbSession.Rollback()
+				}
 				return loginData, loginCode, loginMsg, created, err
 			}
 
@@ -244,17 +274,21 @@ func AddUser(phone, password string, isDefault bool) (ghomeschema.LoginData, int
 				InviteCode:       strconv.Itoa(userID),
 				UpdateTime:       time.Now().Unix(),
 			}
-			_, err = session.Table("user_pref").Insert(&userPref)
+			_, err = dbSession.Table("user_pref").Insert(&userPref)
 			if err != nil {
-				session.Rollback()
+				if localSession {
+					dbSession.Rollback()
+				}
 				return loginData, loginCode, loginMsg, created, err
 			}
 		}
 
 		// 检查用户卡组配置
-		exists, err = session.Table("user_deck").Where("user_id = ?", userID).Exist()
+		exists, err = dbSession.Table("user_deck").Where("user_id = ?", userID).Exist()
 		if err != nil {
-			session.Rollback()
+			if localSession {
+				dbSession.Rollback()
+			}
 			return loginData, loginCode, loginMsg, created, err
 		}
 
@@ -267,9 +301,11 @@ func AddUser(phone, password string, isDefault bool) (ghomeschema.LoginData, int
 				UserID:     userID,
 				InsertDate: time.Now().Unix(),
 			}
-			_, err = session.Table("user_deck").Insert(&userDeck)
+			_, err = dbSession.Table("user_deck").Insert(&userDeck)
 			if err != nil {
-				session.Rollback()
+				if localSession {
+					dbSession.Rollback()
+				}
 				return loginData, loginCode, loginMsg, created, err
 			}
 			userDeckID := userDeck.ID
@@ -277,13 +313,15 @@ func AddUser(phone, password string, isDefault bool) (ghomeschema.LoginData, int
 			// 默认卡组 - 仆光
 			unitID := []int{3465, 3466, 3467, 3468, 3469, 3470, 3471, 3472, 3473}
 			var unitData []unitmodel.UnitDataMap
-			err = session.Table("user_unit_data").Alias("a").
+			err = dbSession.Table("user_unit_data").Alias("a").
 				Join("LEFT", "common_unit_data", "a.unit_id = common_unit_data.unit_id").
 				Cols(`a.unit_owning_user_id,a.favorite_flag,a.display_rank,common_unit_data.*`).
 				Where("a.user_id = ?", userID).
 				In("a.unit_id", unitID).Find(&unitData)
 			if err != nil {
-				session.Rollback()
+				if localSession {
+					dbSession.Rollback()
+				}
 				return loginData, loginCode, loginMsg, created, err
 			}
 
@@ -307,9 +345,11 @@ func AddUser(phone, password string, isDefault bool) (ghomeschema.LoginData, int
 					UserID:           userID,
 					InsertDate:       time.Now().Unix(),
 				}
-				_, err = session.Table("user_deck_unit").Insert(&unitDeckData)
+				_, err = dbSession.Table("user_deck_unit").Insert(&unitDeckData)
 				if err != nil {
-					session.Rollback()
+					if localSession {
+						dbSession.Rollback()
+					}
 					return loginData, loginCode, loginMsg, created, err
 				}
 			}
@@ -333,9 +373,11 @@ func AddUser(phone, password string, isDefault bool) (ghomeschema.LoginData, int
 				Ticket:        ticket,
 				LastLoginTime: loginTime,
 			}
-			_, err = session.Table("users").Where("user_id = ?", userID).Update(&userData)
+			_, err = dbSession.Table("users").Where("user_id = ?", userID).Update(&userData)
 			if err != nil {
-				session.Rollback()
+				if localSession {
+					dbSession.Rollback()
+				}
 				return loginData, loginCode, loginMsg, created, err
 			}
 
@@ -349,9 +391,11 @@ func AddUser(phone, password string, isDefault bool) (ghomeschema.LoginData, int
 		}
 	}
 
-	if err := session.Commit(); err != nil {
-		session.Rollback()
-		return loginData, loginCode, loginMsg, created, err
+	if localSession {
+		if err := dbSession.Commit(); err != nil {
+			dbSession.Rollback()
+			return loginData, loginCode, loginMsg, created, err
+		}
 	}
 
 	return loginData, loginCode, loginMsg, created, nil
