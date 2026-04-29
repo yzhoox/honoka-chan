@@ -1,16 +1,12 @@
 package webui
 
 import (
-	"encoding/csv"
 	"honoka-chan/internal/middleware"
 	unitmodel "honoka-chan/internal/model/unit"
 	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
-	"honoka-chan/internal/utils"
 	"honoka-chan/pkg/db"
 	"net/http"
-	"os"
-	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -24,52 +20,57 @@ type ErrMsg struct {
 }
 
 func upload(ctx *gin.Context) {
-	file, err := ctx.FormFile("file")
-	utils.CheckErr(err)
-
-	tmpPath := path.Join("./temp", file.Filename)
-	err = ctx.SaveUploadedFile(file, tmpPath)
-	utils.CheckErr(err)
+	content := strings.TrimSpace(ctx.PostForm("content"))
+	if content == "" {
+		ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "请输入导入内容！"})
+		return
+	}
 
 	session := db.UserEng.NewSession()
 	defer session.Close()
-	if err = session.Begin(); err != nil {
+	if err := session.Begin(); err != nil {
 		session.Rollback()
 		ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: err.Error()})
 		return
 	}
 
-	f, err := os.Open(tmpPath)
-	if err != nil {
-		session.Rollback()
-		ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "文件创建失败！"})
-		return
-	}
-	defer f.Close()
+	lines := strings.Split(content, "\n")
+	for _, rawLine := range lines {
+		line := strings.TrimSpace(rawLine)
+		if line == "" {
+			continue
+		}
+		line = strings.ReplaceAll(line, "，", ",")
 
-	r := csv.NewReader(f)
-	rs, err := r.ReadAll()
-	if err != nil {
-		session.Rollback()
-		ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "文件解析失败！"})
-		return
-	}
-	for _, rr := range rs {
-		if len(rr) != 2 || rr[0] == "" || rr[1] == "" {
+		parts := strings.Split(line, ",")
+		if len(parts) != 2 {
 			session.Rollback()
-			ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "文件解析失败！"})
+			ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "文本解析失败，请检查每行格式是否为 卡片ID,技能等级"})
 			return
 		}
 
-		skLv, err := strconv.Atoi(rr[1])
+		unitNumber := strings.TrimSpace(parts[0])
+		skillLevelRaw := strings.TrimSpace(parts[1])
+		if unitNumber == "" || skillLevelRaw == "" {
+			session.Rollback()
+			ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "文本解析失败，请检查每行格式是否为 卡片ID,技能等级"})
+			return
+		}
+
+		skLv, err := strconv.Atoi(skillLevelRaw)
 		if err != nil {
 			session.Rollback()
-			ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "文件解析失败！"})
+			ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "文本解析失败，请检查每行格式是否为 卡片ID,技能等级"})
 			return
 		}
 
 		uData := unitmodel.CommonUnitData{}
-		exists, err := session.Table(new(unitmodel.CommonUnitData)).Where("unit_number = ?", rr[0]).Get(&uData)
+		exists, err := session.Table(new(unitmodel.CommonUnitData)).Where("unit_number = ?", unitNumber).Get(&uData)
+		if err != nil {
+			session.Rollback()
+			ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "卡片查询失败！"})
+			return
+		}
 		if !exists {
 			session.Rollback()
 			ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "卡片不存在！"})
@@ -102,12 +103,12 @@ func upload(ctx *gin.Context) {
 			ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "卡片添加失败！"})
 			return
 		}
+	}
 
-		if err = session.Commit(); err != nil {
-			session.Rollback()
-			ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "卡片添加失败！"})
-			return
-		}
+	if err := session.Commit(); err != nil {
+		session.Rollback()
+		ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "卡片添加失败！"})
+		return
 	}
 
 	ctx.JSON(http.StatusOK, ErrMsg{Error: 0, Msg: "导入成功，请重新打开游戏！"})
