@@ -82,6 +82,8 @@ func update(ctx *gin.Context) {
 				Version: config.PackageVersion,
 			})
 		}
+
+		applyOverrideFileSize(downloadReq.TargetOs, pkgList)
 	}
 
 	ss.Respond(downloadschema.UpdateResp{
@@ -126,6 +128,45 @@ func getRemoteFileSize(url string) int {
 	}
 
 	return int(dataLen)
+}
+
+func applyOverrideFileSize(targetOs string, pkgList []downloadschema.UpdateData) {
+	urlSizeCache := map[string]int{}
+
+	for i := range pkgList {
+		fileName := getFileNameFromURL(pkgList[i].URL)
+		if fileName == "" {
+			continue
+		}
+
+		for _, override := range config.Conf.Settings.OverrideFileSize {
+			overrideOs := strings.TrimSpace(override.TargetOs)
+			if overrideOs != "" && !strings.EqualFold(overrideOs, strings.TrimSpace(targetOs)) {
+				continue
+			}
+			if strings.EqualFold(strings.TrimSpace(override.FileName), fileName) {
+				size, ok := urlSizeCache[pkgList[i].URL]
+				if !ok {
+					size = getRemoteFileSize(pkgList[i].URL)
+					urlSizeCache[pkgList[i].URL] = size
+				}
+
+				if size > 0 {
+					pkgList[i].Size = size
+				}
+				break
+			}
+		}
+	}
+}
+
+func getFileNameFromURL(rawURL string) string {
+	urlNoQuery := strings.Split(rawURL, "?")[0]
+	parts := strings.Split(urlNoQuery, "/")
+	if len(parts) == 0 {
+		return ""
+	}
+	return strings.TrimSpace(parts[len(parts)-1])
 }
 
 func init() {

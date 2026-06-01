@@ -27,6 +27,7 @@ type Settings struct {
 	CdnServer            string               `json:"cdn_server"`
 	BackupCdnServer      string               `json:"backup_cdn_server"`
 	OverrideServerConfig OverrideServerConfig `json:"override_server_config"`
+	OverrideFileSize     []OverrideFileSize   `json:"override_file_size"`
 }
 
 type OverrideServerConfig struct {
@@ -40,6 +41,11 @@ type OverrideFileSource struct {
 	Size int    `json:"size"`
 }
 
+type OverrideFileSize struct {
+	TargetOs string `json:"target_os"`
+	FileName string `json:"file_name"`
+}
+
 func InitConfig() {
 	Conf = Load("./config.json")
 }
@@ -48,9 +54,10 @@ func DefaultConfigs() *AppConfigs {
 	return &AppConfigs{
 		AppName: "honoka-chan",
 		Settings: Settings{
-			ListenPort:      "8080",
-			CdnServer:       "http://127.0.0.1:8080/static",
-			BackupCdnServer: "",
+			ListenPort:       "8080",
+			CdnServer:        "http://127.0.0.1:8080/static",
+			BackupCdnServer:  "",
+			OverrideFileSize: []OverrideFileSize{},
 			OverrideServerConfig: OverrideServerConfig{
 				Enable: false,
 				Android: OverrideFileSource{
