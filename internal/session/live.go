@@ -1,11 +1,9 @@
 package session
 
 import (
-	"encoding/json"
 	"honoka-chan/internal/constant"
 	usermodel "honoka-chan/internal/model/user"
 	liveschema "honoka-chan/internal/schema/live"
-	"honoka-chan/pkg/utils"
 )
 
 // Move from LevelDB to SQLite
@@ -77,7 +75,7 @@ func (ss *Session) GetLiveInfo(LiveDifficultyID int) (bool, *liveschema.LiveInfo
 	}
 
 	if !has {
-		has, err = ss.MainEng.Table("special_live_m").Alias("a").
+		has, err = ss.MainEng.Table("normal_live_m").Alias("a").
 			Join("LEFT", "live_setting_m", "a.live_setting_id = live_setting_m.live_setting_id").
 			Where("live_difficulty_id = ?", LiveDifficultyID).
 			Cols("a.live_difficulty_id,live_setting_m.*").Get(&info)
@@ -86,14 +84,14 @@ func (ss *Session) GetLiveInfo(LiveDifficultyID int) (bool, *liveschema.LiveInfo
 		}
 	}
 
-	var notesList []liveschema.NotesList
-	if has {
-		noteData := utils.ReadAllText("./assets/serverdata/beatmaps/" + info.NotesSettingAsset)
-		err = json.Unmarshal([]byte(noteData), &notesList)
-		if ss.CheckErr(err) {
-			return false, nil
-		}
-	}
+	// var notesList []liveschema.NotesList
+	// if has {
+	// 	noteData := utils.ReadAllText("./assets/serverdata/beatmaps/" + info.NotesSettingAsset)
+	// 	err = json.Unmarshal([]byte(noteData), &notesList)
+	// 	if ss.CheckErr(err) {
+	// 		return false, nil
+	// 	}
+	// }
 
 	return has, &liveschema.LiveInfo{
 		LiveDifficultyID: info.LiveDifficultyID,
@@ -108,7 +106,7 @@ func (ss *Session) GetLiveInfo(LiveDifficultyID int) (bool, *liveschema.LiveInfo
 		SRankCombo:       info.SRankCombo,
 		AcFlag:           info.AcFlag,
 		SwingFlag:        info.SwingFlag,
-		NotesList:        notesList,
+		NotesList:        []liveschema.NotesList{},
 	}
 }
 

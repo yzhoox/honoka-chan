@@ -64,9 +64,9 @@ func preciseScore(ctx *gin.Context) {
 	}
 	// fmt.Println("liveSetting", liveSetting)
 
-	notes := []liveschema.NotesList{}
-	notes_list := utils.ReadAllText("./assets/serverdata/beatmaps/" + liveSetting.NotesSettingAsset)
-	err = json.Unmarshal([]byte(notes_list), &notes)
+	notesList := []liveschema.NotesList{}
+	noteData := utils.ReadAllText("./assets/serverdata/beatmaps/" + liveSetting.NotesSettingAsset)
+	err = json.Unmarshal([]byte(noteData), &notesList)
 	if ss.CheckErr(err) {
 		return
 	}
@@ -116,7 +116,7 @@ func preciseScore(ctx *gin.Context) {
 						IsRandom:         false,
 						AcFlag:           liveSetting.AcFlag,
 						SwingFlag:        liveSetting.SwingFlag,
-						NotesList:        notes,
+						NotesList:        notesList,
 					},
 				},
 				Off: liveschema.Skill{
@@ -126,7 +126,7 @@ func preciseScore(ctx *gin.Context) {
 						IsRandom:         false,
 						AcFlag:           liveSetting.AcFlag,
 						SwingFlag:        liveSetting.SwingFlag,
-						NotesList:        notes,
+						NotesList:        notesList,
 					},
 				},
 				RankInfo:          ranks,
@@ -146,8 +146,8 @@ func preciseScore(ctx *gin.Context) {
 				UpdateDate:  nil,
 				PreciseList: nil,
 				DeckInfo:    nil,
-				TapAdjust:   nil,   // TODO: 不知道保存在哪里
-				CanReplay:   false, // TODO: 不知道保存在哪里
+				TapAdjust:   nil,
+				CanReplay:   false,
 			}
 			skillOff = skillOn
 
@@ -159,7 +159,9 @@ func preciseScore(ctx *gin.Context) {
 				if ss.CheckErr(err) {
 					return
 				}
-				liveInfo.NotesList = notes
+				liveInfo.NotesList = notesList
+				skillOn.LiveInfo = liveInfo
+				skillOff.LiveInfo = liveInfo
 
 				// PreciseList
 				var preciseList []liveschema.PreciseList
@@ -192,7 +194,6 @@ func preciseScore(ctx *gin.Context) {
 				if record.IsSkillOn {
 					// 技能开
 					skillOn.HasRecord = true
-					skillOn.LiveInfo = liveInfo
 					skillOn.RandomSeed = time.Now().Unix() // TODO: 从 /live/play 的 Timestamp 字段获取
 					skillOn.MaxCombo = record.MaxCombo
 					skillOn.UpdateDate = record.UpdateDate
@@ -205,7 +206,6 @@ func preciseScore(ctx *gin.Context) {
 				} else {
 					// 技能关
 					skillOff.HasRecord = true
-					skillOff.LiveInfo = liveInfo
 					skillOff.RandomSeed = time.Now().Unix() // TODO: 从 /live/play 的 Timestamp 字段获取
 					skillOff.MaxCombo = record.MaxCombo
 					skillOff.UpdateDate = record.UpdateDate
