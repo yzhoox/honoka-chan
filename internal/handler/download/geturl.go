@@ -13,7 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func url(ctx *gin.Context) {
+func getUrl(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
@@ -44,5 +44,5 @@ func url(ctx *gin.Context) {
 }
 
 func init() {
-	router.AddHandler("main.php", "POST", "/download/url", middleware.Common, url)
+	router.AddHandler("main.php", "POST", "/download/getUrl", middleware.Common, getUrl)
 }
