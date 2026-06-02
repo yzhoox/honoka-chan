@@ -35,7 +35,15 @@ start_app() {
     return 0
   fi
 
-  build_app
+  if [[ ! -f "$APP_BIN" ]]; then
+    build_app
+  fi
+
+  if [[ ! -x "$APP_BIN" ]]; then
+    echo "honoka-chan binary is not executable: $APP_BIN"
+    exit 1
+  fi
+
   nohup "$APP_BIN" >>"$LOG_FILE" 2>&1 &
   local pid=$!
   echo "$pid" >"$PID_FILE"
