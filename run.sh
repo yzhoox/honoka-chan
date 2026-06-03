@@ -44,7 +44,7 @@ start_app() {
     exit 1
   fi
 
-  nohup "$APP_BIN" >>"$LOG_FILE" 2>&1 &
+  nohup "$APP_BIN" >"$LOG_FILE" 2>&1 &
   local pid=$!
   echo "$pid" >"$PID_FILE"
   sleep 1
