@@ -24,7 +24,7 @@ func initialize(ctx *gin.Context) {
 		LogLevel:                  "off",
 		LoginButton:               []string{"official"},
 		LoginIcon:                 []any{},
-		NeedFloatWindowPermission: 1,
+		NeedFloatWindowPermission: 0,
 		NewDeviceIDServer:         strings.ToUpper(openssl.Md5ToString(ss.GetDeviceID())),
 		ShowGuestConfirm:          1,
 		VoicetipButton:            1,
