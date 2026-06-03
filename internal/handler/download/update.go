@@ -53,34 +53,22 @@ func update(ctx *gin.Context) {
 			pkgMap[fileName] = len(pkgList) - 1
 		}
 
+		overrideSource := getOverrideSource(downloadReq.TargetOs)
 		serverConfigURL := fmt.Sprintf("%s/%s/archives/%s",
 			config.Conf.Settings.CdnServer, downloadReq.TargetOs, overrideServerConfigFileName)
-		serverConfigSize := getRemoteFileSize(serverConfigURL)
+		serverConfigURL, serverConfigSize, serverConfigAvailable := resolveServerConfigFile(serverConfigURL, overrideSource)
 
-		overrideSource := getOverrideSource(downloadReq.TargetOs)
-		if config.Conf.Settings.OverrideServerConfig.Enable && overrideSource.URL != "" {
-			serverConfigURL = overrideSource.URL
-			if overrideSource.Size > 0 {
-				serverConfigSize = overrideSource.Size
-			} else {
-				overrideSize := getRemoteFileSize(serverConfigURL)
-				if overrideSize > 0 {
-					serverConfigSize = overrideSize
-				}
-			}
-		}
-
-		if index, ok := pkgMap[overrideServerConfigFileName]; ok {
-			pkgList[index].URL = serverConfigURL
-			if serverConfigSize > 0 {
+		if serverConfigAvailable {
+			if index, ok := pkgMap[overrideServerConfigFileName]; ok {
+				pkgList[index].URL = serverConfigURL
 				pkgList[index].Size = serverConfigSize
+			} else {
+				pkgList = append(pkgList, downloadschema.UpdateData{
+					Size:    serverConfigSize,
+					URL:     serverConfigURL,
+					Version: config.PackageVersion,
+				})
 			}
-		} else {
-			pkgList = append(pkgList, downloadschema.UpdateData{
-				Size:    serverConfigSize,
-				URL:     serverConfigURL,
-				Version: config.PackageVersion,
-			})
 		}
 
 		applyOverrideFileSize(downloadReq.TargetOs, pkgList)
@@ -103,31 +91,52 @@ func getOverrideSource(targetOs string) config.OverrideFileSource {
 	return config.OverrideFileSource{}
 }
 
-func getRemoteFileSize(url string) int {
+func resolveServerConfigFile(defaultURL string, overrideSource config.OverrideFileSource) (string, int, bool) {
+	if config.Conf.Settings.OverrideServerConfig.Enable && overrideSource.URL != "" {
+		size, ok := getRemoteFileSize(overrideSource.URL)
+		if !ok {
+			return overrideSource.URL, 0, false
+		}
+		if overrideSource.Size > 0 {
+			size = overrideSource.Size
+		}
+		return overrideSource.URL, size, true
+	}
+
+	size, ok := getRemoteFileSize(defaultURL)
+	return defaultURL, size, ok
+}
+
+func getRemoteFileSize(url string) (int, bool) {
 	client := &http.Client{Timeout: 5 * time.Second}
 
 	headReq, err := http.NewRequest(http.MethodHead, url, nil)
 	if err == nil {
 		if resp, err := client.Do(headReq); err == nil {
 			_ = resp.Body.Close()
-			if resp.ContentLength > 0 {
-				return int(resp.ContentLength)
+			if resp.StatusCode >= http.StatusOK && resp.StatusCode < http.StatusMultipleChoices {
+				if resp.ContentLength > 0 {
+					return int(resp.ContentLength), true
+				}
 			}
 		}
 	}
 
 	getResp, err := client.Get(url)
 	if err != nil {
-		return 0
+		return 0, false
 	}
 	defer getResp.Body.Close()
+	if getResp.StatusCode < http.StatusOK || getResp.StatusCode >= http.StatusMultipleChoices {
+		return 0, false
+	}
 
 	dataLen, err := io.Copy(io.Discard, getResp.Body)
 	if err != nil {
-		return 0
+		return 0, false
 	}
 
-	return int(dataLen)
+	return int(dataLen), dataLen > 0
 }
 
 func applyOverrideFileSize(targetOs string, pkgList []downloadschema.UpdateData) {
@@ -147,7 +156,7 @@ func applyOverrideFileSize(targetOs string, pkgList []downloadschema.UpdateData)
 			if strings.EqualFold(strings.TrimSpace(override.FileName), fileName) {
 				size, ok := urlSizeCache[pkgList[i].URL]
 				if !ok {
-					size = getRemoteFileSize(pkgList[i].URL)
+					size, _ = getRemoteFileSize(pkgList[i].URL)
 					urlSizeCache[pkgList[i].URL] = size
 				}
 
