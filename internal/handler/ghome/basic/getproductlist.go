@@ -9,7 +9,7 @@ import (
 )
 
 func getProductList(ctx *gin.Context) {
-	ss := session.New(ctx)
+	ss := session.Attach(ctx)
 	defer ss.Finalize()
 
 	getProductListData := ghomeschema.GetProductListData{

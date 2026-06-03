@@ -13,7 +13,7 @@ import (
 )
 
 func initialize(ctx *gin.Context) {
-	ss := session.New(ctx)
+	ss := session.Attach(ctx)
 	defer ss.Finalize()
 
 	initData := ghomeschema.InitializeData{

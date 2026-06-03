@@ -19,7 +19,10 @@ func login(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	has, authKeyData := ss.GetAuthKey(ctx.MustGet("token").(string))
+	has, authKeyData, err := ss.GetAuthKey(ctx.MustGet("token").(string))
+	if ss.CheckErr(err) {
+		return
+	}
 	if !has {
 		ss.Abort(errors.New("invalid token"))
 		return

@@ -14,8 +14,8 @@ func subscenarioStatus(ctx *gin.Context) (res any, err error) {
 	var subScenarioID []int
 	subScenarioLists := []subscenarioapischema.StatusList{}
 	err = ss.MainEng.Table("subscenario_m").Cols("subscenario_id").OrderBy("subscenario_id ASC").Find(&subScenarioID)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	for _, id := range subScenarioID {

@@ -9,7 +9,7 @@ import (
 )
 
 func appReport(ctx *gin.Context) {
-	ss := session.New(ctx)
+	ss := session.Attach(ctx)
 	defer ss.Finalize()
 
 	ss.Respond(ghomeschema.AppReportResp{

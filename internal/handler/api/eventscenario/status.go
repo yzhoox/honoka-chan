@@ -16,8 +16,8 @@ func eventScenarioStatus(ctx *gin.Context) (res any, err error) {
 	var eventID []int
 	eventsList := []eventscenarioapischema.EventScenarioList{}
 	err = ss.MainEng.Table("event_scenario_m").Cols("event_id").GroupBy("event_id").OrderBy("event_id DESC").Find(&eventID)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	for _, id := range eventID {
@@ -30,8 +30,8 @@ func eventScenarioStatus(ctx *gin.Context) (res any, err error) {
 		chapsList := []eventscenarioapischema.ChapterList{}
 		err = ss.MainEng.Table("event_scenario_m").Where("event_id = ?", id).Cols("event_scenario_id,chapter,chapter_asset,open_date").
 			OrderBy("chapter DESC").Find(&eventRes)
-		if ss.CheckErr(err) {
-			return
+		if err != nil {
+			return nil, err
 		}
 
 		for _, res := range eventRes {

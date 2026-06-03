@@ -8,6 +8,7 @@ import (
 	"honoka-chan/internal/router"
 	liveschema "honoka-chan/internal/schema/live"
 	"honoka-chan/internal/session"
+	honokautils "honoka-chan/internal/utils"
 	"honoka-chan/pkg/utils"
 	"strconv"
 	"time"
@@ -20,7 +21,7 @@ func preciseScore(ctx *gin.Context) {
 	defer ss.Finalize()
 
 	playScoreReq := liveschema.PlayScoreReq{}
-	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &playScoreReq)
+	err := honokautils.ParseRequestData(ctx, &playScoreReq)
 	if ss.CheckErr(err) {
 		return
 	}

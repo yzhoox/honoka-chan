@@ -33,7 +33,7 @@ const (
 )
 
 func login(ctx *gin.Context) {
-	ss := session.New(ctx)
+	ss := session.Attach(ctx)
 	defer ss.Finalize()
 
 	data, err := ctx.GetRawData()

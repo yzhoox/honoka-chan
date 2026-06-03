@@ -1,12 +1,12 @@
 package unit
 
 import (
-	"encoding/json"
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
 	unitapischema "honoka-chan/internal/schema/api/unit"
 	unitschema "honoka-chan/internal/schema/unit"
 	"honoka-chan/internal/session"
+	honokautils "honoka-chan/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,7 +16,7 @@ func deckName(ctx *gin.Context) {
 	defer ss.Finalize()
 
 	deckReq := unitschema.DeckNameReq{}
-	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &deckReq)
+	err := honokautils.ParseRequestData(ctx, &deckReq)
 	if ss.CheckErr(err) {
 		return
 	}

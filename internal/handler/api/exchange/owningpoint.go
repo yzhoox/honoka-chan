@@ -14,8 +14,8 @@ func owningPoint(ctx *gin.Context) (res any, err error) {
 	var exchangeID []int
 	exPointsList := []exchangeapischema.ExchangePointList{}
 	err = ss.MainEng.Table("exchange_point_m").Cols("exchange_point_id").OrderBy("exchange_point_id ASC").Find(&exchangeID)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	for _, id := range exchangeID {

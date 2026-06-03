@@ -15,8 +15,8 @@ func unitAll(ctx *gin.Context) (res any, err error) {
 	unitMap := []unitmodel.UnitDataMap{}
 	err = ss.GetBasicUnitInfo().
 		Where("a.user_id = ?", ss.UserID).Find(&unitMap)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	unitsData := []unitapischema.Active{}

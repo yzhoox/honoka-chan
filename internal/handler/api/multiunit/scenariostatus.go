@@ -15,8 +15,8 @@ func MultiUnitScenarioStatus(ctx *gin.Context) (res any, err error) {
 	var statusID []int
 	multiUnitsList := []multiunitapischema.StatusList{}
 	err = ss.MainEng.Table("multi_unit_scenario_m").Cols("multi_unit_id").GroupBy("multi_unit_id").OrderBy("multi_unit_id ASC").Find(&statusID)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	for _, id := range statusID {
@@ -30,8 +30,8 @@ func MultiUnitScenarioStatus(ctx *gin.Context) (res any, err error) {
 			Join("LEFT", "multi_unit_scenario_open_m", "multi_unit_scenario_m.multi_unit_id = multi_unit_scenario_open_m.multi_unit_id").
 			Cols("multi_unit_scenario_btn_asset,open_date,multi_unit_scenario_id,chapter").
 			Where("multi_unit_scenario_m.multi_unit_id = ?", id).Get(&multiRes)
-		if ss.CheckErr(err) {
-			return
+		if err != nil {
+			return nil, err
 		}
 
 		multiUnitsList = append(multiUnitsList, multiunitapischema.StatusList{

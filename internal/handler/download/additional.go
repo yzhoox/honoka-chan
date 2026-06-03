@@ -1,30 +1,23 @@
 package download
 
 import (
-	"encoding/json"
 	"fmt"
 	"honoka-chan/config"
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
 	downloadschema "honoka-chan/internal/schema/download"
 	"honoka-chan/internal/session"
+	honokautils "honoka-chan/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
-
-type PkgInfo struct {
-	PkgType int `xorm:"pkg_type"`
-	PkgID   int `xorm:"pkg_id"`
-	Order   int `xorm:"pkg_order"`
-	Size    int `xorm:"pkg_size"`
-}
 
 func additional(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
 	downloadReq := downloadschema.AdditionalReq{}
-	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &downloadReq)
+	err := honokautils.ParseRequestData(ctx, &downloadReq)
 	if ss.CheckErr(err) {
 		return
 	}

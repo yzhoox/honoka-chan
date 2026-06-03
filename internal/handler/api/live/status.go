@@ -14,8 +14,8 @@ func liveStatus(ctx *gin.Context) (res any, err error) {
 	var liveDifficultyID []int
 	normalLives := []liveapischema.NormalLiveStatusList{}
 	err = ss.MainEng.Table("normal_live_m").Cols("live_difficulty_id").OrderBy("live_difficulty_id ASC").Find(&liveDifficultyID)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 	for _, id := range liveDifficultyID {
 		normalLive := liveapischema.NormalLiveStatusList{
@@ -31,8 +31,8 @@ func liveStatus(ctx *gin.Context) (res any, err error) {
 
 	specialLives := []liveapischema.SpecialLiveStatusList{}
 	err = ss.MainEng.Table("special_live_m").Cols("live_difficulty_id").OrderBy("live_difficulty_id ASC").Find(&liveDifficultyID)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 	for _, id := range liveDifficultyID {
 		specialLive := liveapischema.SpecialLiveStatusList{

@@ -13,16 +13,16 @@ func unitDeckInfo(ctx *gin.Context) (res any, err error) {
 
 	userDeck := []unitapischema.UserDeckData{}
 	err = ss.UserEng.Table("user_deck").Where("user_id = ?", ss.UserID).Asc("deck_id").Find(&userDeck)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	unitDeckInfo := []unitapischema.DeckInfoData{}
 	for _, deck := range userDeck {
 		deckUnit := []unitapischema.UnitDeckData{}
 		err = ss.UserEng.Table("user_deck_unit").Where("user_deck_id = ?", deck.ID).Asc("position").Find(&deckUnit)
-		if ss.CheckErr(err) {
-			return
+		if err != nil {
+			return nil, err
 		}
 
 		oUID := []unitapischema.UnitOwningUserIds{}

@@ -14,8 +14,8 @@ func scenarioStatus(ctx *gin.Context) (res any, err error) {
 	var scenarioID []int
 	scenarioLists := []scenarioapischema.StatusList{}
 	err = ss.MainEng.Table("scenario_m").Cols("scenario_id").OrderBy("scenario_id ASC").Find(&scenarioID)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	for _, id := range scenarioID {

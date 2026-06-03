@@ -13,8 +13,8 @@ func unitAccessoryAll(ctx *gin.Context) (res any, err error) {
 
 	accessoryList := []unitapischema.AccessoryList{}
 	err = ss.MainEng.Table("common_accessory_m").Find(&accessoryList)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 	for k := range accessoryList {
 		accessoryList[k].NextExp = 0
@@ -25,8 +25,8 @@ func unitAccessoryAll(ctx *gin.Context) (res any, err error) {
 	}
 	wearingInfo := []unitapischema.WearingInfo{}
 	err = ss.UserEng.Table("user_accessory_wear").Where("user_id = ?", ss.UserID).Find(&wearingInfo)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 	res = unitapischema.AccessoryAllResp{
 		Result: unitapischema.AccessoryAllData{

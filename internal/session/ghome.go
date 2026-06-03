@@ -6,26 +6,30 @@ import (
 )
 
 func (ss *Session) GetDeviceID() string {
-	return ss.Ctx.Request.Header.Get("X-DEVICEID")
+	return ss.deviceID
 }
 
-func (ss *Session) GetRandKey() []byte {
+func (ss *Session) GetRandKey() ([]byte, error) {
 	deviceKey := ghomemodel.DeviceKey{}
 	has, err := ss.UserEng.Table(new(ghomemodel.DeviceKey)).
 		Where("device_id = ?", ss.GetDeviceID()).Get(&deviceKey)
-	if ss.CheckErr(err) {
-		return nil
+	if err != nil {
+		return nil, err
 	}
 
 	if !has {
-		return nil
+		return nil, nil
 	}
 
-	return []byte(deviceKey.RandKey)
+	return []byte(deviceKey.RandKey), nil
 }
 func (ss *Session) SetRandKey(key string) {
 	var err error
-	if ss.GetRandKey() == nil {
+	randKey, err := ss.GetRandKey()
+	if ss.CheckErr(err) {
+		return
+	}
+	if randKey == nil {
 		_, err = ss.UserEng.Insert(&ghomemodel.DeviceKey{
 			DeviceID: ss.GetDeviceID(),
 			RandKey:  key,
@@ -40,7 +44,10 @@ func (ss *Session) SetRandKey(key string) {
 }
 
 func (ss *Session) Get3DESRandKey() ([]byte, error) {
-	randKey := ss.GetRandKey()
+	randKey, err := ss.GetRandKey()
+	if err != nil {
+		return nil, err
+	}
 	if len(randKey) < 24 {
 		return nil, errors.New("invalid rand key")
 	}

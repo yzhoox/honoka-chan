@@ -1,11 +1,11 @@
 package multiunit
 
 import (
-	"encoding/json"
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
 	multiunitschema "honoka-chan/internal/schema/multiunit"
 	"honoka-chan/internal/session"
+	honokautils "honoka-chan/internal/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,7 +16,7 @@ func scenarioStartup(ctx *gin.Context) {
 	defer ss.Finalize()
 
 	startReq := multiunitschema.ScenarioStartUpReq{}
-	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &startReq)
+	err := honokautils.ParseRequestData(ctx, &startReq)
 	if ss.CheckErr(err) {
 		return
 	}

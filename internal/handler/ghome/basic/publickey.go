@@ -13,7 +13,7 @@ import (
 )
 
 func publicKey(ctx *gin.Context) {
-	ss := session.New(ctx)
+	ss := session.Attach(ctx)
 	defer ss.Finalize()
 
 	publicKeyCode := 0

@@ -1,12 +1,12 @@
 package unit
 
 import (
-	"encoding/json"
 	"honoka-chan/internal/middleware"
 	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
 	unitschema "honoka-chan/internal/schema/unit"
 	"honoka-chan/internal/session"
+	honokautils "honoka-chan/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,7 +16,7 @@ func favorite(ctx *gin.Context) {
 	defer ss.Finalize()
 
 	var req unitschema.FavoriteReq
-	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &req)
+	err := honokautils.ParseRequestData(ctx, &req)
 	if ss.CheckErr(err) {
 		return
 	}

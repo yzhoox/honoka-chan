@@ -13,14 +13,14 @@ func awardInfo(ctx *gin.Context) (res any, err error) {
 
 	var awardList []int
 	err = ss.MainEng.Table("award_m").Cols("award_id").Find(&awardList)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	var awardID int
 	_, err = ss.UserEng.Table("user_pref").Where("user_id = ?", ss.UserID).Cols("award_id").Get(&awardID)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	awardsList := []awardapischema.Info{}

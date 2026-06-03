@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
 	"honoka-chan/internal/handler/api/album"
 	"honoka-chan/internal/handler/api/award"
@@ -32,6 +31,7 @@ import (
 	"honoka-chan/internal/router"
 	apischema "honoka-chan/internal/schema/api"
 	"honoka-chan/internal/session"
+	honokautils "honoka-chan/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -41,7 +41,7 @@ func api(ctx *gin.Context) {
 	defer ss.Finalize()
 
 	apiReq := []apischema.ApiReq{}
-	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &apiReq)
+	err := honokautils.ParseRequestData(ctx, &apiReq)
 	if ss.CheckErr(err) {
 		return
 	}

@@ -14,14 +14,14 @@ func unitRemovableSkillInfo(ctx *gin.Context) (res any, err error) {
 	var skillEquipCount []unitapischema.SkillEquipCount
 	err = ss.UserEng.Table("user_unit_skill_equip").Where("user_id = ?", ss.UserID).Select("unit_removable_skill_id,COUNT(*) AS ct").
 		GroupBy("unit_removable_skill_id").Find(&skillEquipCount)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	var rmSkillIds []int
 	err = ss.MainEng.Table("unit_removable_skill_m").Where("effect_range = 1").Cols("unit_removable_skill_id").Find(&rmSkillIds)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	owingInfo := []unitapischema.OwningInfo{}
@@ -43,8 +43,8 @@ func unitRemovableSkillInfo(ctx *gin.Context) (res any, err error) {
 
 	var unitOwningIds []int
 	err = ss.UserEng.Table("user_unit_skill_equip").Where("user_id = ?", ss.UserID).Cols("unit_owning_user_id").GroupBy("unit_owning_user_id").Find(&unitOwningIds)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	equipInfo := map[int]any{}
@@ -52,8 +52,8 @@ func unitRemovableSkillInfo(ctx *gin.Context) (res any, err error) {
 		detail := []unitapischema.SkillEquipDetail{}
 		err = ss.UserEng.Table("user_unit_skill_equip").Where("user_id = ? AND unit_owning_user_id = ?", ss.UserID, v).
 			Cols("unit_removable_skill_id").Find(&detail)
-		if ss.CheckErr(err) {
-			return
+		if err != nil {
+			return nil, err
 		}
 
 		equipInfo[v] = unitapischema.SkillEquipList{

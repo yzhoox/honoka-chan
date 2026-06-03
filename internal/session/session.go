@@ -13,19 +13,36 @@ import (
 	"xorm.io/xorm"
 )
 
-type Session struct {
-	Ctx *gin.Context
+type responseHooks struct {
+	setHeader func(string, string)
+	writeJSON func(int, any)
+	writeBody func(int, string)
+	abort     func()
+}
 
+type Session struct {
 	MainEng *xorm.Session
 	UserEng *xorm.Session
 
 	UserID   int
 	UserPref usermodel.UserPref
+
+	deviceID string
+	resp     responseHooks
+	done     bool
 }
 
 func New(ctx *gin.Context) *Session {
 	ss := &Session{
-		Ctx: ctx,
+		deviceID: ctx.GetHeader("X-DEVICEID"),
+		resp: responseHooks{
+			setHeader: ctx.Header,
+			writeJSON: ctx.JSON,
+			writeBody: func(code int, body string) {
+				ctx.String(code, body)
+			},
+			abort: ctx.Abort,
+		},
 	}
 
 	ss.MainEng = db.MainEng.NewSession()
@@ -45,21 +62,62 @@ func Get(ctx *gin.Context) *Session {
 	return ctx.MustGet("session").(*Session)
 }
 
+func Attach(ctx *gin.Context) *Session {
+	if ss, ok := ctx.Get("session"); ok {
+		return ss.(*Session)
+	}
+
+	ss := New(ctx)
+	ctx.Set("session", ss)
+	return ss
+}
+
 func (ss *Session) Finalize() {
-	ss.MainEng.Close()
-	if ss.CheckErr(ss.UserEng.Commit()) {
+	if ss.done {
 		return
 	}
+	ss.done = true
+
+	if ss.MainEng != nil {
+		ss.MainEng.Close()
+		ss.MainEng = nil
+	}
+
+	if ss.UserEng == nil {
+		return
+	}
+
+	if err := ss.UserEng.Commit(); err != nil {
+		log.Println(err.Error())
+		ss.UserEng.Close()
+		ss.UserEng = nil
+		ss.resp.writeJSON(500, gin.H{"error": err.Error()})
+		ss.resp.abort()
+		return
+	}
+
 	ss.UserEng.Close()
+	ss.UserEng = nil
 }
 
 func (ss *Session) Abort(err error) {
-	ss.MainEng.Close()
-	ss.UserEng.Rollback()
-	ss.UserEng.Close()
+	if ss.done {
+		return
+	}
+	ss.done = true
 
-	ss.Ctx.JSON(500, gin.H{"error": err.Error()})
-	ss.Ctx.Abort()
+	if ss.MainEng != nil {
+		ss.MainEng.Close()
+		ss.MainEng = nil
+	}
+	if ss.UserEng != nil {
+		ss.UserEng.Rollback()
+		ss.UserEng.Close()
+		ss.UserEng = nil
+	}
+
+	ss.resp.writeJSON(500, gin.H{"error": err.Error()})
+	ss.resp.abort()
 }
 
 func (ss *Session) CheckErr(err error) bool {
@@ -77,7 +135,7 @@ func (ss *Session) Respond(resp any) {
 		return
 	}
 
-	ss.Ctx.Header("Content-Type", "application/json")
-	ss.Ctx.Header("X-Message-Sign", base64.StdEncoding.EncodeToString(encrypt.RSASignSHA1(data)))
-	ss.Ctx.String(http.StatusOK, string(data))
+	ss.resp.setHeader("Content-Type", "application/json")
+	ss.resp.setHeader("X-Message-Sign", base64.StdEncoding.EncodeToString(encrypt.RSASignSHA1(data)))
+	ss.resp.writeBody(http.StatusOK, string(data))
 }

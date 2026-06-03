@@ -36,7 +36,7 @@ func Common(ctx *gin.Context) {
 	uid := ctx.GetHeader("User-ID")
 	ctx.Set("userid", uid)
 
-	ss := session.New(ctx)
+	ss := session.Attach(ctx)
 	ctx.Set("session", ss)
 
 	authorize := ctx.GetHeader("Authorize")

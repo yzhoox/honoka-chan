@@ -1,13 +1,13 @@
 package download
 
 import (
-	"encoding/json"
 	"fmt"
 	"honoka-chan/config"
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
 	downloadschema "honoka-chan/internal/schema/download"
 	"honoka-chan/internal/session"
+	honokautils "honoka-chan/internal/utils"
 
 	"github.com/gin-gonic/gin"
 	"xorm.io/builder"
@@ -18,7 +18,7 @@ func batch(ctx *gin.Context) {
 	defer ss.Finalize()
 
 	downloadReq := downloadschema.BatchReq{}
-	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &downloadReq)
+	err := honokautils.ParseRequestData(ctx, &downloadReq)
 	if ss.CheckErr(err) {
 		return
 	}

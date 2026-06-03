@@ -21,8 +21,8 @@ func museumInfo(ctx *gin.Context) (res any, err error) {
 	var smileBuff, pureBuff, coolBuff int
 	err = ss.MainEng.Table("museum_contents_m").Cols("museum_contents_id,smile_buff,pure_buff,cool_buff").
 		OrderBy("museum_contents_id ASC").Find(&museumRes)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	for _, res := range museumRes {

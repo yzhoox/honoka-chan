@@ -14,8 +14,8 @@ func liveSchedule(ctx *gin.Context) (res any, err error) {
 	var liveID []int
 	err = ss.MainEng.Table("special_live_m").
 		Cols("live_difficulty_id").OrderBy("live_difficulty_id ASC").Find(&liveID)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	liveList := []liveapischema.LiveList{}

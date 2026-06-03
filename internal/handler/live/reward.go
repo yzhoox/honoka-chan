@@ -1,12 +1,12 @@
 package live
 
 import (
-	"encoding/json"
 	"honoka-chan/internal/middleware"
 	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
 	liveschema "honoka-chan/internal/schema/live"
 	"honoka-chan/internal/session"
+	honokautils "honoka-chan/internal/utils"
 	"honoka-chan/pkg/utils"
 	"time"
 
@@ -21,7 +21,7 @@ func reward(ctx *gin.Context) {
 	}()
 
 	playRewardReq := liveschema.RewardReq{}
-	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &playRewardReq)
+	err := honokautils.ParseRequestData(ctx, &playRewardReq)
 	if ss.CheckErr(err) {
 		return
 	}

@@ -1,11 +1,11 @@
 package subscenario
 
 import (
-	"encoding/json"
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
 	subscenarioschema "honoka-chan/internal/schema/subscenario"
 	"honoka-chan/internal/session"
+	honokautils "honoka-chan/internal/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,7 +16,7 @@ func startup(ctx *gin.Context) {
 	defer ss.Finalize()
 
 	startReq := subscenarioschema.StartUpReq{}
-	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &startReq)
+	err := honokautils.ParseRequestData(ctx, &startReq)
 	if ss.CheckErr(err) {
 		return
 	}

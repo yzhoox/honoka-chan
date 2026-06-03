@@ -7,6 +7,7 @@ import (
 	"honoka-chan/internal/router"
 	liveschema "honoka-chan/internal/schema/live"
 	"honoka-chan/internal/session"
+	honokautils "honoka-chan/internal/utils"
 	"honoka-chan/pkg/utils"
 	"math"
 	"strconv"
@@ -20,7 +21,7 @@ func play(ctx *gin.Context) {
 	defer ss.Finalize()
 
 	playReq := liveschema.PlayReq{}
-	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &playReq)
+	err := honokautils.ParseRequestData(ctx, &playReq)
 	if ss.CheckErr(err) {
 		return
 	}

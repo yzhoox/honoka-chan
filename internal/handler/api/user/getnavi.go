@@ -13,8 +13,8 @@ func userGetNavi(ctx *gin.Context) (res any, err error) {
 
 	var uID, oID int
 	_, err = ss.UserEng.Table("user_pref").Where("user_id = ?", ss.UserID).Cols("user_id,unit_owning_user_id").Get(&uID, &oID)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	res = userapischema.GetNaviResp{

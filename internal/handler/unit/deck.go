@@ -1,7 +1,6 @@
 package unit
 
 import (
-	"encoding/json"
 	"honoka-chan/internal/middleware"
 	unitmodel "honoka-chan/internal/model/unit"
 	usermodel "honoka-chan/internal/model/user"
@@ -9,6 +8,7 @@ import (
 	unitapischema "honoka-chan/internal/schema/api/unit"
 	unitschema "honoka-chan/internal/schema/unit"
 	"honoka-chan/internal/session"
+	honokautils "honoka-chan/internal/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -19,7 +19,7 @@ func deck(ctx *gin.Context) {
 	defer ss.Finalize()
 
 	deckReq := unitschema.DeckReq{}
-	err := json.Unmarshal([]byte(ctx.MustGet("request_data").(string)), &deckReq)
+	err := honokautils.ParseRequestData(ctx, &deckReq)
 	if ss.CheckErr(err) {
 		return
 	}

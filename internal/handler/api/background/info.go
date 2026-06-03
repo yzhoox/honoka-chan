@@ -13,14 +13,14 @@ func backgroundInfo(ctx *gin.Context) (res any, err error) {
 
 	var backgroundList []int
 	err = ss.MainEng.Table("background_m").Cols("background_id").Find(&backgroundList)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	var backgroundID int
 	_, err = ss.UserEng.Table("user_pref").Where("user_id = ?", ss.UserID).Cols("background_id").Get(&backgroundID)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	backgroundsList := []backgroundapischema.Info{}

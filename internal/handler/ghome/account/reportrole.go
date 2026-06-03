@@ -11,7 +11,7 @@ import (
 )
 
 func reportRole(ctx *gin.Context) {
-	ss := session.New(ctx)
+	ss := session.Attach(ctx)
 	defer ss.Finalize()
 
 	randKey, err := ss.Get3DESRandKey()
