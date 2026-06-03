@@ -4,7 +4,6 @@ import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
 	webuischema "honoka-chan/internal/schema/webui"
-	"honoka-chan/internal/utils"
 	"honoka-chan/pkg/db"
 	"net/http"
 
@@ -29,8 +28,7 @@ func login(ctx *gin.Context) {
 	exists, err := db.UserEng.Table("users").
 		Where("phone = ? AND password = ?", user, openssl.Md5ToString(pass)).
 		Cols("user_id").Get(&userId)
-	utils.CheckErr(err)
-	if !exists {
+	if err != nil || !exists {
 		ctx.JSON(http.StatusOK, webuischema.Msg{
 			Code:     1,
 			Message:  "账号不存在或者密码有误！",

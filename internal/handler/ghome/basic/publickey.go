@@ -7,7 +7,7 @@ import (
 	"honoka-chan/internal/router"
 	ghomeschema "honoka-chan/internal/schema/ghome"
 	"honoka-chan/internal/session"
-	honokautils "honoka-chan/pkg/utils"
+	"honoka-chan/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,7 +23,7 @@ func publicKey(ctx *gin.Context) {
 		Message: publicKeyMsg,
 	}
 
-	publicKey := honokautils.ReadAllText(config.PublicKeyPath)
+	publicKey := utils.ReadAllText(config.PublicKeyPath)
 	block, _ := pem.Decode([]byte(publicKey))
 	if block == nil || block.Type != "PUBLIC KEY" {
 		publicKeyMsg = "公钥读取失败！"

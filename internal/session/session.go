@@ -1,10 +1,11 @@
 package session
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	usermodel "honoka-chan/internal/model/user"
-	"honoka-chan/internal/utils"
 	"honoka-chan/pkg/db"
+	"honoka-chan/pkg/encrypt"
 	"log"
 	"net/http"
 
@@ -77,6 +78,6 @@ func (ss *Session) Respond(resp any) {
 	}
 
 	ss.Ctx.Header("Content-Type", "application/json")
-	ss.Ctx.Header("X-Message-Sign", utils.GenXMS(data))
+	ss.Ctx.Header("X-Message-Sign", base64.StdEncoding.EncodeToString(encrypt.RSASignSHA1(data)))
 	ss.Ctx.String(http.StatusOK, string(data))
 }

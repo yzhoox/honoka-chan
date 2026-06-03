@@ -8,7 +8,7 @@ import (
 	ghomeschema "honoka-chan/internal/schema/ghome"
 	"honoka-chan/internal/session"
 	"honoka-chan/pkg/encrypt"
-	honokautils "honoka-chan/pkg/utils"
+	"honoka-chan/pkg/utils"
 	"net/url"
 	"strings"
 
@@ -44,7 +44,7 @@ func handshake(ctx *gin.Context) {
 	}
 	ss.SetRandKey(randKey)
 
-	token := fmt.Sprintf(`{"message":"ok","result":0,"token":"%s"}`, strings.ToUpper(honokautils.RandomStr(33)))
+	token := fmt.Sprintf(`{"message":"ok","result":0,"token":"%s"}`, strings.ToUpper(utils.RandomStr(33)))
 	encryptedToken, err := openssl.Des3ECBEncrypt([]byte(token), []byte(randKey[:24]), openssl.PKCS7_PADDING)
 	if ss.CheckErr(err) {
 		return

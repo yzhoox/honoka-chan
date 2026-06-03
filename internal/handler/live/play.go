@@ -7,7 +7,7 @@ import (
 	"honoka-chan/internal/router"
 	liveschema "honoka-chan/internal/schema/live"
 	"honoka-chan/internal/session"
-	honokautils "honoka-chan/pkg/utils"
+	"honoka-chan/pkg/utils"
 	"math"
 	"strconv"
 	"time"
@@ -67,7 +67,7 @@ func play(ctx *gin.Context) {
 	// fmt.Println("liveSetting", liveSetting)
 
 	notes := []liveschema.NotesList{}
-	notes_list := honokautils.ReadAllText("./assets/serverdata/beatmaps/" + liveSetting.NotesSettingAsset)
+	notes_list := utils.ReadAllText("./assets/serverdata/beatmaps/" + liveSetting.NotesSettingAsset)
 	err = json.Unmarshal([]byte(notes_list), &notes)
 	if ss.CheckErr(err) {
 		return
@@ -313,7 +313,7 @@ func play(ctx *gin.Context) {
 		// 好友主唱技能加成
 		// TODO 好友支援存入数据库
 		// var tomoUnitId int64
-		// partyList := gjson.Parse(honokautils.ReadAllText("assets/serverdata/partylist.json")).Get("response_data.party_list")
+		// partyList := gjson.Parse(utils.ReadAllText("assets/serverdata/partylist.json")).Get("response_data.party_list")
 		// partyList.ForEach(func(key, value gjson.Result) bool {
 		// 	if value.Get("user_info.user_id").Int() == playReq.PartyUserID {
 		// 		tomoUnitId = value.Get("center_unit_info.unit_id").Int()

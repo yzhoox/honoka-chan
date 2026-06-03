@@ -3,13 +3,13 @@ package profile
 import (
 	"encoding/json"
 	profileapischema "honoka-chan/internal/schema/api/profile"
-	honokautils "honoka-chan/pkg/utils"
+	"honoka-chan/pkg/utils"
 	"time"
 )
 
 func cardRanking() (res any, err error) {
 	var result []any
-	love := honokautils.ReadAllText("assets/serverdata/love.json")
+	love := utils.ReadAllText("assets/serverdata/love.json")
 	err = json.Unmarshal([]byte(love), &result)
 	if err != nil {
 		return nil, err

@@ -8,7 +8,7 @@ import (
 	loginschema "honoka-chan/internal/schema/login"
 	"honoka-chan/internal/session"
 	"honoka-chan/pkg/encrypt"
-	honokautils "honoka-chan/pkg/utils"
+	utils "honoka-chan/pkg/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -35,8 +35,8 @@ func authKey(ctx *gin.Context) {
 	// fmt.Println(string(authDataDecrypted))
 
 	clientToken := base64.StdEncoding.EncodeToString(dummyTokenDecrypted)
-	serverToken := base64.StdEncoding.EncodeToString([]byte(honokautils.RandomStr(32)))
-	authorizeToken := base64.StdEncoding.EncodeToString([]byte(honokautils.RandomStr(32)))
+	serverToken := base64.StdEncoding.EncodeToString([]byte(utils.RandomStr(32)))
+	authorizeToken := base64.StdEncoding.EncodeToString([]byte(utils.RandomStr(32)))
 
 	ss.SetAuthKey(&loginmodel.AuthKey{
 		AuthorizeToken: authorizeToken,

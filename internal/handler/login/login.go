@@ -8,7 +8,7 @@ import (
 	loginschema "honoka-chan/internal/schema/login"
 	"honoka-chan/internal/session"
 	"honoka-chan/pkg/encrypt"
-	honokautils "honoka-chan/pkg/utils"
+	"honoka-chan/pkg/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -34,7 +34,7 @@ func login(ctx *gin.Context) {
 		return
 	}
 
-	xmcKey := honokautils.XOR(clientToken, serverToken)
+	xmcKey := utils.XOR(clientToken, serverToken)
 	aesKey := xmcKey[0:16]
 
 	reqData := gjson.Parse(ctx.MustGet("request_data").(string))
@@ -52,7 +52,7 @@ func login(ctx *gin.Context) {
 	// loginPasswd := encrypt.AESCBCDecrypt(password, aesKey)[16:]
 	// fmt.Println("loginPasswd", string(loginPasswd))
 
-	authorizeToken := base64.StdEncoding.EncodeToString([]byte(honokautils.RandomStr(32)))
+	authorizeToken := base64.StdEncoding.EncodeToString([]byte(utils.RandomStr(32)))
 
 	var userID int
 	exists, err := ss.UserEng.Table("user_key").Where("key = ?", string(loginKey)).Cols("user_id").Get(&userID)
