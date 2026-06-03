@@ -13,9 +13,10 @@ import (
 )
 
 type PkgInfo struct {
-	Id    int `xorm:"pkg_id"`
-	Order int `xorm:"pkg_order"`
-	Size  int `xorm:"pkg_size"`
+	PkgType int `xorm:"pkg_type"`
+	PkgID   int `xorm:"pkg_id"`
+	Order   int `xorm:"pkg_order"`
+	Size    int `xorm:"pkg_size"`
 }
 
 func additional(ctx *gin.Context) {
@@ -32,7 +33,6 @@ func additional(ctx *gin.Context) {
 	pkgType, pkgId := downloadReq.PackageType, downloadReq.PackageID
 	var pkgInfo []PkgInfo
 	err = ss.MainEng.Table("download_m").Where("pkg_type = ? AND pkg_id = ? AND pkg_os = ?", pkgType, pkgId, downloadReq.TargetOs).
-		Cols("pkg_id,pkg_order,pkg_size").
 		OrderBy("pkg_id ASC, pkg_order ASC").Find(&pkgInfo)
 	if ss.CheckErr(err) {
 		return
@@ -42,7 +42,7 @@ func additional(ctx *gin.Context) {
 		pkgList = append(pkgList, downloadschema.AdditionalData{
 			Size: pkg.Size,
 			URL: fmt.Sprintf("%s/%s/archives/%d_%d_%d.zip",
-				config.Conf.Settings.CdnServer, downloadReq.TargetOs, pkgType, pkg.Id, pkg.Order),
+				config.Conf.Settings.CdnServer, downloadReq.TargetOs, pkg.PkgType, pkg.PkgID, pkg.Order),
 		})
 	}
 

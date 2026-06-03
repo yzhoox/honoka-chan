@@ -33,7 +33,6 @@ func update(ctx *gin.Context) {
 		pkgType := 99
 		var pkgInfo []PkgInfo
 		err := ss.MainEng.Table("download_m").Where("pkg_type = ? AND pkg_os = ?", pkgType, downloadReq.TargetOs).
-			Cols("pkg_id,pkg_order,pkg_size").
 			OrderBy("pkg_id ASC, pkg_order ASC").Find(&pkgInfo)
 		if ss.CheckErr(err) {
 			return
@@ -41,7 +40,7 @@ func update(ctx *gin.Context) {
 
 		pkgMap := map[string]int{}
 		for _, pkg := range pkgInfo {
-			fileName := fmt.Sprintf("%d_%d_%d.zip", pkgType, pkg.Id, pkg.Order)
+			fileName := fmt.Sprintf("%d_%d_%d.zip", pkg.PkgType, pkg.PkgID, pkg.Order)
 			url := fmt.Sprintf("%s/%s/archives/%s",
 				config.Conf.Settings.CdnServer, downloadReq.TargetOs, fileName)
 

@@ -25,10 +25,13 @@ func batch(ctx *gin.Context) {
 
 	pkgList := []downloadschema.BatchData{}
 	if downloadReq.ClientVersion == config.PackageVersion {
-		pkgType := downloadReq.PackageType
+		// 直接使用 downloadReq.PackageType 会导致下载数据量计算错误
+		pkgType := 4
+
 		var pkgInfo []PkgInfo
-		err := ss.MainEng.Table("download_m").Where(builder.NotIn("pkg_id", downloadReq.ExcludedPackageIds)).Where("pkg_type = ? AND pkg_os = ?", pkgType, downloadReq.Os).
-			Cols("pkg_id,pkg_order,pkg_size").
+		err := ss.MainEng.Table("download_m").
+			Where(builder.NotIn("pkg_id", downloadReq.ExcludedPackageIds)).
+			Where("pkg_type = ? AND pkg_os = ?", pkgType, downloadReq.Os).
 			OrderBy("pkg_id ASC, pkg_order ASC").Find(&pkgInfo)
 		if ss.CheckErr(err) {
 			return
@@ -38,7 +41,7 @@ func batch(ctx *gin.Context) {
 			pkgList = append(pkgList, downloadschema.BatchData{
 				Size: pkg.Size,
 				URL: fmt.Sprintf("%s/%s/archives/%d_%d_%d.zip",
-					config.Conf.Settings.CdnServer, downloadReq.Os, pkgType, pkg.Id, pkg.Order),
+					config.Conf.Settings.CdnServer, downloadReq.Os, pkg.PkgType, pkg.PkgID, pkg.Order),
 			})
 		}
 	}
