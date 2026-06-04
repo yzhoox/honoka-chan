@@ -7,6 +7,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>SIF 小助手</title>
     {{ template "admin/nav/css.html" . }}
+    <style>
+        .profile-action-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .profile-action-row .layui-btn+.layui-btn {
+            margin-left: 0;
+        }
+
+        @media screen and (max-width: 767.98px) {
+            .profile-action-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
 </head>
 
 <body class="layui-layout-body">
@@ -90,7 +109,10 @@
                     </div>
                     <div class="layui-form-item">
                         <div class="layui-input-block">
-                            <button type="button" class="layui-btn" id="save-profile">保存</button>
+                            <div class="profile-action-row">
+                                <button type="button" class="layui-btn" id="save-profile">保存</button>
+                                <button type="button" class="layui-btn layui-btn-primary" id="reset-profile">重置默认值</button>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -105,9 +127,33 @@
 
             $("#save-profile").click(function () {
                 $.post("/admin/profile", $("form").serialize(), function (res) {
-                    layer.msg(res.message || "请求完成");
+                    var message = res.message || "请求完成";
+                    if (res.code === 0) {
+                        message += " 请重新登录游戏生效。";
+                    }
+                    layer.msg(message);
                 }).fail(function () {
                     layer.msg("请求失败，请稍后再试");
+                });
+            });
+
+            $("#reset-profile").click(function () {
+                layer.confirm("将数值项和用户 ID 恢复为默认安全值，是否继续？", function (index) {
+                    $.post("/admin/profile/reset", function (res) {
+                        var message = res.message || "请求完成";
+                        if (res.code === 0) {
+                            message += " 请重新登录游戏生效。";
+                        }
+                        layer.msg(message);
+                        if (res.code === 0) {
+                            setTimeout(function () {
+                                window.location.reload();
+                            }, 1800);
+                        }
+                    }).fail(function () {
+                        layer.msg("请求失败，请稍后再试");
+                    });
+                    layer.close(index);
                 });
             });
         });

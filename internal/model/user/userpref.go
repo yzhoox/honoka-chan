@@ -8,6 +8,8 @@ import (
 const CurrentUserPrefProfileVersion = 1
 
 const (
+	DefaultAutoUserName      = "音乃木坂学生"
+	DefaultAutoUserDesc      = "你好。"
 	DefaultUserLevel         = 1028
 	DefaultUserExp           = 1089696
 	DefaultUserNextExp       = 1207185
@@ -61,6 +63,22 @@ func (u *UserPref) ApplyProfileDefaults() {
 	}
 	if u.OverMaxEnergy < 0 {
 		u.OverMaxEnergy = DefaultUserOverMaxEnergy
+	}
+	u.ProfileVersion = CurrentUserPrefProfileVersion
+}
+
+func (u *UserPref) ResetProfileDefaults() {
+	u.UserName = DefaultAutoUserName
+	u.UserDesc = DefaultAutoUserDesc
+	u.UserLevel = DefaultUserLevel
+	u.UserExp = DefaultUserExp
+	u.NextExp = DefaultUserNextExp
+	u.GameCoin = DefaultUserGameCoin
+	u.SnsCoin = DefaultUserSnsCoin
+	u.EnergyMax = DefaultUserEnergyMax
+	u.OverMaxEnergy = DefaultUserOverMaxEnergy
+	if u.UserID > 0 {
+		u.InviteCode = strconv.Itoa(u.UserID)
 	}
 	u.ProfileVersion = CurrentUserPrefProfileVersion
 }

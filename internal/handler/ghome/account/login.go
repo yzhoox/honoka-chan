@@ -136,8 +136,8 @@ func addUser(dbSession *xorm.Session, phone, password string, isDefault bool) (g
 		awardID := 1      // 音乃木坂学生
 		backgroundID := 1 // 初始背景
 		unitID := 31      // 初始高坂穂乃果
-		userName := "音乃木坂学生"
-		userDesc := "你好。"
+		userName := usermodel.DefaultAutoUserName
+		userDesc := usermodel.DefaultAutoUserDesc
 		// 是否初始化
 		if isDefault {
 			// 初始化默认用户

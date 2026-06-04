@@ -135,7 +135,55 @@ func updateProfile(ctx *gin.Context) {
 	})
 }
 
+func resetProfile(ctx *gin.Context) {
+	pref := usermodel.UserPref{}
+	exists, err := db.UserEng.Table(new(usermodel.UserPref)).
+		Where("user_id = ?", ctx.GetInt("userid")).Get(&pref)
+	if err != nil || !exists {
+		ctx.JSON(http.StatusOK, webuischema.Msg{
+			Code:    1,
+			Message: "用户资料读取失败！",
+		})
+		return
+	}
+
+	pref.ResetProfileDefaults()
+	pref.UpdateTime = time.Now().Unix()
+
+	_, err = db.UserEng.Table(new(usermodel.UserPref)).
+		Where("user_id = ?", ctx.GetInt("userid")).
+		Cols(
+			"user_name",
+			"user_level",
+			"user_desc",
+			"invite_code",
+			"user_exp",
+			"next_exp",
+			"game_coin",
+			"sns_coin",
+			"energy_max",
+			"over_max_energy",
+			"profile_version",
+			"update_time",
+		).
+		Update(&pref)
+	if err != nil {
+		ctx.JSON(http.StatusOK, webuischema.Msg{
+			Code:    1,
+			Message: "重置失败！",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, webuischema.Msg{
+		Code:     0,
+		Message:  "已恢复默认值！",
+		Redirect: "/admin/profile",
+	})
+}
+
 func init() {
 	router.AddHandler("admin", "GET", "/profile", middleware.WebAuth, profilePage)
 	router.AddHandler("admin", "POST", "/profile", middleware.WebAuth, updateProfile)
+	router.AddHandler("admin", "POST", "/profile/reset", middleware.WebAuth, resetProfile)
 }
