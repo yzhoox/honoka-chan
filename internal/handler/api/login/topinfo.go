@@ -30,13 +30,23 @@ func loginTopInfo(ctx *gin.Context) (res any, err error) {
 		return nil, err
 	}
 
+	friendGreetCnt64, err := ss.UserEng.Table(new(usermodel.UserGreet)).
+		Where("receiver_id = ?", ss.UserID).
+		Where("deleted_from_receiver = ?", false).
+		Where("readed = ?", false).
+		Count()
+	if err != nil {
+		return nil, err
+	}
+
 	friendsRequestCnt := int(friendsRequestCnt64)
 	friendsApprovalWaitCnt := int(friendsApprovalWaitCnt64)
+	friendGreetCnt := int(friendGreetCnt64)
 
 	res = loginapischema.TopInfoResp{
 		Result: loginapischema.TopInfoData{
-			FriendActionCnt:        0,
-			FriendGreetCnt:         0,
+			FriendActionCnt:        friendGreetCnt,
+			FriendGreetCnt:         friendGreetCnt,
 			FriendVarietyCnt:       0,
 			FriendNewCnt:           friendsRequestCnt + friendsApprovalWaitCnt,
 			PresentCnt:             0,
@@ -44,7 +54,7 @@ func loginTopInfo(ctx *gin.Context) (res any, err error) {
 			ServerDatetime:         now.Format("2006-01-02 15:04:05"),
 			ServerTimestamp:        now.Unix(),
 			NoticeFriendDatetime:   now.Format("2006-01-02 15:04:05"),
-			NoticeMailDatetime:     "2000-01-01 12:00:00",
+			NoticeMailDatetime:     now.Format("2006-01-02 15:04:05"),
 			FriendsApprovalWaitCnt: friendsApprovalWaitCnt,
 			FriendsRequestCnt:      friendsRequestCnt,
 			IsTodayBirthday:        false,

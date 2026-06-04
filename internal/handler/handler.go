@@ -11,6 +11,7 @@ import (
 	_ "honoka-chan/internal/handler/friend"
 	_ "honoka-chan/internal/handler/gdpr"
 	_ "honoka-chan/internal/handler/ghome"
+	_ "honoka-chan/internal/handler/greet"
 	_ "honoka-chan/internal/handler/lbonus"
 	_ "honoka-chan/internal/handler/live"
 	_ "honoka-chan/internal/handler/login"
