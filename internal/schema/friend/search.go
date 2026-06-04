@@ -17,7 +17,7 @@ type SearchUserInfo struct {
 	UnitMax              int    `json:"unit_max"`
 	EnergyMax            int    `json:"energy_max"`
 	FriendMax            int    `json:"friend_max"`
-	UnitCnt              int    `json:"unit_cnt"`
+	UnitCnt              int64  `json:"unit_cnt"`
 	ElapsedTimeFromLogin string `json:"elapsed_time_from_login"`
 	Comment              string `json:"comment"`
 }

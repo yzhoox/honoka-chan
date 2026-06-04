@@ -36,12 +36,36 @@
         background-color: #e4007f;
     }
 
-    .layui-nav-tree .layui-nav-child dd.layui-this,
-    .layui-nav-tree .layui-nav-child dd.layui-this a,
     .layui-nav-tree .layui-this,
     .layui-nav-tree .layui-this>a,
     .layui-nav-tree .layui-this>a:hover {
         background-color: #ff6699 !important;
+    }
+
+    .layui-nav-tree .layui-nav-child {
+        padding: 0 !important;
+        background-color: rgba(0, 0, 0, 0.18) !important;
+    }
+
+    .layui-nav-tree .layui-nav-child dd {
+        margin: 0;
+        padding: 0;
+        background: transparent !important;
+    }
+
+    .layui-nav-tree .layui-nav-child dd>a {
+        display: block;
+        height: 40px;
+        line-height: 40px;
+        padding: 0 20px 0 42px;
+        box-sizing: border-box;
+        background: transparent !important;
+    }
+
+    .layui-nav-tree .layui-nav-child dd>a.admin-subnav-active,
+    .layui-nav-tree .layui-nav-child dd>a.admin-subnav-active:hover {
+        background-color: #ff6699 !important;
+        color: #fff !important;
     }
 
     .admin-mobile-mask {

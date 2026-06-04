@@ -25,11 +25,10 @@ func reward(ctx *gin.Context) {
 	if ss.CheckErr(err) {
 		return
 	}
-	// fmt.Println(ctx.MustGet("request_data").(string))
 
 	difficultyID := playRewardReq.LiveDifficultyID
 	_, liveInfo := ss.GetLiveInfo(difficultyID)
-	_, progress := ss.GetLiveInProgress() // TODO: 添加返回指定状态码的方法
+	_, progress := ss.GetLiveInProgress()
 	_, deckInfo := ss.GetDeckInfo(progress.DeckID)
 	deckInfo.LiveDifficultyID = difficultyID
 

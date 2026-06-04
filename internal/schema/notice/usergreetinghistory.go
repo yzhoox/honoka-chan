@@ -1,7 +1,7 @@
 package noticeschema
 
 type UserGreetingData struct {
-	ItemCount       int                  `json:"item_count"`
+	ItemCount       int64                `json:"item_count"`
 	HasNext         bool                 `json:"has_next"`
 	NoticeList      []UserGreetingNotice `json:"notice_list"`
 	ServerTimestamp int64                `json:"server_timestamp"`

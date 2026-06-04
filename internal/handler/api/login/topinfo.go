@@ -13,7 +13,7 @@ func loginTopInfo(ctx *gin.Context) (res any, err error) {
 	ss := session.Get(ctx)
 	now := time.Now()
 
-	friendsRequestCnt64, err := ss.UserEng.Table(new(usermodel.UserFriend)).
+	friendsRequestCnt, err := ss.UserEng.Table(new(usermodel.UserFriend)).
 		Where("user_id = ?", ss.UserID).
 		Where("status = ?", usermodel.FriendStatusAwaitingApproval).
 		Where("is_new = ?", true).
@@ -22,7 +22,7 @@ func loginTopInfo(ctx *gin.Context) (res any, err error) {
 		return nil, err
 	}
 
-	friendsApprovalWaitCnt64, err := ss.UserEng.Table(new(usermodel.UserFriend)).
+	friendsApprovalWaitCnt, err := ss.UserEng.Table(new(usermodel.UserFriend)).
 		Where("user_id = ?", ss.UserID).
 		Where("status = ?", usermodel.FriendStatusPending).
 		Count()
@@ -30,7 +30,7 @@ func loginTopInfo(ctx *gin.Context) (res any, err error) {
 		return nil, err
 	}
 
-	friendGreetCnt64, err := ss.UserEng.Table(new(usermodel.UserGreet)).
+	friendGreetCnt, err := ss.UserEng.Table(new(usermodel.UserGreet)).
 		Where("receiver_id = ?", ss.UserID).
 		Where("deleted_from_receiver = ?", false).
 		Where("readed = ?", false).
@@ -38,10 +38,6 @@ func loginTopInfo(ctx *gin.Context) (res any, err error) {
 	if err != nil {
 		return nil, err
 	}
-
-	friendsRequestCnt := int(friendsRequestCnt64)
-	friendsApprovalWaitCnt := int(friendsApprovalWaitCnt64)
-	friendGreetCnt := int(friendGreetCnt64)
 
 	res = loginapischema.TopInfoResp{
 		Result: loginapischema.TopInfoData{

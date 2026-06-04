@@ -1,13 +1,23 @@
 package item
 
 import (
-	"encoding/json"
-	"honoka-chan/pkg/utils"
+	itemapischema "honoka-chan/internal/schema/api/item"
+	honokautils "honoka-chan/internal/utils"
+	"time"
 )
 
 func itemList() (res any, err error) {
-	itemResp := utils.ReadAllText("assets/serverdata/item.json")
-	err = json.Unmarshal([]byte(itemResp), &res)
+	itemData, err := honokautils.LoadServerData[itemapischema.ListData]("item_data.json")
+	if err != nil {
+		return nil, err
+	}
+
+	res = itemapischema.ListResp{
+		Result:     itemData,
+		Status:     200,
+		CommandNum: false,
+		TimeStamp:  time.Now().Unix(),
+	}
 
 	return res, err
 }

@@ -71,7 +71,7 @@ type FriendList struct {
 }
 
 type ListData struct {
-	ItemCount       int          `json:"item_count"`
+	ItemCount       int64        `json:"item_count"`
 	FriendList      []FriendList `json:"friend_list"`
 	NewFriendList   []any        `json:"new_friend_list"`
 	ServerTimestamp int64        `json:"server_timestamp"`

@@ -5,14 +5,14 @@
             <li class="layui-nav-item {{ if eq .menu 2 }} layui-nav-itemed {{ end }}">
                 <a class="" href="javascript:;">用户设置</a>
                 <dl class="layui-nav-child">
-                    <dd {{ if eq .url "/admin/profile" }} class="layui-this" {{ end }}><a href="/admin/profile">个人资料</a></dd>
+                    <dd><a class="{{ if eq .url "/admin/profile" }}admin-subnav-active{{ end }}" href="/admin/profile">个人资料</a></dd>
                 </dl>
             </li>
             <li class="layui-nav-item {{ if eq .menu 1 }} layui-nav-itemed {{ end }}">
                 <a class="" href="javascript:;">卡片管理</a>
                 <dl class="layui-nav-child">
-                    <dd {{ if eq .url "/admin/card" }} class="layui-this" {{ end }}><a href="/admin/card">卡片一览</a></dd>
-                    <dd {{ if eq .url "/admin/upload" }} class="layui-this" {{ end }}><a href="/admin/upload">卡片导入</a>
+                    <dd><a class="{{ if eq .url "/admin/card" }}admin-subnav-active{{ end }}" href="/admin/card">卡片一览</a></dd>
+                    <dd><a class="{{ if eq .url "/admin/upload" }}admin-subnav-active{{ end }}" href="/admin/upload">卡片导入</a>
                     </dd>
                 </dl>
             </li>

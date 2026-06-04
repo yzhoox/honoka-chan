@@ -4,6 +4,7 @@ import (
 	"honoka-chan/internal/constant"
 	usermodel "honoka-chan/internal/model/user"
 	liveschema "honoka-chan/internal/schema/live"
+	liverecordschema "honoka-chan/internal/schema/liverecord"
 )
 
 // Move from LevelDB to SQLite
@@ -110,14 +111,14 @@ func (ss *Session) GetLiveInfo(LiveDifficultyID int) (bool, *liveschema.LiveInfo
 	}
 }
 
-func (ss *Session) GetDeckInfo(deckID int) (bool, *usermodel.DeckInfo) {
+func (ss *Session) GetDeckInfo(deckID int) (bool, *liverecordschema.DeckInfo) {
 	// 卡片信息
 	totalHp, totalSmile, totalCute, totalCool := 0, 0, 0, 0
-	unitData := []usermodel.UnitList{}
+	unitData := []liverecordschema.UnitList{}
 	units := ss.GetUserDeckUnit(deckID)
 	for _, u := range units {
 		_, uData := ss.GetUnitInfo(u.UnitID)
-		tempUnitData := usermodel.UnitList{
+		tempUnitData := liverecordschema.UnitList{
 			UnitID:                     u.UnitID,
 			Position:                   u.Position,
 			Level:                      u.Level,
@@ -132,13 +133,13 @@ func (ss *Session) GetDeckInfo(deckID int) (bool, *usermodel.DeckInfo) {
 			Rank:                       uData.Rank,
 			MaxHp:                      uData.MaxHp,
 			UnitRemovableSkillCapacity: uData.UnitRemovableSkillCapacity,
-			TotalStatus: usermodel.TotalStatus{
+			TotalStatus: liverecordschema.TotalStatus{
 				Hp:    uData.MaxHp,
 				Smile: uData.Smile,
 				Cute:  uData.Cute,
 				Cool:  uData.Cool,
 			},
-			SiBonus: usermodel.SiBonus{
+			SiBonus: liverecordschema.SiBonus{
 				Hp:    0,
 				Smile: 0,
 				Cute:  0,
@@ -165,20 +166,20 @@ func (ss *Session) GetDeckInfo(deckID int) (bool, *usermodel.DeckInfo) {
 		unitData = append(unitData, tempUnitData)
 	}
 
-	return true, &usermodel.DeckInfo{
-		TotalStatus: usermodel.TotalStatus{
+	return true, &liverecordschema.DeckInfo{
+		TotalStatus: liverecordschema.TotalStatus{
 			Hp:    totalHp,
 			Smile: totalSmile,
 			Cute:  totalCute,
 			Cool:  totalCool,
 		},
-		CenterBonus: usermodel.CenterBonus{ // TODO: 计算C位加成
+		CenterBonus: liverecordschema.CenterBonus{ // TODO: 计算C位加成
 			Hp:    0,
 			Smile: 0,
 			Cute:  0,
 			Cool:  0,
 		},
-		SiBonus: usermodel.SiBonus{
+		SiBonus: liverecordschema.SiBonus{
 			Hp:    0,
 			Smile: 0,
 			Cute:  0,

@@ -1,22 +1,19 @@
 package profile
 
 import (
-	"encoding/json"
 	profileapischema "honoka-chan/internal/schema/api/profile"
-	"honoka-chan/pkg/utils"
+	honokautils "honoka-chan/internal/utils"
 	"time"
 )
 
 func cardRanking() (res any, err error) {
-	var result []any
-	love := utils.ReadAllText("assets/serverdata/love.json")
-	err = json.Unmarshal([]byte(love), &result)
+	cardRankingData, err := honokautils.LoadServerData[[]profileapischema.CardRankingData]("card_ranking_data.json")
 	if err != nil {
 		return nil, err
 	}
 
 	res = profileapischema.CardRankingResp{
-		Result:     result,
+		Result:     cardRankingData,
 		Status:     200,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),

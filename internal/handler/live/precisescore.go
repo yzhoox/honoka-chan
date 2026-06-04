@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"honoka-chan/internal/constant"
 	"honoka-chan/internal/middleware"
-	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
 	commonschema "honoka-chan/internal/schema/common"
 	liveschema "honoka-chan/internal/schema/live"
+	liverecordschema "honoka-chan/internal/schema/liverecord"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
 	"honoka-chan/pkg/utils"
@@ -173,7 +173,7 @@ func preciseScore(ctx *gin.Context) {
 				}
 
 				// DeckInfo
-				var deckInfo usermodel.DeckInfo
+				var deckInfo liverecordschema.DeckInfo
 				err = json.Unmarshal([]byte(record.DeckInfoJSON), &deckInfo)
 				if ss.CheckErr(err) {
 					return

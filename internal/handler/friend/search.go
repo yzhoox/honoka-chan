@@ -96,7 +96,7 @@ func search(ctx *gin.Context) {
 				UnitMax:              5000,
 				EnergyMax:            positiveIntOrDefault(row.EnergyMax, usermodel.DefaultUserEnergyMax),
 				FriendMax:            99,
-				UnitCnt:              int(unitCount),
+				UnitCnt:              unitCount,
 				ElapsedTimeFromLogin: formatElapsedTime(row.LastLoginTime),
 				Comment:              row.UserDesc,
 			},

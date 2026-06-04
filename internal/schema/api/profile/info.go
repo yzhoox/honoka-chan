@@ -53,7 +53,7 @@ type UserInfo struct {
 	UnitMax              int    `json:"unit_max"`
 	EnergyMax            int    `json:"energy_max"`
 	FriendMax            int    `json:"friend_max"`
-	UnitCnt              int    `json:"unit_cnt"`
+	UnitCnt              int64  `json:"unit_cnt"`
 	InviteCode           string `json:"invite_code"`
 	ElapsedTimeFromLogin string `json:"elapsed_time_from_login"`
 	Introduction         string `json:"introduction"`

@@ -8,18 +8,18 @@ type LicenseInfo struct {
 }
 
 type TopInfoData struct {
-	FriendActionCnt        int         `json:"friend_action_cnt"`
-	FriendGreetCnt         int         `json:"friend_greet_cnt"`
-	FriendVarietyCnt       int         `json:"friend_variety_cnt"`
-	FriendNewCnt           int         `json:"friend_new_cnt"`
-	PresentCnt             int         `json:"present_cnt"`
+	FriendActionCnt        int64       `json:"friend_action_cnt"`
+	FriendGreetCnt         int64       `json:"friend_greet_cnt"`
+	FriendVarietyCnt       int64       `json:"friend_variety_cnt"`
+	FriendNewCnt           int64       `json:"friend_new_cnt"`
+	PresentCnt             int64       `json:"present_cnt"`
 	SecretBoxBadgeFlag     bool        `json:"secret_box_badge_flag"`
 	ServerDatetime         string      `json:"server_datetime"`
 	ServerTimestamp        int64       `json:"server_timestamp"`
 	NoticeFriendDatetime   string      `json:"notice_friend_datetime"`
 	NoticeMailDatetime     string      `json:"notice_mail_datetime"`
-	FriendsApprovalWaitCnt int         `json:"friends_approval_wait_cnt"`
-	FriendsRequestCnt      int         `json:"friends_request_cnt"`
+	FriendsApprovalWaitCnt int64       `json:"friends_approval_wait_cnt"`
+	FriendsRequestCnt      int64       `json:"friends_request_cnt"`
 	IsTodayBirthday        bool        `json:"is_today_birthday"`
 	LicenseInfo            LicenseInfo `json:"license_info"`
 	UsingBuffInfo          []any       `json:"using_buff_info"`

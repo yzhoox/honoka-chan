@@ -72,7 +72,7 @@ func profileInfo(ctx *gin.Context, targetUserID int) (res any, err error) {
 				UnitMax:              5000,
 				EnergyMax:            targetPref.EffectiveEnergyMax(),
 				FriendMax:            99,
-				UnitCnt:              int(unitCount),
+				UnitCnt:              unitCount,
 				InviteCode:           targetPref.InviteCode,
 				ElapsedTimeFromLogin: formatProfileElapsedTime(lastLoginTime),
 				Introduction:         targetPref.UserDesc,

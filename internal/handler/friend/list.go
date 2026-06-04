@@ -115,7 +115,7 @@ func list(ctx *gin.Context) {
 
 	ss.Respond(friendschema.ListResp{
 		ResponseData: friendschema.ListData{
-			ItemCount:       int(totalCount),
+			ItemCount:       totalCount,
 			FriendList:      friendList,
 			NewFriendList:   []any{},
 			ServerTimestamp: time.Now().Unix(),

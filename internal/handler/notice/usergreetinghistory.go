@@ -62,7 +62,7 @@ func userGreetingHistory(ctx *gin.Context) {
 
 	ss.Respond(noticeschema.UserGreetingResp{
 		ResponseData: noticeschema.UserGreetingData{
-			ItemCount:       int(totalCount),
+			ItemCount:       totalCount,
 			HasNext:         totalCount > int64(len(rows)),
 			NoticeList:      noticeList,
 			ServerTimestamp: time.Now().Unix(),

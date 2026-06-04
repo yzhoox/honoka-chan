@@ -3,6 +3,7 @@ package session
 import (
 	accessorymodel "honoka-chan/internal/model/accessory"
 	usermodel "honoka-chan/internal/model/user"
+	liverecordschema "honoka-chan/internal/schema/liverecord"
 )
 
 func (ss *Session) GetUserAccessoryWearByUnitOwningUserID(unitOwningUserID int) (bool, *usermodel.UserAccessoryWear) {
@@ -29,7 +30,7 @@ func (ss *Session) GetAccessoryByAccessoryOwningUserID(accessoryOwningUserID int
 	return has, &accessoryData
 }
 
-func (ss *Session) GetUserAccessoryInfoByUnitOwningUserID(unitOwningUserID int) (bool, *usermodel.AccessoryInfo) {
+func (ss *Session) GetUserAccessoryInfoByUnitOwningUserID(unitOwningUserID int) (bool, *liverecordschema.AccessoryInfo) {
 	has, wearData := ss.GetUserAccessoryWearByUnitOwningUserID(unitOwningUserID)
 	if !has {
 		return false, nil
@@ -40,7 +41,7 @@ func (ss *Session) GetUserAccessoryInfoByUnitOwningUserID(unitOwningUserID int) 
 		return false, nil
 	}
 
-	return has, &usermodel.AccessoryInfo{
+	return has, &liverecordschema.AccessoryInfo{
 		AccessoryOwningUserID: wearData.AccessoryOwningUserID,
 		AccessoryID:           accessoryData.AccessoryID,
 		Exp:                   accessoryData.Exp,
