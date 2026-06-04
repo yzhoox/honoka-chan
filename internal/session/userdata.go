@@ -7,6 +7,15 @@ import (
 	userschema "honoka-chan/internal/schema/user"
 )
 
+// recovery_item_m
+// https://github.com/lemon-devs/llsif_cn_db_diff/blob/master/item/item.db.sql
+var defaultLpRecoveryItemIDs = []int{
+	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+	22, 23, 24, 25, 26, 27, 801, 802, 803, 804, 805, 995, 777001, 777002, 777003,
+	777005, 777006, 777007, 777008, 777009, 777010, 777011, 777012, 777013, 777014,
+	777015, 777016, 777017, 777018, 777019, 777020,
+}
+
 func (ss *Session) GetUserPref(userID string) usermodel.UserPref {
 	pref := usermodel.UserPref{}
 	has, err := ss.UserEng.Table(new(usermodel.UserPref)).
@@ -64,7 +73,19 @@ func (ss *Session) GetUserInfo() userschema.UserInfo {
 		CrystalCoin:                    0,
 		UnlockRandomLiveMuse:           1,
 		UnlockRandomLiveAqours:         1,
+		LpRecoveryItem:                 buildLpRecoveryItems(),
 	}
+}
+
+func buildLpRecoveryItems() []userschema.LpRecoveryItem {
+	items := make([]userschema.LpRecoveryItem, 0, len(defaultLpRecoveryItemIDs))
+	for _, itemID := range defaultLpRecoveryItemIDs {
+		items = append(items, userschema.LpRecoveryItem{
+			ItemID: itemID,
+			Amount: 1,
+		})
+	}
+	return items
 }
 
 func (ss *Session) GetUserLiveRecord(liveDifficultyID int) []usermodel.UserLiveRecord {
