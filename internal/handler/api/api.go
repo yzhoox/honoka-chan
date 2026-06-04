@@ -22,6 +22,7 @@ import (
 	"honoka-chan/internal/handler/api/notice"
 	"honoka-chan/internal/handler/api/payment"
 	"honoka-chan/internal/handler/api/profile"
+	"honoka-chan/internal/handler/api/reward"
 	"honoka-chan/internal/handler/api/scenario"
 	"honoka-chan/internal/handler/api/stamp"
 	"honoka-chan/internal/handler/api/subscenario"
@@ -91,6 +92,8 @@ func api(ctx *gin.Context) {
 			result, err = payment.PaymentApi(ctx, v.Action)
 		case "profile":
 			result, err = profile.ProfileApi(ctx, v.Action, v.UserID)
+		case "reward":
+			result, err = reward.RewardApi(v.Action)
 		case "scenario":
 			result, err = scenario.ScenarioApi(ctx, v.Action)
 		case "stamp":

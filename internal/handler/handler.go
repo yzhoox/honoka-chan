@@ -22,6 +22,7 @@ import (
 	_ "honoka-chan/internal/handler/payment"
 	_ "honoka-chan/internal/handler/personalnotice"
 	_ "honoka-chan/internal/handler/profile"
+	_ "honoka-chan/internal/handler/reward"
 	_ "honoka-chan/internal/handler/scenario"
 	_ "honoka-chan/internal/handler/subscenario"
 	_ "honoka-chan/internal/handler/tos"

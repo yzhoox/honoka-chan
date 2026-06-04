@@ -6,6 +6,7 @@ import (
 	"honoka-chan/internal/middleware"
 	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
+	commonschema "honoka-chan/internal/schema/common"
 	liveschema "honoka-chan/internal/schema/live"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
@@ -232,8 +233,8 @@ func preciseScore(ctx *gin.Context) {
 			}
 		} else {
 			playResp = liveschema.PreciseScoreResp{
-				ResponseData: map[string]constant.ErrorCode{
-					"error_code": constant.ErrorCodeLivePreciseListNotFound,
+				ResponseData: commonschema.ErrorData{
+					ErrorCode: constant.ErrorCodeLivePreciseListNotFound,
 				},
 				ReleaseInfo: []any{},
 				StatusCode:  600,
