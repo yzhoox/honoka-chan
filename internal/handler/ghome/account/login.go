@@ -362,6 +362,16 @@ func addUser(dbSession *xorm.Session, phone, password string, isDefault bool) (g
 			}
 		}
 
+		if !isDefault {
+			err = usermodel.EnsureDefaultFriendship(dbSession, userID)
+			if err != nil {
+				if localSession {
+					dbSession.Rollback()
+				}
+				return loginData, loginCode, loginMsg, created, err
+			}
+		}
+
 		loginData.Autokey = autoKey
 		loginData.HasRealInfo = 1
 		loginData.Message = "ok"

@@ -1,25 +1,52 @@
 package login
 
 import (
+	usermodel "honoka-chan/internal/model/user"
 	loginapischema "honoka-chan/internal/schema/api/login"
+	"honoka-chan/internal/session"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
-func loginTopInfo() (res any, err error) {
+func loginTopInfo(ctx *gin.Context) (res any, err error) {
+	ss := session.Get(ctx)
+	now := time.Now()
+
+	friendsRequestCnt64, err := ss.UserEng.Table(new(usermodel.UserFriend)).
+		Where("user_id = ?", ss.UserID).
+		Where("status = ?", usermodel.FriendStatusAwaitingApproval).
+		Where("is_new = ?", true).
+		Count()
+	if err != nil {
+		return nil, err
+	}
+
+	friendsApprovalWaitCnt64, err := ss.UserEng.Table(new(usermodel.UserFriend)).
+		Where("user_id = ?", ss.UserID).
+		Where("status = ?", usermodel.FriendStatusPending).
+		Count()
+	if err != nil {
+		return nil, err
+	}
+
+	friendsRequestCnt := int(friendsRequestCnt64)
+	friendsApprovalWaitCnt := int(friendsApprovalWaitCnt64)
+
 	res = loginapischema.TopInfoResp{
 		Result: loginapischema.TopInfoData{
 			FriendActionCnt:        0,
 			FriendGreetCnt:         0,
 			FriendVarietyCnt:       0,
-			FriendNewCnt:           0,
+			FriendNewCnt:           friendsRequestCnt + friendsApprovalWaitCnt,
 			PresentCnt:             0,
 			SecretBoxBadgeFlag:     false,
-			ServerDatetime:         time.Now().Format("2006-01-02 15:04:05"),
-			ServerTimestamp:        time.Now().Unix(),
-			NoticeFriendDatetime:   time.Now().Format("2006-01-02 15:04:05"),
+			ServerDatetime:         now.Format("2006-01-02 15:04:05"),
+			ServerTimestamp:        now.Unix(),
+			NoticeFriendDatetime:   now.Format("2006-01-02 15:04:05"),
 			NoticeMailDatetime:     "2000-01-01 12:00:00",
-			FriendsApprovalWaitCnt: 0,
-			FriendsRequestCnt:      0,
+			FriendsApprovalWaitCnt: friendsApprovalWaitCnt,
+			FriendsRequestCnt:      friendsRequestCnt,
 			IsTodayBirthday:        false,
 			LicenseInfo: loginapischema.LicenseInfo{
 				LicenseList:  []any{},
@@ -37,7 +64,7 @@ func loginTopInfo() (res any, err error) {
 		},
 		Status:     200,
 		CommandNum: false,
-		TimeStamp:  time.Now().Unix(),
+		TimeStamp:  now.Unix(),
 	}
 
 	return res, err

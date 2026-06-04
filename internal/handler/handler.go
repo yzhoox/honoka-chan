@@ -8,6 +8,7 @@ import (
 	_ "honoka-chan/internal/handler/background"
 	_ "honoka-chan/internal/handler/download"
 	_ "honoka-chan/internal/handler/event"
+	_ "honoka-chan/internal/handler/friend"
 	_ "honoka-chan/internal/handler/gdpr"
 	_ "honoka-chan/internal/handler/ghome"
 	_ "honoka-chan/internal/handler/lbonus"

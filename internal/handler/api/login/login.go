@@ -2,12 +2,14 @@ package login
 
 import (
 	"fmt"
+
+	"github.com/gin-gonic/gin"
 )
 
-func LoginApi(action string) (res any, err error) {
+func LoginApi(ctx *gin.Context, action string) (res any, err error) {
 	switch action {
 	case "topInfo":
-		res, err = loginTopInfo()
+		res, err = loginTopInfo(ctx)
 	case "topInfoOnce":
 		res, err = loginTopInfoOnce()
 	default:

@@ -4,4 +4,5 @@ func StartUp() {
 	CreateTables()
 	LoadUnitData()
 	CreateDefaultUser()
+	EnsureDefaultFriends()
 }

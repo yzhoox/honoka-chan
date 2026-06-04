@@ -2,6 +2,7 @@ package apischema
 
 type ApiReq struct {
 	Module    string `json:"module"`
+	UserID    int    `json:"user_id"`
 	Action    string `json:"action"`
 	Timestamp int64  `json:"timeStamp"`
 }

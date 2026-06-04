@@ -76,7 +76,7 @@ func api(ctx *gin.Context) {
 		case "livese":
 			result, err = livese.LiveSeApi(v.Action)
 		case "login":
-			result, err = login.LoginApi(v.Action)
+			result, err = login.LoginApi(ctx, v.Action)
 		case "marathon":
 			result, err = marathon.MarathonApi(v.Action)
 		case "multiunit":
@@ -90,7 +90,7 @@ func api(ctx *gin.Context) {
 		case "payment":
 			result, err = payment.PaymentApi(v.Action)
 		case "profile":
-			result, err = profile.ProfileApi(ctx, v.Action)
+			result, err = profile.ProfileApi(ctx, v.Action, v.UserID)
 		case "scenario":
 			result, err = scenario.ScenarioApi(ctx, v.Action)
 		case "stamp":
