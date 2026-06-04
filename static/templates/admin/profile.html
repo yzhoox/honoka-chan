@@ -1,0 +1,118 @@
+{{ define "admin/profile.html" }}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>SIF 小助手</title>
+    {{ template "admin/nav/css.html" . }}
+</head>
+
+<body>
+    <div class="layui-layout layui-layout-admin">
+        {{ template "admin/nav/header.html" . }}
+        {{ template "admin/nav/side.html" . }}
+
+        <div class="layui-body">
+            <form class="layui-form layui-col-md8" action="" style="padding: 15px 20px 30px;">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">用户名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="user_name" required lay-verify="required" autocomplete="off"
+                            class="layui-input" value="{{ .pref.UserName }}">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">等级</label>
+                    <div class="layui-input-block">
+                        <input type="number" name="user_level" min="1" required lay-verify="required" autocomplete="off"
+                            class="layui-input" value="{{ .pref.UserLevel }}">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">当前经验</label>
+                    <div class="layui-input-block">
+                        <input type="number" name="user_exp" min="0" required lay-verify="required" autocomplete="off"
+                            class="layui-input" value="{{ .pref.UserExp }}">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">升级经验</label>
+                    <div class="layui-input-block">
+                        <input type="number" name="next_exp" min="0" required lay-verify="required" autocomplete="off"
+                            class="layui-input" value="{{ .pref.NextExp }}">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">金币</label>
+                    <div class="layui-input-block">
+                        <input type="number" name="game_coin" min="0" required lay-verify="required" autocomplete="off"
+                            class="layui-input" value="{{ .pref.GameCoin }}">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">爱心</label>
+                    <div class="layui-input-block">
+                        <input type="number" name="sns_coin" min="0" required lay-verify="required" autocomplete="off"
+                            class="layui-input" value="{{ .pref.SnsCoin }}">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">体力上限</label>
+                    <div class="layui-input-block">
+                        <input type="number" name="energy_max" min="1" required lay-verify="required" autocomplete="off"
+                            class="layui-input" value="{{ .pref.EnergyMax }}">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">当前体力</label>
+                    <div class="layui-input-block">
+                        <input type="number" name="over_max_energy" min="0" required lay-verify="required"
+                            autocomplete="off" class="layui-input" value="{{ .pref.OverMaxEnergy }}">
+                        <div class="layui-form-mid layui-word-aux">填 0 时按体力上限返回给客户端。</div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">用户 ID</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="invite_code" required lay-verify="required" autocomplete="off"
+                            class="layui-input" value="{{ .pref.InviteCode }}">
+                    </div>
+                </div>
+                <div class="layui-form-item layui-form-text">
+                    <label class="layui-form-label">简介</label>
+                    <div class="layui-input-block">
+                        <textarea name="user_desc" class="layui-textarea"
+                            style="min-height: 120px;">{{ .pref.UserDesc }}</textarea>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                        <button type="button" class="layui-btn" id="save-profile">保存</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {{ template "admin/nav/footer.html" . }}
+    </div>
+    <script src="/static/js/layui.js"></script>
+    <script>
+        layui.use(['form', 'layer'], function () {
+            var $ = layui.jquery
+                , layer = layui.layer;
+
+            $("#save-profile").click(function () {
+                $.post("/admin/profile", $("form").serialize(), function (res) {
+                    layer.msg(res.message || "请求完成");
+                }).fail(function () {
+                    layer.msg("请求失败，请稍后再试");
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
+{{ end }}

@@ -42,12 +42,6 @@ func reward(ctx *gin.Context) {
 		return
 	}
 
-	pref := usermodel.UserPref{}
-	_, err = ss.UserEng.Table("user_pref").Where("user_id = ?", ss.UserID).Get(&pref)
-	if ss.CheckErr(err) {
-		return
-	}
-
 	totalScore := playRewardReq.ScoreSmile + playRewardReq.ScoreCool + playRewardReq.ScoreCute
 	playResp := liveschema.RewardResp{
 		ResponseData: liveschema.RewardData{
@@ -73,8 +67,8 @@ func reward(ctx *gin.Context) {
 					After:  99,
 				},
 				PlayerExpLpMax: liveschema.PlayerExpLpMax{
-					Before: 417,
-					After:  417,
+					Before: ss.UserPref.EffectiveEnergyMax(),
+					After:  ss.UserPref.EffectiveEnergyMax(),
 				},
 				GameCoin:              0,
 				GameCoinRewardBoxFlag: false,
@@ -95,8 +89,8 @@ func reward(ctx *gin.Context) {
 			AfterUserInfo:                ss.GetUserInfo(),
 			NextLevelInfo: []liveschema.NextLevelInfo{
 				{
-					Level:   pref.UserLevel,
-					FromExp: 1089696,
+					Level:   ss.UserPref.UserLevel,
+					FromExp: ss.UserPref.UserExp,
 				},
 			},
 			GoalAccompInfo: liveschema.GoalAccompInfo{

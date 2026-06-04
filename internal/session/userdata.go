@@ -18,6 +18,16 @@ func (ss *Session) GetUserPref(userID string) usermodel.UserPref {
 		ss.Abort(errors.New("用户不存在！"))
 		return usermodel.UserPref{}
 	}
+	if pref.NeedsProfileMigration() {
+		pref.ApplyProfileDefaults()
+		_, err = ss.UserEng.Table(new(usermodel.UserPref)).
+			Where("user_id = ?", userID).
+			Cols(usermodel.UserPrefProfileColumns()...).
+			Update(&pref)
+		if ss.CheckErr(err) {
+			return usermodel.UserPref{}
+		}
+	}
 
 	return pref
 }
@@ -27,22 +37,22 @@ func (ss *Session) GetUserInfo() userschema.UserInfo {
 		UserID:                         ss.UserID,
 		Name:                           ss.UserPref.UserName,
 		Level:                          ss.UserPref.UserLevel,
-		Exp:                            1089696,
+		Exp:                            ss.UserPref.UserExp,
 		PreviousExp:                    0,
-		NextExp:                        1207185,
-		GameCoin:                       112124104,
-		SnsCoin:                        10000,
-		FreeSnsCoin:                    50000,
-		PaidSnsCoin:                    50000,
+		NextExp:                        ss.UserPref.NextExp,
+		GameCoin:                       ss.UserPref.GameCoin,
+		SnsCoin:                        ss.UserPref.SnsCoin,
+		FreeSnsCoin:                    ss.UserPref.SnsCoin,
+		PaidSnsCoin:                    0,
 		SocialPoint:                    1438165,
 		UnitMax:                        5000,
 		WaitingUnitMax:                 5000,
-		CurrentEnergy:                  417,
-		EnergyMax:                      417,
+		CurrentEnergy:                  ss.UserPref.EffectiveCurrentEnergy(),
+		EnergyMax:                      ss.UserPref.EffectiveEnergyMax(),
 		EnergyFullTime:                 "2023-03-20 01:28:55",
 		LicenseLiveEnergyRecoverlyTime: 60,
 		EnergyFullNeedTime:             0,
-		OverMaxEnergy:                  417,
+		OverMaxEnergy:                  ss.UserPref.EffectiveCurrentEnergy(),
 		TrainingEnergy:                 10,
 		TrainingEnergyMax:              10,
 		FriendMax:                      99,

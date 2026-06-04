@@ -5,6 +5,7 @@ import (
 	usermodel "honoka-chan/internal/model/user"
 	profileapischema "honoka-chan/internal/schema/api/profile"
 	"honoka-chan/internal/session"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -12,11 +13,10 @@ import (
 
 func profileInfo(ctx *gin.Context) (res any, err error) {
 	ss := session.Get(ctx)
-
-	pref := usermodel.UserPref{}
-	_, err = ss.UserEng.Table("user_pref").Where("user_id = ?", ss.UserID).Get(&pref)
-	if err != nil {
-		return nil, err
+	pref := ss.UserPref
+	displayUserID := pref.UserID
+	if inviteUserID, convErr := strconv.Atoi(pref.InviteCode); convErr == nil && inviteUserID > 0 {
+		displayUserID = inviteUserID
 	}
 
 	unitCount, err := ss.UserEng.Table(new(usermodel.UserUnitData)).
@@ -64,12 +64,12 @@ func profileInfo(ctx *gin.Context) (res any, err error) {
 	res = profileapischema.InfoResp{
 		Result: profileapischema.InfoData{
 			UserInfo: profileapischema.UserInfo{
-				UserID:               pref.UserID,
+				UserID:               displayUserID,
 				Name:                 pref.UserName,
 				Level:                pref.UserLevel,
 				CostMax:              100,
 				UnitMax:              5000,
-				EnergyMax:            417,
+				EnergyMax:            pref.EffectiveEnergyMax(),
 				FriendMax:            99,
 				UnitCnt:              int(unitCount),
 				InviteCode:           pref.InviteCode,

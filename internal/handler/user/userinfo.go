@@ -2,7 +2,6 @@ package user
 
 import (
 	"honoka-chan/internal/middleware"
-	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
 	userschema "honoka-chan/internal/schema/user"
 	"honoka-chan/internal/session"
@@ -14,12 +13,6 @@ import (
 func userInfo(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
-
-	pref := usermodel.UserPref{}
-	_, err := ss.UserEng.Table("user_pref").Where("user_id = ?", ss.UserID).Get(&pref)
-	if ss.CheckErr(err) {
-		return
-	}
 
 	userResp := userschema.UserInfoResp{
 		ResponseData: userschema.UserInfoData{

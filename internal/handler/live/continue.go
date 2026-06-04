@@ -16,8 +16,8 @@ func continuee(ctx *gin.Context) {
 
 	ss.Respond(liveschema.ContinueResp{
 		ResponseData: liveschema.ContinueData{
-			BeforeSnsCoin:   100000,
-			AfterSnsCoin:    100000,
+			BeforeSnsCoin:   ss.UserPref.SnsCoin,
+			AfterSnsCoin:    ss.UserPref.SnsCoin,
 			ServerTimestamp: time.Now().Unix(),
 		},
 		ReleaseInfo: []any{},

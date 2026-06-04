@@ -269,9 +269,16 @@ func addUser(dbSession *xorm.Session, phone, password string, isDefault bool) (g
 				BackgroundID:     backgroundID,
 				UnitOwningUserID: unitOwningUserID,
 				UserName:         userName,
-				UserLevel:        1028,
+				UserLevel:        usermodel.DefaultUserLevel,
 				UserDesc:         userDesc,
 				InviteCode:       strconv.Itoa(userID),
+				UserExp:          usermodel.DefaultUserExp,
+				NextExp:          usermodel.DefaultUserNextExp,
+				GameCoin:         usermodel.DefaultUserGameCoin,
+				SnsCoin:          usermodel.DefaultUserSnsCoin,
+				EnergyMax:        usermodel.DefaultUserEnergyMax,
+				OverMaxEnergy:    usermodel.DefaultUserOverMaxEnergy,
+				ProfileVersion:   usermodel.CurrentUserPrefProfileVersion,
 				UpdateTime:       time.Now().Unix(),
 			}
 			_, err = dbSession.Table("user_pref").Insert(&userPref)

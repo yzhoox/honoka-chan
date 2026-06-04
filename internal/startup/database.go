@@ -31,6 +31,33 @@ func CreateTables() {
 	db.UserEng.Sync2(new(usermodel.Users))
 	db.UserEng.Sync2(new(usermodel.UserUnit))
 	db.UserEng.Sync2(new(usermodel.UserUnitSkillEquip))
+
+	MigrateUserPref()
+}
+
+func MigrateUserPref() {
+	session := db.UserEng.NewSession()
+	defer session.Close()
+
+	prefList := []usermodel.UserPref{}
+	err := session.Table(new(usermodel.UserPref)).
+		Where("profile_version < ?", usermodel.CurrentUserPrefProfileVersion).
+		Or("profile_version IS NULL").
+		Find(&prefList)
+	if err != nil {
+		log.Fatalln("迁移 user_pref 失败:", err.Error())
+	}
+
+	for _, pref := range prefList {
+		pref.ApplyProfileDefaults()
+		_, err = session.Table(new(usermodel.UserPref)).
+			ID(pref.ID).
+			Cols(usermodel.UserPrefProfileColumns()...).
+			Update(&pref)
+		if err != nil {
+			log.Fatalln("迁移 user_pref 失败:", err.Error())
+		}
+	}
 }
 
 func LoadUnitData() {
