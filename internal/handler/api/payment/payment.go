@@ -1,11 +1,15 @@
 package payment
 
-import "fmt"
+import (
+	"fmt"
 
-func PaymentApi(action string) (res any, err error) {
+	"github.com/gin-gonic/gin"
+)
+
+func PaymentApi(ctx *gin.Context, action string) (res any, err error) {
 	switch action {
 	case "productList":
-		res, err = productList()
+		res, err = productList(ctx)
 	default:
 		err = fmt.Errorf("unimplemented action: payment: %s", action)
 	}

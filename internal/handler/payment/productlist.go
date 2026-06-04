@@ -21,7 +21,7 @@ func productList(ctx *gin.Context) {
 				Restricted: false,
 			},
 			UnderAgeInfo: paymentapischema.UnderAgeInfo{
-				BirthSet:    true,
+				BirthSet:    ss.UserPref.HasBirthDate(),
 				HasLimit:    false,
 				LimitAmount: nil,
 				MonthUsed:   0,

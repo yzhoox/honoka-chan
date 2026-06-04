@@ -89,6 +89,20 @@ func updateProfile(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, webuischema.Msg{Code: 1, Message: "当前体力格式有误！"})
 		return
 	}
+	birthMonth, err := parseInt("birth_month", 1)
+	if err != nil {
+		ctx.JSON(http.StatusOK, webuischema.Msg{Code: 1, Message: "生日月份格式有误！"})
+		return
+	}
+	birthDay, err := parseInt("birth_day", 1)
+	if err != nil {
+		ctx.JSON(http.StatusOK, webuischema.Msg{Code: 1, Message: "生日日期格式有误！"})
+		return
+	}
+	if !usermodel.IsValidBirthDate(birthMonth, birthDay) {
+		ctx.JSON(http.StatusOK, webuischema.Msg{Code: 1, Message: "生日日期无效！"})
+		return
+	}
 
 	pref := usermodel.UserPref{
 		UserName:       userName,
@@ -101,6 +115,8 @@ func updateProfile(ctx *gin.Context) {
 		SnsCoin:        snsCoin,
 		EnergyMax:      energyMax,
 		OverMaxEnergy:  overMaxEnergy,
+		BirthMonth:     birthMonth,
+		BirthDay:       birthDay,
 		ProfileVersion: usermodel.CurrentUserPrefProfileVersion,
 		UpdateTime:     time.Now().Unix(),
 	}
@@ -117,6 +133,8 @@ func updateProfile(ctx *gin.Context) {
 			"sns_coin",
 			"energy_max",
 			"over_max_energy",
+			"birth_month",
+			"birth_day",
 			"profile_version",
 			"update_time",
 		).
@@ -163,6 +181,8 @@ func resetProfile(ctx *gin.Context) {
 			"sns_coin",
 			"energy_max",
 			"over_max_energy",
+			"birth_month",
+			"birth_day",
 			"profile_version",
 			"update_time",
 		).

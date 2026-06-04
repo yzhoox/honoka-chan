@@ -278,6 +278,8 @@ func addUser(dbSession *xorm.Session, phone, password string, isDefault bool) (g
 				SnsCoin:          usermodel.DefaultUserSnsCoin,
 				EnergyMax:        usermodel.DefaultUserEnergyMax,
 				OverMaxEnergy:    usermodel.DefaultUserOverMaxEnergy,
+				BirthMonth:       usermodel.DefaultBirthMonth,
+				BirthDay:         usermodel.DefaultBirthDay,
 				ProfileVersion:   usermodel.CurrentUserPrefProfileVersion,
 				UpdateTime:       time.Now().Unix(),
 			}

@@ -2,10 +2,15 @@ package login
 
 import (
 	loginapischema "honoka-chan/internal/schema/api/login"
+	"honoka-chan/internal/session"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
-func loginTopInfoOnce() (res any, err error) {
+func loginTopInfoOnce(ctx *gin.Context) (res any, err error) {
+	ss := session.Get(ctx)
+
 	res = loginapischema.TopInfoOnceResp{
 		Result: loginapischema.TopInfoOnceData{
 			NewAchievementCnt:            0,
@@ -22,7 +27,7 @@ func loginTopInfoOnce() (res any, err error) {
 				Lbonus:     false,
 				Event:      false,
 				Secretbox:  false,
-				Birthday:   true,
+				Birthday:   ss.UserPref.HasBirthDate(),
 			},
 			OpenArena:               true,
 			CostumeStatus:           true,

@@ -88,7 +88,7 @@ func api(ctx *gin.Context) {
 		case "notice":
 			result, err = notice.NoticeApi(v.Action)
 		case "payment":
-			result, err = payment.PaymentApi(v.Action)
+			result, err = payment.PaymentApi(ctx, v.Action)
 		case "profile":
 			result, err = profile.ProfileApi(ctx, v.Action, v.UserID)
 		case "scenario":

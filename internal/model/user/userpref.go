@@ -3,9 +3,10 @@ package usermodel
 import (
 	"strconv"
 	"strings"
+	"time"
 )
 
-const CurrentUserPrefProfileVersion = 1
+const CurrentUserPrefProfileVersion = 2
 
 const (
 	DefaultAutoUserName      = "音乃木坂学生"
@@ -17,6 +18,8 @@ const (
 	DefaultUserSnsCoin       = 10000
 	DefaultUserEnergyMax     = 417
 	DefaultUserOverMaxEnergy = 0
+	DefaultBirthMonth        = 10
+	DefaultBirthDay          = 18
 )
 
 type UserPref struct {
@@ -35,6 +38,8 @@ type UserPref struct {
 	SnsCoin          int    `xorm:"sns_coin"`
 	EnergyMax        int    `xorm:"energy_max"`
 	OverMaxEnergy    int    `xorm:"over_max_energy"`
+	BirthMonth       int    `xorm:"birth_month"`
+	BirthDay         int    `xorm:"birth_day"`
 	ProfileVersion   int    `xorm:"profile_version"`
 	UpdateTime       int64  `xorm:"update_time"`
 }
@@ -64,6 +69,10 @@ func (u *UserPref) ApplyProfileDefaults() {
 	if u.OverMaxEnergy < 0 {
 		u.OverMaxEnergy = DefaultUserOverMaxEnergy
 	}
+	if !IsValidBirthDate(u.BirthMonth, u.BirthDay) {
+		u.BirthMonth = DefaultBirthMonth
+		u.BirthDay = DefaultBirthDay
+	}
 	u.ProfileVersion = CurrentUserPrefProfileVersion
 }
 
@@ -77,6 +86,8 @@ func (u *UserPref) ResetProfileDefaults() {
 	u.SnsCoin = DefaultUserSnsCoin
 	u.EnergyMax = DefaultUserEnergyMax
 	u.OverMaxEnergy = DefaultUserOverMaxEnergy
+	u.BirthMonth = DefaultBirthMonth
+	u.BirthDay = DefaultBirthDay
 	if u.UserID > 0 {
 		u.InviteCode = strconv.Itoa(u.UserID)
 	}
@@ -101,6 +112,36 @@ func (u UserPref) EffectiveCurrentEnergy() int {
 	return u.EffectiveEnergyMax()
 }
 
+func (u UserPref) EffectiveBirthMonth() int {
+	if IsValidBirthDate(u.BirthMonth, u.BirthDay) {
+		return u.BirthMonth
+	}
+	return DefaultBirthMonth
+}
+
+func (u UserPref) EffectiveBirthDay() int {
+	if IsValidBirthDate(u.BirthMonth, u.BirthDay) {
+		return u.BirthDay
+	}
+	return DefaultBirthDay
+}
+
+func (u UserPref) HasBirthDate() bool {
+	return IsValidBirthDate(u.BirthMonth, u.BirthDay)
+}
+
+func (u UserPref) IsBirthdayToday(now time.Time) bool {
+	return int(now.Month()) == u.EffectiveBirthMonth() && now.Day() == u.EffectiveBirthDay()
+}
+
+func IsValidBirthDate(month, day int) bool {
+	if month < 1 || month > 12 || day < 1 {
+		return false
+	}
+	maxDay := time.Date(2000, time.Month(month)+1, 0, 0, 0, 0, 0, time.UTC).Day()
+	return day <= maxDay
+}
+
 func UserPrefProfileColumns() []string {
 	return []string{
 		"user_level",
@@ -111,6 +152,8 @@ func UserPrefProfileColumns() []string {
 		"sns_coin",
 		"energy_max",
 		"over_max_energy",
+		"birth_month",
+		"birth_day",
 		"profile_version",
 	}
 }

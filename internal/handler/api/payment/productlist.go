@@ -2,17 +2,22 @@ package payment
 
 import (
 	paymentapischema "honoka-chan/internal/schema/api/payment"
+	"honoka-chan/internal/session"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
-func productList() (res any, err error) {
+func productList(ctx *gin.Context) (res any, err error) {
+	ss := session.Get(ctx)
+
 	res = paymentapischema.ProductListResp{
 		Result: paymentapischema.ProductListData{
 			RestrictionInfo: paymentapischema.RestrictionInfo{
 				Restricted: false,
 			},
 			UnderAgeInfo: paymentapischema.UnderAgeInfo{
-				BirthSet:    false,
+				BirthSet:    ss.UserPref.HasBirthDate(),
 				HasLimit:    false,
 				LimitAmount: nil,
 				MonthUsed:   0,

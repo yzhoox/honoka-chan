@@ -57,7 +57,7 @@ func loginTopInfo(ctx *gin.Context) (res any, err error) {
 			NoticeMailDatetime:     now.Format("2006-01-02 15:04:05"),
 			FriendsApprovalWaitCnt: friendsApprovalWaitCnt,
 			FriendsRequestCnt:      friendsRequestCnt,
-			IsTodayBirthday:        false,
+			IsTodayBirthday:        ss.UserPref.IsBirthdayToday(now),
 			LicenseInfo: loginapischema.LicenseInfo{
 				LicenseList:  []any{},
 				LicensedInfo: []any{},

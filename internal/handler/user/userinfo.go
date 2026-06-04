@@ -18,8 +18,8 @@ func userInfo(ctx *gin.Context) {
 		ResponseData: userschema.UserInfoData{
 			User: ss.GetUserInfo(),
 			Birth: userschema.Birth{
-				BirthMonth: 10,
-				BirthDay:   18,
+				BirthMonth: ss.UserPref.EffectiveBirthMonth(),
+				BirthDay:   ss.UserPref.EffectiveBirthDay(),
 			},
 			ServerTimestamp: time.Now().Unix(),
 		},

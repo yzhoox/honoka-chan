@@ -11,7 +11,7 @@ func LoginApi(ctx *gin.Context, action string) (res any, err error) {
 	case "topInfo":
 		res, err = loginTopInfo(ctx)
 	case "topInfoOnce":
-		res, err = loginTopInfoOnce()
+		res, err = loginTopInfoOnce(ctx)
 	default:
 		err = fmt.Errorf("unimplemented action: login: %s", action)
 	}
