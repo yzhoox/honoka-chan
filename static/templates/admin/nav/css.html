@@ -3,18 +3,13 @@
 <link rel="stylesheet" href="/static/css/layui.css">
 
 <style>
-    html,
     body.layui-layout-body {
-        height: 100%;
-    }
-
-    body.layui-layout-body {
-        overflow-y: auto;
         overflow-x: hidden;
+        background: #fff;
     }
 
     .layui-layout.layui-layout-admin {
-        min-height: 100%;
+        background: #fff;
     }
 
     .sif-title {
@@ -24,11 +19,9 @@
 
     .layui-layout-admin .layui-body {
         position: static;
-        margin-top: 60px;
         margin-left: 200px;
-        padding: 30px 15px 20px;
+        padding: 90px 15px 20px;
         box-sizing: border-box;
-        min-height: calc(100vh - 60px);
     }
 
     .layui-header {
@@ -49,6 +42,102 @@
     .layui-nav-tree .layui-this>a,
     .layui-nav-tree .layui-this>a:hover {
         background-color: #ff6699 !important;
+    }
+
+    .admin-mobile-mask {
+        display: none;
+    }
+
+    @media screen and (max-width: 767.98px) {
+        .layui-layout-admin .layui-logo {
+            display: block !important;
+            width: auto;
+            left: 52px;
+            right: 12px;
+            text-align: left;
+            box-shadow: none;
+        }
+
+        .sif-title {
+            font-size: 1.1em;
+        }
+
+        .layui-layout-left {
+            left: 0 !important;
+        }
+
+        .layui-layout-right {
+            right: 0 !important;
+        }
+
+        .admin-mobile-actions .layui-nav-item a {
+            padding: 0 10px;
+            font-size: 13px;
+        }
+
+        .layui-layout-admin .layui-side {
+            width: 240px;
+            transform: translateX(-100%);
+            transition: transform 0.22s ease;
+            z-index: 1002;
+        }
+
+        .layui-side-scroll {
+            width: 240px;
+        }
+
+        body.admin-side-open .layui-layout-admin .layui-side {
+            transform: translateX(0);
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.18);
+        }
+
+        .admin-mobile-mask {
+            display: block;
+            position: fixed;
+            inset: 60px 0 0 0;
+            background: rgba(0, 0, 0, 0.28);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.22s ease, visibility 0.22s ease;
+            z-index: 1001;
+        }
+
+        body.admin-side-open .admin-mobile-mask {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .layui-layout-admin .layui-body {
+            margin-left: 0;
+            padding: 80px 12px 24px;
+        }
+
+        .layui-form-item .layui-form-label {
+            float: none;
+            display: block;
+            width: auto;
+            padding: 0 0 8px;
+            line-height: 1.5;
+            text-align: left;
+        }
+
+        .layui-form-item .layui-input-block {
+            margin-left: 0;
+        }
+
+        .layui-form-mid {
+            float: none;
+            margin-left: 0 !important;
+            padding: 8px 0 0 !important;
+        }
+
+        .layui-form .layui-btn {
+            width: 100%;
+        }
+
+        .layui-collapse {
+            margin-top: 6px;
+        }
     }
 </style>
 {{ end }}

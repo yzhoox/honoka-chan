@@ -12,21 +12,47 @@
         body {
             background: url("/static/images/admin/top-bg.jpg") no-repeat;
             background-size: cover;
+            min-height: 100vh;
         }
 
         .login-btn {
-            margin-top: 1%;
+            margin-top: 5%;
             border: 0px;
             color: azure;
             background: #e4007f;
+            min-width: 0;
+            padding: 0 28px;
         }
 
         .login-btn:hover {
             color: aliceblue;
         }
 
-        .layui-input {
-            width: 85%;
+        .login-layer .layui-layer-title {
+            padding: 0 16px;
+            text-align: center;
+        }
+
+        #login-form .layui-form-label {
+            float: left;
+            display: block;
+            width: 56px;
+            padding: 9px 15px;
+            line-height: 20px;
+            text-align: right;
+        }
+
+        #login-form .layui-input-block {
+            margin-left: 86px;
+        }
+
+        #login-form .layui-input {
+            width: 100%;
+        }
+
+        #login-submit-wrap {
+            margin-left: 86px;
+            padding-right: 15%;
         }
 
         .login-copyright {
@@ -34,8 +60,27 @@
             left: 20px;
             bottom: 14px;
             color: rgba(255, 255, 255, 0.92);
-            font-size: 14px;
+            font-size: 18px;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+        }
+
+        @media screen and (max-width: 767.98px) {
+            .layui-container {
+                padding: 24px 16px 0;
+            }
+
+            .login-btn {
+                width: auto;
+                max-width: none;
+                margin-top: 0;
+            }
+
+            .login-copyright {
+                left: 16px;
+                right: 16px;
+                bottom: 12px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -51,10 +96,18 @@
             var $ = layui.$
                 , layer = layui.layer;
 
+            function getLoginDialogArea() {
+                var viewportWidth = window.innerWidth || document.documentElement.clientWidth || 600;
+                var dialogWidth = Math.min(600, Math.max(280, viewportWidth - 24));
+                var dialogHeight = viewportWidth <= 767.98 ? '280px' : '230px';
+                return [dialogWidth + 'px', dialogHeight];
+            }
+
             $(".login-btn").click(function () {
                 layer.open({
                     type: 1,
-                    area: ['600px', '230px'],
+                    area: getLoginDialogArea(),
+                    skin: 'login-layer',
                     title: "登录",
                     content: $('#login-form'),
                     shade: 0
@@ -64,8 +117,6 @@
             $("#login-submit").click(function () {
                 let user = $("#sifuser").val();
                 let pass = $("#sifpass").val();
-                console.log(user)
-                console.log(pass)
                 $.post("/admin/login", { user: user, pass: pass }, function (data) {
                     if (data.code != 0) {
                         layer.msg(data.message)
@@ -98,7 +149,7 @@
             </div>
         </div>
     </form>
-    <div class="layui-input-block">
+    <div class="layui-input-block" id="login-submit-wrap">
         <button class="layui-btn" id="login-submit">登录</button>
     </div>
 </div>

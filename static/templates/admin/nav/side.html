@@ -14,10 +14,45 @@
                     <dd {{ if eq .url "/admin/card" }} class="layui-this" {{ end }}><a href="/admin/card">卡片一览</a></dd>
                     <dd {{ if eq .url "/admin/upload" }} class="layui-this" {{ end }}><a href="/admin/upload">卡片导入</a>
                     </dd>
-                    </dd>
                 </dl>
             </li>
         </ul>
     </div>
 </div>
+<div class="admin-mobile-mask"></div>
+<script>
+    (function () {
+        function closeAdminSide() {
+            document.body.classList.remove('admin-side-open');
+        }
+
+        function toggleAdminSide() {
+            document.body.classList.toggle('admin-side-open');
+        }
+
+        document.addEventListener('click', function (event) {
+            var menuTrigger = event.target.closest('[lay-header-event="menuLeft"]');
+            if (menuTrigger) {
+                event.preventDefault();
+                toggleAdminSide();
+                return;
+            }
+
+            if (event.target.closest('.admin-mobile-mask')) {
+                closeAdminSide();
+                return;
+            }
+
+            if (window.innerWidth <= 767.98 && event.target.closest('.layui-side .layui-nav-child a[href]')) {
+                closeAdminSide();
+            }
+        });
+
+        window.addEventListener('resize', function () {
+            if (window.innerWidth > 767.98) {
+                closeAdminSide();
+            }
+        });
+    })();
+</script>
 {{ end }}

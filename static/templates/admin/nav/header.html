@@ -1,13 +1,19 @@
 {{ define "admin/nav/header.html" }}
 <div class="layui-header">
-    <div class="layui-logo layui-hide-xs"><a href="/admin/index"><span class="sif-title">SIF
+    <div class="layui-logo"><a href="/admin/index"><span class="sif-title">SIF
                 小助手</span></a></div>
     <ul class="layui-nav layui-layout-left">
         <li class="layui-nav-item layui-show-xs-inline-block layui-hide-sm" lay-header-event="menuLeft">
             <i class="layui-icon layui-icon-spread-left"></i>
         </li>
     </ul>
-    <ul class="layui-nav layui-layout-right">
+    <ul class="layui-nav layui-layout-right admin-mobile-actions">
+        <li class="layui-nav-item layui-show-xs-inline-block layui-hide-sm">
+            <a href="/admin/profile">资料</a>
+        </li>
+        <li class="layui-nav-item layui-show-xs-inline-block layui-hide-sm">
+            <a href="/admin/logout">退出</a>
+        </li>
         <li class="layui-nav-item layui-hide layui-show-md-inline-block">
             <a href="javascript:;">
                 <img src="/static/images/admin/ic_launcher.png" class="layui-nav-img">
