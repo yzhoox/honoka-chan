@@ -3,13 +3,32 @@
 <link rel="stylesheet" href="/static/css/layui.css">
 
 <style>
+    html,
+    body.layui-layout-body {
+        height: 100%;
+    }
+
+    body.layui-layout-body {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .layui-layout.layui-layout-admin {
+        min-height: 100%;
+    }
+
     .sif-title {
         font-size: 1.3em;
         color: aliceblue;
     }
 
-    .layui-body {
-        padding-top: 30px;
+    .layui-layout-admin .layui-body {
+        position: static;
+        margin-top: 60px;
+        margin-left: 200px;
+        padding: 30px 15px 20px;
+        box-sizing: border-box;
+        min-height: calc(100vh - 60px);
     }
 
     .layui-header {

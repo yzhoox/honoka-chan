@@ -9,7 +9,7 @@
     {{ template "admin/nav/css.html" . }}
 </head>
 
-<body>
+<body class="layui-layout-body">
     <div class="layui-layout layui-layout-admin">
         {{ template "admin/nav/header.html" . }}
         {{ template "admin/nav/side.html" . }}
@@ -17,8 +17,6 @@
         <div class="layui-body">
             <div style="padding: 15px;">{{ .url }}</div>
         </div>
-
-        {{ template "admin/nav/footer.html" . }}
     </div>
     <script src="/static/js/layui.js"></script>
 </body>
