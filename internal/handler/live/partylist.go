@@ -1,9 +1,7 @@
 package live
 
 import (
-	"errors"
 	"honoka-chan/internal/middleware"
-	unitmodel "honoka-chan/internal/model/unit"
 	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
 	liveschema "honoka-chan/internal/schema/live"
@@ -23,63 +21,32 @@ func partyList(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: 好友功能实装前先使用自己的卡组助战
-	var unitList []usermodel.UserDeckUnit
-	err = ss.UserEng.Table("user_deck_unit").Where("user_id = ? AND position = 5", ss.UserID).Find(&unitList)
+	supportRows, err := listLiveSupportRows(ss)
 	if ss.CheckErr(err) {
 		return
 	}
 
-	var partyList []liveschema.PartyList
-	for _, u := range unitList {
-		var unitInfo unitmodel.UnitDataMap
-		has, err := ss.GetBasicUnitInfo().
-			Where("unit_owning_user_id = ?", u.UnitOwningUserID).Get(&unitInfo)
+	partyList := make([]liveschema.PartyList, 0, len(supportRows))
+	for _, row := range supportRows {
+		party, err := buildLiveSupportParty(ss, row)
 		if ss.CheckErr(err) {
 			return
 		}
+		partyList = append(partyList, party)
+	}
 
-		if !has {
-			ss.Abort(errors.New("卡片不存在！"))
+	if len(partyList) == 0 {
+		selfParty := liveschema.PartyList{
+			UserInfo:       ss.GetUserInfo(),
+			SettingAwardID: pref.AwardID,
+			FriendStatus:   0,
+		}
+		selfParty.AvailableSocialPoint = 10
+		selfParty.CenterUnitInfo, err = mustFindCenterUnitInfo(ss, ss.UserID, pref.UnitOwningUserID)
+		if ss.CheckErr(err) {
 			return
 		}
-
-		partyList = append(partyList, liveschema.PartyList{
-			UserInfo: ss.GetUserInfo(),
-			CenterUnitInfo: liveschema.CenterUnitInfo{
-				UnitOwningUserID:           u.UnitOwningUserID,
-				UnitID:                     u.UnitID,
-				Exp:                        unitInfo.Exp,
-				NextExp:                    0,
-				Level:                      u.Level,
-				LevelLimitID:               u.LevelLimitID,
-				MaxLevel:                   unitInfo.MaxLevel,
-				Rank:                       unitInfo.Rank,
-				MaxRank:                    unitInfo.MaxRank,
-				Love:                       u.Love,
-				MaxLove:                    u.MaxLove,
-				UnitSkillLevel:             u.UnitSkillLevel,
-				MaxHp:                      unitInfo.MaxHp,
-				FavoriteFlag:               unitInfo.FavoriteFlag,
-				DisplayRank:                u.DisplayRank,
-				UnitSkillExp:               unitInfo.UnitSkillExp,
-				UnitRemovableSkillCapacity: unitInfo.UnitRemovableSkillCapacity,
-				Attribute:                  unitInfo.Attribute,
-				Smile:                      unitInfo.Smile,
-				Cute:                       unitInfo.Cute,
-				Cool:                       unitInfo.Cool,
-				IsLoveMax:                  u.IsLoveMax,
-				IsLevelMax:                 u.IsLevelMax,
-				IsRankMax:                  u.IsRankMax,
-				IsSigned:                   u.IsSigned,
-				IsSkillLevelMax:            unitInfo.IsSkillLevelMax,
-				SettingAwardID:             pref.AwardID,
-				RemovableSkillIds:          []int{},
-			},
-			SettingAwardID:       pref.AwardID,
-			AvailableSocialPoint: 10,
-			FriendStatus:         1,
-		})
+		partyList = append(partyList, selfParty)
 	}
 
 	ss.Respond(liveschema.PartyListResp{
