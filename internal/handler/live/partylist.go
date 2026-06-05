@@ -39,7 +39,7 @@ func partyList(ctx *gin.Context) {
 		selfParty := liveschema.PartyList{
 			UserInfo:       ss.GetUserInfo(),
 			SettingAwardID: pref.AwardID,
-			FriendStatus:   0,
+			FriendStatus:   usermodel.ClientFriendStatusNone,
 		}
 		selfParty.AvailableSocialPoint = 10
 		selfParty.CenterUnitInfo, err = mustFindCenterUnitInfo(ss, ss.UserID, pref.UnitOwningUserID)

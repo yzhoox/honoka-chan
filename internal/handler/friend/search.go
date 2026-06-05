@@ -86,6 +86,11 @@ func search(ctx *gin.Context) {
 		return
 	}
 
+	friendStatus, err := usermodel.ResolveClientFriendStatus(ss.UserEng, ss.UserID, targetUserID)
+	if ss.CheckErr(err) {
+		return
+	}
+
 	ss.Respond(friendschema.SearchResp{
 		ResponseData: friendschema.SearchData{
 			UserInfo: friendschema.SearchUserInfo{
@@ -103,7 +108,7 @@ func search(ctx *gin.Context) {
 			CenterUnitInfo:  toSearchCenterUnitInfo(centerUnitInfo, costume),
 			SettingAwardID:  row.AwardID,
 			IsAlliance:      false,
-			FriendStatus:    0,
+			FriendStatus:    friendStatus,
 			ServerTimestamp: time.Now().Unix(),
 		},
 		ReleaseInfo: []any{},

@@ -48,6 +48,11 @@ func profileInfo(ctx *gin.Context, targetUserID int) (res any, err error) {
 		return nil, err
 	}
 
+	friendStatus, err := usermodel.ResolveClientFriendStatus(ss.UserEng, ss.UserID, targetUserID)
+	if err != nil {
+		return nil, err
+	}
+
 	if naviRaw != nil {
 		centerUnitInfo.Costume = profileapischema.Costume{
 			UnitID:    naviRaw.UnitID,
@@ -80,7 +85,7 @@ func profileInfo(ctx *gin.Context, targetUserID int) (res any, err error) {
 			CenterUnitInfo:      centerUnitInfo,
 			NaviUnitInfo:        naviUnitInfo,
 			IsAlliance:          false,
-			FriendStatus:        0,
+			FriendStatus:        friendStatus,
 			SettingAwardID:      targetPref.AwardID,
 			SettingBackgroundID: targetPref.BackgroundID,
 		},
@@ -105,12 +110,20 @@ func getTargetUserPref(ss *session.Session, targetUserID int) (usermodel.UserPre
 		return usermodel.UserPref{}, err
 	}
 	if !has {
+		has, err = ss.UserEng.Table(new(usermodel.UserPref)).
+			Where("invite_code = ?", strconv.Itoa(targetUserID)).
+			Get(&pref)
+		if err != nil {
+			return usermodel.UserPref{}, err
+		}
+	}
+	if !has {
 		return usermodel.UserPref{}, errors.New("user not found")
 	}
 	if pref.NeedsProfileMigration() {
 		pref.ApplyProfileDefaults()
 		_, err = ss.UserEng.Table(new(usermodel.UserPref)).
-			Where("user_id = ?", targetUserID).
+			Where("user_id = ?", pref.UserID).
 			Cols(usermodel.UserPrefProfileColumns()...).
 			Update(&pref)
 		if err != nil {

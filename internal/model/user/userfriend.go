@@ -16,6 +16,13 @@ const (
 	FriendListPageSize = 40
 )
 
+const (
+	ClientFriendStatusNone = iota
+	ClientFriendStatusApproved
+	ClientFriendStatusPending
+	ClientFriendStatusAwaitingApproval
+)
+
 type UserFriend struct {
 	ID           int   `xorm:"id pk autoincr"`
 	UserID       int   `xorm:"user_id unique(friend_pair) index"`
@@ -84,6 +91,44 @@ func EnsureMutualFriendWithIsNew(dbSession *xorm.Session, userID, friendUserID, 
 		return err
 	}
 	return EnsureFriendLink(dbSession, friendUserID, userID, status, friendIsNew)
+}
+
+func ResolveClientFriendStatus(dbSession *xorm.Session, userID, targetUserID int) (int, error) {
+	if dbSession == nil || userID <= 0 || targetUserID <= 0 || userID == targetUserID {
+		return ClientFriendStatusNone, nil
+	}
+
+	link := UserFriend{}
+	has, err := dbSession.Table(new(UserFriend)).
+		Where("user_id = ? AND friend_user_id = ?", userID, targetUserID).
+		Cols("status").
+		Get(&link)
+	if err != nil {
+		return ClientFriendStatusNone, err
+	}
+	if !has {
+		return ClientFriendStatusNone, nil
+	}
+
+	switch link.Status {
+	case FriendStatusApproved:
+		isMutual, err := dbSession.Table(new(UserFriend)).
+			Where("user_id = ? AND friend_user_id = ?", targetUserID, userID).
+			Where("status = ?", FriendStatusApproved).
+			Exist()
+		if err != nil {
+			return ClientFriendStatusNone, err
+		}
+		if isMutual {
+			return ClientFriendStatusApproved, nil
+		}
+	case FriendStatusPending:
+		return ClientFriendStatusPending, nil
+	case FriendStatusAwaitingApproval:
+		return ClientFriendStatusAwaitingApproval, nil
+	}
+
+	return ClientFriendStatusNone, nil
 }
 
 func EnsureDefaultFriendship(dbSession *xorm.Session, userID int) error {

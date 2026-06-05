@@ -51,7 +51,7 @@ func buildLiveSupportParty(ss *session.Session, row liveSupportRow) (liveschema.
 		CenterUnitInfo:       centerUnitInfo,
 		SettingAwardID:       row.AwardID,
 		AvailableSocialPoint: 10,
-		FriendStatus:         0,
+		FriendStatus:         usermodel.ClientFriendStatusApproved,
 	}, nil
 }
 
