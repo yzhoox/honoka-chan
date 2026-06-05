@@ -24,6 +24,7 @@ import (
 	"honoka-chan/internal/handler/api/profile"
 	"honoka-chan/internal/handler/api/reward"
 	"honoka-chan/internal/handler/api/scenario"
+	"honoka-chan/internal/handler/api/secretbox"
 	"honoka-chan/internal/handler/api/stamp"
 	"honoka-chan/internal/handler/api/subscenario"
 	"honoka-chan/internal/handler/api/unit"
@@ -96,6 +97,8 @@ func api(ctx *gin.Context) {
 			result, err = reward.RewardApi(v.Action)
 		case "scenario":
 			result, err = scenario.ScenarioApi(ctx, v.Action)
+		case "secretbox":
+			result, err = secretbox.SecretBoxApi(v.Action)
 		case "stamp":
 			result, err = stamp.StampApi(v.Action)
 		case "subscenario":
