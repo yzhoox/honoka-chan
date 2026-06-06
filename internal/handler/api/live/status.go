@@ -24,12 +24,20 @@ func liveStatus(ctx *gin.Context) (res any, err error) {
 	if err != nil {
 		return nil, err
 	}
+	allIDs := make([]int, 0, len(normalIDs)+len(specialIDs)+len(trainingIDs))
+	allIDs = append(allIDs, normalIDs...)
+	allIDs = append(allIDs, specialIDs...)
+	allIDs = append(allIDs, trainingIDs...)
+	statusSnapshotMap, err := ss.BuildLiveStatusSnapshotMap(allIDs)
+	if err != nil {
+		return nil, err
+	}
 
 	res = liveapischema.StatusResp{
 		Result: liveapischema.StatusData{
-			NormalLiveStatusList:   buildNormalLiveStatusList(normalIDs),
-			SpecialLiveStatusList:  buildSpecialLiveStatusList(specialIDs),
-			TrainingLiveStatusList: buildTrainingLiveStatusList(trainingIDs),
+			NormalLiveStatusList:   buildNormalLiveStatusList(normalIDs, statusSnapshotMap),
+			SpecialLiveStatusList:  buildSpecialLiveStatusList(specialIDs, statusSnapshotMap),
+			TrainingLiveStatusList: buildTrainingLiveStatusList(trainingIDs, statusSnapshotMap),
 			MarathonLiveStatusList: []any{},
 			FreeLiveStatusList:     []any{},
 			CanResumeLive:          true,

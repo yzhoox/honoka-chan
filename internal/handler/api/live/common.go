@@ -268,46 +268,49 @@ func buildRandomLiveList() []liveapischema.RandomLiveList {
 	}
 }
 
-func buildNormalLiveStatusList(ids []int) []liveapischema.NormalLiveStatusList {
+func buildNormalLiveStatusList(ids []int, snapshotMap map[int]session.LiveStatusSnapshot) []liveapischema.NormalLiveStatusList {
 	result := make([]liveapischema.NormalLiveStatusList, 0, len(ids))
 	for _, id := range ids {
+		snapshot := snapshotMap[id]
 		result = append(result, liveapischema.NormalLiveStatusList{
 			LiveDifficultyID:   id,
-			Status:             1,
-			HiScore:            0,
-			HiComboCount:       0,
-			ClearCnt:           0,
-			AchievedGoalIDList: []int{},
+			Status:             snapshot.Status,
+			HiScore:            snapshot.HiScore,
+			HiComboCount:       snapshot.HiComboCount,
+			ClearCnt:           snapshot.ClearCnt,
+			AchievedGoalIDList: snapshot.AchievedGoalIDList,
 		})
 	}
 	return result
 }
 
-func buildSpecialLiveStatusList(ids []int) []liveapischema.SpecialLiveStatusList {
+func buildSpecialLiveStatusList(ids []int, snapshotMap map[int]session.LiveStatusSnapshot) []liveapischema.SpecialLiveStatusList {
 	result := make([]liveapischema.SpecialLiveStatusList, 0, len(ids))
 	for _, id := range ids {
+		snapshot := snapshotMap[id]
 		result = append(result, liveapischema.SpecialLiveStatusList{
 			LiveDifficultyID:   id,
-			Status:             1,
-			HiScore:            0,
-			HiComboCount:       0,
-			ClearCnt:           0,
-			AchievedGoalIDList: []int{},
+			Status:             snapshot.Status,
+			HiScore:            snapshot.HiScore,
+			HiComboCount:       snapshot.HiComboCount,
+			ClearCnt:           snapshot.ClearCnt,
+			AchievedGoalIDList: snapshot.AchievedGoalIDList,
 		})
 	}
 	return result
 }
 
-func buildTrainingLiveStatusList(ids []int) []liveapischema.TrainingLiveStatusList {
+func buildTrainingLiveStatusList(ids []int, snapshotMap map[int]session.LiveStatusSnapshot) []liveapischema.TrainingLiveStatusList {
 	result := make([]liveapischema.TrainingLiveStatusList, 0, len(ids))
 	for _, id := range ids {
+		snapshot := snapshotMap[id]
 		result = append(result, liveapischema.TrainingLiveStatusList{
 			LiveDifficultyID:   id,
-			Status:             1,
-			HiScore:            0,
-			HiComboCount:       0,
-			ClearCnt:           0,
-			AchievedGoalIDList: []int{},
+			Status:             snapshot.Status,
+			HiScore:            snapshot.HiScore,
+			HiComboCount:       snapshot.HiComboCount,
+			ClearCnt:           snapshot.ClearCnt,
+			AchievedGoalIDList: snapshot.AchievedGoalIDList,
 		})
 	}
 	return result

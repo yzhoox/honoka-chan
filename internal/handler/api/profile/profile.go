@@ -11,7 +11,7 @@ func ProfileApi(ctx *gin.Context, action string, targetUserID int) (res any, err
 	case "cardRanking":
 		res, err = cardRanking()
 	case "liveCnt":
-		res, err = liveCnt()
+		res, err = liveCnt(ctx, targetUserID)
 	case "profileInfo":
 		res, err = profileInfo(ctx, targetUserID)
 	default:

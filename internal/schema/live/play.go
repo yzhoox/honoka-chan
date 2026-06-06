@@ -39,6 +39,10 @@ type LiveInfo struct {
 	BRankCombo       int         `json:"-"`
 	CRankCombo       int         `json:"-"`
 	SRankCombo       int         `json:"-"`
+	ARankComplete    int         `json:"-"`
+	BRankComplete    int         `json:"-"`
+	CRankComplete    int         `json:"-"`
+	SRankComplete    int         `json:"-"`
 	AcFlag           int         `json:"ac_flag"`
 	SwingFlag        int         `json:"swing_flag"`
 	NotesList        []NotesList `json:"notes_list"`

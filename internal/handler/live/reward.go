@@ -42,6 +42,36 @@ func reward(ctx *gin.Context) {
 	}
 
 	totalScore := playRewardReq.ScoreSmile + playRewardReq.ScoreCool + playRewardReq.ScoreCute
+	beforeLiveStatus, afterLiveStatus, err := ss.UpdateUserLiveStatus(difficultyID, totalScore, playRewardReq.MaxCombo)
+	if ss.CheckErr(err) {
+		return
+	}
+	newGoalRewardIDs, err := ss.SyncUserLiveGoals(difficultyID, afterLiveStatus.HiScore, afterLiveStatus.HiComboCount, afterLiveStatus.ClearCnt)
+	if ss.CheckErr(err) {
+		return
+	}
+
+	goalAccomplishedIDs := make([]any, 0, len(newGoalRewardIDs))
+	goalRewards := make([]any, 0, len(newGoalRewardIDs))
+	if len(newGoalRewardIDs) > 0 {
+		goalRewardRows, err := ss.GetLiveGoalRewardRowsByIDs(newGoalRewardIDs)
+		if ss.CheckErr(err) {
+			return
+		}
+		for _, goalRewardID := range newGoalRewardIDs {
+			goalAccomplishedIDs = append(goalAccomplishedIDs, goalRewardID)
+		}
+		for _, row := range goalRewardRows {
+			goalRewards = append(goalRewards, liveschema.PlayRewardList{
+				ItemID:         row.ItemID,
+				AddType:        row.AddType,
+				Amount:         row.Amount,
+				ItemCategoryID: row.ItemCategoryID,
+				RewardBoxFlag:  false,
+			})
+		}
+	}
+
 	playResp := liveschema.RewardResp{
 		ResponseData: liveschema.RewardData{
 			LiveInfo: []liveschema.RewardLiveInfo{
@@ -53,8 +83,8 @@ func reward(ctx *gin.Context) {
 				},
 			},
 			TotalLove:   0,
-			IsHighScore: true,
-			HiScore:     totalScore,
+			IsHighScore: totalScore >= beforeLiveStatus.HiScore,
+			HiScore:     afterLiveStatus.HiScore,
 			BaseRewardInfo: liveschema.BaseRewardInfo{
 				PlayerExp: 0,
 				PlayerExpUnitMax: liveschema.PlayerExpUnitMax{
@@ -93,8 +123,8 @@ func reward(ctx *gin.Context) {
 				},
 			},
 			GoalAccompInfo: liveschema.GoalAccompInfo{
-				AchievedIds: []any{},
-				Rewards:     []any{},
+				AchievedIds: goalAccomplishedIDs,
+				Rewards:     goalRewards,
 			},
 			SpecialRewardInfo:    []any{},
 			EventInfo:            []any{},
@@ -123,25 +153,25 @@ func reward(ctx *gin.Context) {
 		StatusCode:  200,
 	}
 
-	if playRewardReq.MaxCombo > liveInfo.SRankCombo {
+	if playRewardReq.MaxCombo >= liveInfo.SRankCombo {
 		playResp.ResponseData.ComboRank = 1
-	} else if playRewardReq.MaxCombo > liveInfo.ARankCombo {
+	} else if playRewardReq.MaxCombo >= liveInfo.ARankCombo {
 		playResp.ResponseData.ComboRank = 2
-	} else if playRewardReq.MaxCombo > liveInfo.BRankCombo {
+	} else if playRewardReq.MaxCombo >= liveInfo.BRankCombo {
 		playResp.ResponseData.ComboRank = 3
-	} else if playRewardReq.MaxCombo > liveInfo.CRankCombo {
+	} else if playRewardReq.MaxCombo >= liveInfo.CRankCombo {
 		playResp.ResponseData.ComboRank = 4
 	} else {
 		playResp.ResponseData.ComboRank = 5
 	}
 
-	if totalScore > liveInfo.SRankScore {
+	if totalScore >= liveInfo.SRankScore {
 		playResp.ResponseData.Rank = 1
-	} else if totalScore > liveInfo.ARankScore {
+	} else if totalScore >= liveInfo.ARankScore {
 		playResp.ResponseData.Rank = 2
-	} else if totalScore > liveInfo.BRankScore {
+	} else if totalScore >= liveInfo.BRankScore {
 		playResp.ResponseData.Rank = 3
-	} else if totalScore > liveInfo.CRankScore {
+	} else if totalScore >= liveInfo.CRankScore {
 		playResp.ResponseData.Rank = 4
 	} else {
 		playResp.ResponseData.Rank = 5

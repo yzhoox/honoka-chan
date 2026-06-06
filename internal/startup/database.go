@@ -1,12 +1,14 @@
 package startup
 
 import (
+	"honoka-chan/internal/constant"
 	ghomemodel "honoka-chan/internal/model/ghome"
 	loginmodel "honoka-chan/internal/model/login"
 	unitmodel "honoka-chan/internal/model/unit"
 	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/pkg/db"
 	"log"
+	"sort"
 	"time"
 
 	"xorm.io/xorm"
@@ -25,6 +27,7 @@ func CreateTables() {
 	db.UserEng.Sync2(new(usermodel.UserDeckUnit))
 	db.UserEng.Sync2(new(usermodel.UserKey))
 	db.UserEng.Sync2(new(usermodel.UserLiveGoal))
+	db.UserEng.Sync2(new(usermodel.UserLiveStatus))
 	db.UserEng.Sync2(new(usermodel.UserLiveInProgress))
 	db.UserEng.Sync2(new(usermodel.UserLiveRecord))
 	db.UserEng.Sync2(new(usermodel.UserFriend))
@@ -35,6 +38,7 @@ func CreateTables() {
 	db.UserEng.Sync2(new(usermodel.UserUnitSkillEquip))
 
 	MigrateUserPref()
+	MigrateUserLiveData()
 }
 
 func MigrateUserPref() {
@@ -58,6 +62,233 @@ func MigrateUserPref() {
 			Update(&pref)
 		if err != nil {
 			log.Fatalln("迁移 user_pref 失败:", err.Error())
+		}
+	}
+}
+
+type liveGoalRewardMigrationRow struct {
+	LiveGoalRewardID int `xorm:"live_goal_reward_id"`
+	LiveDifficultyID int `xorm:"live_difficulty_id"`
+	LiveGoalType     int `xorm:"live_goal_type"`
+	Rank             int `xorm:"rank"`
+}
+
+type liveGoalInfoMigrationRow struct {
+	LiveDifficultyID int `xorm:"live_difficulty_id"`
+	CRankScore       int `xorm:"c_rank_score"`
+	BRankScore       int `xorm:"b_rank_score"`
+	ARankScore       int `xorm:"a_rank_score"`
+	SRankScore       int `xorm:"s_rank_score"`
+	CRankCombo       int `xorm:"c_rank_combo"`
+	BRankCombo       int `xorm:"b_rank_combo"`
+	ARankCombo       int `xorm:"a_rank_combo"`
+	SRankCombo       int `xorm:"s_rank_combo"`
+	CRankComplete    int `xorm:"c_rank_complete"`
+	BRankComplete    int `xorm:"b_rank_complete"`
+	ARankComplete    int `xorm:"a_rank_complete"`
+	SRankComplete    int `xorm:"s_rank_complete"`
+}
+
+func liveRankForMigration(value int, cRank int, bRank int, aRank int, sRank int) int {
+	switch {
+	case value >= sRank:
+		return 1
+	case value >= aRank:
+		return 2
+	case value >= bRank:
+		return 3
+	case value >= cRank:
+		return 4
+	default:
+		return 5
+	}
+}
+
+func MigrateUserLiveData() {
+	session := db.UserEng.NewSession()
+	defer session.Close()
+
+	recordRows := []usermodel.UserLiveRecord{}
+	if err := session.Table(new(usermodel.UserLiveRecord)).Find(&recordRows); err != nil {
+		log.Fatalln("迁移 user_live_status 失败:", err.Error())
+	}
+
+	existingStatusRows := []usermodel.UserLiveStatus{}
+	if err := session.Table(new(usermodel.UserLiveStatus)).Find(&existingStatusRows); err != nil {
+		log.Fatalln("迁移 user_live_status 失败:", err.Error())
+	}
+
+	type liveStatusKey struct {
+		UserID           int
+		LiveDifficultyID int
+	}
+
+	statusMap := make(map[liveStatusKey]usermodel.UserLiveStatus, len(existingStatusRows))
+	for _, row := range existingStatusRows {
+		statusMap[liveStatusKey{UserID: row.UserID, LiveDifficultyID: row.LiveDifficultyID}] = row
+	}
+
+	now := time.Now().Unix()
+	for _, row := range recordRows {
+		key := liveStatusKey{UserID: row.UserID, LiveDifficultyID: row.LiveDifficultyID}
+		status, ok := statusMap[key]
+		if !ok {
+			status = usermodel.UserLiveStatus{
+				UserID:           row.UserID,
+				LiveDifficultyID: row.LiveDifficultyID,
+				HiScore:          row.TotalScore,
+				HiComboCount:     row.MaxCombo,
+				ClearCnt:         1,
+				InsertDate:       now,
+				UpdateDate:       now,
+			}
+			if _, err := session.Insert(&status); err != nil {
+				log.Fatalln("迁移 user_live_status 失败:", err.Error())
+			}
+			statusMap[key] = status
+			continue
+		}
+
+		updated := false
+		if row.TotalScore > status.HiScore {
+			status.HiScore = row.TotalScore
+			updated = true
+		}
+		if row.MaxCombo > status.HiComboCount {
+			status.HiComboCount = row.MaxCombo
+			updated = true
+		}
+		if status.ClearCnt <= 0 {
+			status.ClearCnt = 1
+			updated = true
+		}
+		if updated {
+			status.UpdateDate = now
+			if _, err := session.Table(new(usermodel.UserLiveStatus)).
+				Where("user_id = ? AND live_difficulty_id = ?", status.UserID, status.LiveDifficultyID).
+				Cols("hi_score", "hi_combo_count", "clear_cnt", "update_date").
+				Update(&status); err != nil {
+				log.Fatalln("迁移 user_live_status 失败:", err.Error())
+			}
+			statusMap[key] = status
+		}
+	}
+
+	liveGoalInfoMap := map[int]liveGoalInfoMigrationRow{}
+	loadLiveGoalInfoRows := func(table string) {
+		rows := []liveGoalInfoMigrationRow{}
+		err := db.MainEng.Table(table).Alias("live").
+			Join("LEFT", "live_setting_m setting", "live.live_setting_id = setting.live_setting_id").
+			Select(`
+				live.live_difficulty_id,
+				setting.c_rank_score,
+				setting.b_rank_score,
+				setting.a_rank_score,
+				setting.s_rank_score,
+				setting.c_rank_combo,
+				setting.b_rank_combo,
+				setting.a_rank_combo,
+				setting.s_rank_combo,
+				live.c_rank_complete,
+				live.b_rank_complete,
+				live.a_rank_complete,
+				live.s_rank_complete
+			`).
+			Find(&rows)
+		if err != nil {
+			log.Fatalln("迁移 user_live_goal 失败:", err.Error())
+		}
+		for _, row := range rows {
+			liveGoalInfoMap[row.LiveDifficultyID] = row
+		}
+	}
+	loadLiveGoalInfoRows("normal_live_m")
+	loadLiveGoalInfoRows("special_live_m")
+
+	goalRewardRows := []liveGoalRewardMigrationRow{}
+	if err := db.MainEng.Table("live_goal_reward_m").
+		OrderBy("live_difficulty_id ASC, live_goal_type ASC, rank ASC, live_goal_reward_id ASC").
+		Find(&goalRewardRows); err != nil {
+		log.Fatalln("迁移 user_live_goal 失败:", err.Error())
+	}
+
+	goalRewardMap := map[int][]liveGoalRewardMigrationRow{}
+	for _, row := range goalRewardRows {
+		goalRewardMap[row.LiveDifficultyID] = append(goalRewardMap[row.LiveDifficultyID], row)
+	}
+
+	existingGoalRows := []usermodel.UserLiveGoal{}
+	if err := session.Table(new(usermodel.UserLiveGoal)).
+		Where("live_goal_reward_id > 0").
+		Find(&existingGoalRows); err != nil {
+		log.Fatalln("迁移 user_live_goal 失败:", err.Error())
+	}
+
+	existingGoalMap := make(map[liveStatusKey]map[int]struct{})
+	for _, row := range existingGoalRows {
+		key := liveStatusKey{UserID: row.UserID, LiveDifficultyID: row.LiveDifficultyID}
+		if existingGoalMap[key] == nil {
+			existingGoalMap[key] = map[int]struct{}{}
+		}
+		existingGoalMap[key][row.LiveGoalRewardID] = struct{}{}
+	}
+
+	statusKeys := make([]liveStatusKey, 0, len(statusMap))
+	for key := range statusMap {
+		statusKeys = append(statusKeys, key)
+	}
+	sort.Slice(statusKeys, func(i, j int) bool {
+		if statusKeys[i].UserID == statusKeys[j].UserID {
+			return statusKeys[i].LiveDifficultyID < statusKeys[j].LiveDifficultyID
+		}
+		return statusKeys[i].UserID < statusKeys[j].UserID
+	})
+
+	for _, key := range statusKeys {
+		status := statusMap[key]
+		liveInfo, ok := liveGoalInfoMap[key.LiveDifficultyID]
+		if !ok {
+			continue
+		}
+
+		scoreRank := liveRankForMigration(status.HiScore, liveInfo.CRankScore, liveInfo.BRankScore, liveInfo.ARankScore, liveInfo.SRankScore)
+		comboRank := liveRankForMigration(status.HiComboCount, liveInfo.CRankCombo, liveInfo.BRankCombo, liveInfo.ARankCombo, liveInfo.SRankCombo)
+		clearRank := liveRankForMigration(status.ClearCnt, liveInfo.CRankComplete, liveInfo.BRankComplete, liveInfo.ARankComplete, liveInfo.SRankComplete)
+
+		for _, reward := range goalRewardMap[key.LiveDifficultyID] {
+			achieved := false
+			switch reward.LiveGoalType {
+			case 1:
+				achieved = scoreRank <= reward.Rank
+			case 2:
+				achieved = comboRank <= reward.Rank
+			case 3:
+				achieved = clearRank <= reward.Rank
+			}
+			if !achieved {
+				continue
+			}
+
+			if existingGoalMap[key] != nil {
+				if _, ok := existingGoalMap[key][reward.LiveGoalRewardID]; ok {
+					continue
+				}
+			}
+
+			if _, err := session.Insert(&usermodel.UserLiveGoal{
+				UserID:           key.UserID,
+				LiveDifficultyID: key.LiveDifficultyID,
+				LiveGoalRewardID: reward.LiveGoalRewardID,
+				GoalType:         constant.LiveGoalType(reward.LiveGoalType),
+				Rank:             reward.Rank,
+				CompletedAt:      now,
+			}); err != nil {
+				log.Fatalln("迁移 user_live_goal 失败:", err.Error())
+			}
+			if existingGoalMap[key] == nil {
+				existingGoalMap[key] = map[int]struct{}{}
+			}
+			existingGoalMap[key][reward.LiveGoalRewardID] = struct{}{}
 		}
 	}
 }

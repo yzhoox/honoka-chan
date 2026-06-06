@@ -1,7 +1,6 @@
 package session
 
 import (
-	"honoka-chan/internal/constant"
 	usermodel "honoka-chan/internal/model/user"
 	liveschema "honoka-chan/internal/schema/live"
 	liverecordschema "honoka-chan/internal/schema/liverecord"
@@ -64,13 +63,34 @@ func (ss *Session) GetLiveInfo(LiveDifficultyID int) (bool, *liveschema.LiveInfo
 		BRankCombo        int    `xorm:"b_rank_combo"`
 		CRankCombo        int    `xorm:"c_rank_combo"`
 		SRankCombo        int    `xorm:"s_rank_combo"`
+		ARankComplete     int    `xorm:"a_rank_complete"`
+		BRankComplete     int    `xorm:"b_rank_complete"`
+		CRankComplete     int    `xorm:"c_rank_complete"`
+		SRankComplete     int    `xorm:"s_rank_complete"`
 		AcFlag            int    `xorm:"ac_flag"`
 		SwingFlag         int    `xorm:"swing_flag"`
 	}
 	has, err := ss.MainEng.Table("special_live_m").Alias("a").
 		Join("LEFT", "live_setting_m", "a.live_setting_id = live_setting_m.live_setting_id").
 		Where("live_difficulty_id = ?", LiveDifficultyID).
-		Cols("a.live_difficulty_id,live_setting_m.*").Get(&info)
+		Select(`
+			a.live_difficulty_id,
+			a.c_rank_complete,
+			a.b_rank_complete,
+			a.a_rank_complete,
+			a.s_rank_complete,
+			live_setting_m.notes_setting_asset,
+			live_setting_m.a_rank_score,
+			live_setting_m.b_rank_score,
+			live_setting_m.c_rank_score,
+			live_setting_m.s_rank_score,
+			live_setting_m.a_rank_combo,
+			live_setting_m.b_rank_combo,
+			live_setting_m.c_rank_combo,
+			live_setting_m.s_rank_combo,
+			live_setting_m.ac_flag,
+			live_setting_m.swing_flag
+		`).Get(&info)
 	if ss.CheckErr(err) {
 		return false, nil
 	}
@@ -79,7 +99,24 @@ func (ss *Session) GetLiveInfo(LiveDifficultyID int) (bool, *liveschema.LiveInfo
 		has, err = ss.MainEng.Table("normal_live_m").Alias("a").
 			Join("LEFT", "live_setting_m", "a.live_setting_id = live_setting_m.live_setting_id").
 			Where("live_difficulty_id = ?", LiveDifficultyID).
-			Cols("a.live_difficulty_id,live_setting_m.*").Get(&info)
+			Select(`
+				a.live_difficulty_id,
+				a.c_rank_complete,
+				a.b_rank_complete,
+				a.a_rank_complete,
+				a.s_rank_complete,
+				live_setting_m.notes_setting_asset,
+				live_setting_m.a_rank_score,
+				live_setting_m.b_rank_score,
+				live_setting_m.c_rank_score,
+				live_setting_m.s_rank_score,
+				live_setting_m.a_rank_combo,
+				live_setting_m.b_rank_combo,
+				live_setting_m.c_rank_combo,
+				live_setting_m.s_rank_combo,
+				live_setting_m.ac_flag,
+				live_setting_m.swing_flag
+			`).Get(&info)
 		if ss.CheckErr(err) {
 			return false, nil
 		}
@@ -105,6 +142,10 @@ func (ss *Session) GetLiveInfo(LiveDifficultyID int) (bool, *liveschema.LiveInfo
 		BRankCombo:       info.BRankCombo,
 		CRankCombo:       info.CRankCombo,
 		SRankCombo:       info.SRankCombo,
+		ARankComplete:    info.ARankComplete,
+		BRankComplete:    info.BRankComplete,
+		CRankComplete:    info.CRankComplete,
+		SRankComplete:    info.SRankComplete,
 		AcFlag:           info.AcFlag,
 		SwingFlag:        info.SwingFlag,
 		NotesList:        []liveschema.NotesList{},
@@ -187,28 +228,4 @@ func (ss *Session) GetDeckInfo(deckID int) (bool, *liverecordschema.DeckInfo) {
 		},
 		UnitList: unitData,
 	}
-}
-
-func (ss *Session) GetLiveGoalList(LiveDifficultyID int) []constant.LiveGoalType {
-	var goal []constant.LiveGoalType
-	err := ss.MainEng.Table("live_goal_reward_m").
-		Where("live_difficulty_id = ?", LiveDifficultyID).Cols("live_goal_type").Find(&goal)
-	if ss.CheckErr(err) {
-		return []constant.LiveGoalType{}
-	}
-	return goal
-}
-
-func (ss *Session) GetUserLiveGoalList(LiveDifficultyID int) []constant.LiveGoalType {
-	var goal []constant.LiveGoalType
-	var goalData []usermodel.UserLiveGoal
-	err := ss.UserEng.Table(new(usermodel.UserLiveGoal)).
-		Where("user_id = ? AND live_difficulty_id = ?", ss.UserID, LiveDifficultyID).Find(&goalData)
-	if ss.CheckErr(err) {
-		return []constant.LiveGoalType{}
-	}
-	for _, g := range goalData {
-		goal = append(goal, g.GoalType)
-	}
-	return goal
 }
