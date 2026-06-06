@@ -1,7 +1,7 @@
 package album
 
 import (
-	"fmt"
+	honokautils "honoka-chan/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,7 +11,7 @@ func AlbumApi(ctx *gin.Context, action string) (res any, err error) {
 	case "albumAll":
 		res, err = albumAll(ctx)
 	default:
-		err = fmt.Errorf("unimplemented action: album: %s", action)
+		err = honokautils.NewUnimplementedActionError("album", action)
 	}
 	return res, err
 }

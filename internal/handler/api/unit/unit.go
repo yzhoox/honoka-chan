@@ -1,7 +1,7 @@
 package unit
 
 import (
-	"fmt"
+	honokautils "honoka-chan/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,7 +23,7 @@ func UnitApi(ctx *gin.Context, action string) (res any, err error) {
 	case "unitAll":
 		res, err = unitAll(ctx)
 	default:
-		err = fmt.Errorf("unimplemented action: unit: %s", action)
+		err = honokautils.NewUnimplementedActionError("unit", action)
 	}
 	return res, err
 }

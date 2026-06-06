@@ -1,7 +1,7 @@
 package secretbox
 
 import (
-	"fmt"
+	honokautils "honoka-chan/internal/utils"
 )
 
 func SecretBoxApi(action string) (res any, err error) {
@@ -9,7 +9,7 @@ func SecretBoxApi(action string) (res any, err error) {
 	case "all":
 		res, err = all()
 	default:
-		err = fmt.Errorf("unimplemented action: secretbox: %s", action)
+		err = honokautils.NewUnimplementedActionError("secretbox", action)
 	}
 	return res, err
 }

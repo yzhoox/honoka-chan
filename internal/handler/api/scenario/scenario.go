@@ -1,7 +1,7 @@
 package scenario
 
 import (
-	"fmt"
+	honokautils "honoka-chan/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,7 +11,7 @@ func ScenarioApi(ctx *gin.Context, action string) (res any, err error) {
 	case "scenarioStatus":
 		res, err = scenarioStatus(ctx)
 	default:
-		err = fmt.Errorf("unimplemented action: scenario: %s", action)
+		err = honokautils.NewUnimplementedActionError("scenario", action)
 	}
 	return res, err
 }

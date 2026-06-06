@@ -1,7 +1,7 @@
 package login
 
 import (
-	"fmt"
+	honokautils "honoka-chan/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,7 +13,7 @@ func LoginApi(ctx *gin.Context, action string) (res any, err error) {
 	case "topInfoOnce":
 		res, err = loginTopInfoOnce(ctx)
 	default:
-		err = fmt.Errorf("unimplemented action: login: %s", action)
+		err = honokautils.NewUnimplementedActionError("login", action)
 	}
 	return res, err
 }

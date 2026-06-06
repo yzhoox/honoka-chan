@@ -1,7 +1,7 @@
 package navigation
 
 import (
-	"fmt"
+	honokautils "honoka-chan/internal/utils"
 )
 
 func NavigationApi(action string) (res any, err error) {
@@ -9,7 +9,7 @@ func NavigationApi(action string) (res any, err error) {
 	case "specialCutin":
 		res, err = SpecialCutin()
 	default:
-		err = fmt.Errorf("unimplemented action: navigation: %s", action)
+		err = honokautils.NewUnimplementedActionError("navigation", action)
 	}
 	return res, err
 }

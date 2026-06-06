@@ -1,7 +1,7 @@
 package payment
 
 import (
-	"fmt"
+	honokautils "honoka-chan/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,7 +11,7 @@ func PaymentApi(ctx *gin.Context, action string) (res any, err error) {
 	case "productList":
 		res, err = productList(ctx)
 	default:
-		err = fmt.Errorf("unimplemented action: payment: %s", action)
+		err = honokautils.NewUnimplementedActionError("payment", action)
 	}
 	return res, err
 }

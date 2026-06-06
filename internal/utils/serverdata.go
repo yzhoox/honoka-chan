@@ -1,4 +1,4 @@
-package utils
+package honokautils
 
 import (
 	"encoding/json"

@@ -1,13 +1,13 @@
 package banner
 
-import "fmt"
+import honokautils "honoka-chan/internal/utils"
 
 func BannerApi(action string) (res any, err error) {
 	switch action {
 	case "bannerList":
 		res, err = bannerList()
 	default:
-		err = fmt.Errorf("unimplemented action: banner: %s", action)
+		err = honokautils.NewUnimplementedActionError("banner", action)
 	}
 	return res, err
 }

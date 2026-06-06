@@ -1,7 +1,7 @@
 package background
 
 import (
-	"fmt"
+	honokautils "honoka-chan/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,7 +11,7 @@ func BackgroundApi(ctx *gin.Context, action string) (res any, err error) {
 	case "backgroundInfo":
 		res, err = backgroundInfo(ctx)
 	default:
-		err = fmt.Errorf("unimplemented action: background: %s", action)
+		err = honokautils.NewUnimplementedActionError("background", action)
 	}
 	return res, err
 }

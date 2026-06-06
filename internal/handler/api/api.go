@@ -1,7 +1,7 @@
 package api
 
 import (
-	"fmt"
+	"honoka-chan/internal/constant"
 	"honoka-chan/internal/handler/api/album"
 	"honoka-chan/internal/handler/api/award"
 	"honoka-chan/internal/handler/api/background"
@@ -32,8 +32,10 @@ import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
 	apischema "honoka-chan/internal/schema/api"
+	commonschema "honoka-chan/internal/schema/common"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -108,9 +110,20 @@ func api(ctx *gin.Context) {
 		case "user":
 			result, err = user.UserApi(ctx, v.Action)
 		default:
-			err = fmt.Errorf("unimplemented api module: %s", v.Module)
+			err = honokautils.NewUnimplementedModuleError(v.Module)
 		}
 
+		if honokautils.IsUnimplementedError(err) {
+			results = append(results, commonschema.ApiErrorResp{
+				Result: commonschema.ErrorData{
+					ErrorCode: constant.ErrorCodeUnknown,
+				},
+				Status:     600,
+				CommandNum: false,
+				TimeStamp:  time.Now().Unix(),
+			})
+			continue
+		}
 		if ss.CheckErr(err) {
 			return
 		}

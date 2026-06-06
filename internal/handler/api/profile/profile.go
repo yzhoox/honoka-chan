@@ -1,7 +1,7 @@
 package profile
 
 import (
-	"fmt"
+	honokautils "honoka-chan/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,7 +15,7 @@ func ProfileApi(ctx *gin.Context, action string, targetUserID int) (res any, err
 	case "profileInfo":
 		res, err = profileInfo(ctx, targetUserID)
 	default:
-		err = fmt.Errorf("unimplemented action: profile: %s", action)
+		err = honokautils.NewUnimplementedActionError("profile", action)
 	}
 	return res, err
 }

@@ -1,7 +1,7 @@
 package award
 
 import (
-	"fmt"
+	honokautils "honoka-chan/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,7 +11,7 @@ func AwardApi(ctx *gin.Context, action string) (res any, err error) {
 	case "awardInfo":
 		res, err = awardInfo(ctx)
 	default:
-		err = fmt.Errorf("unimplemented action: award: %s", action)
+		err = honokautils.NewUnimplementedActionError("award", action)
 	}
 	return res, err
 }

@@ -1,7 +1,7 @@
 package challenge
 
 import (
-	"fmt"
+	honokautils "honoka-chan/internal/utils"
 )
 
 func ChallengeApi(action string) (res any, err error) {
@@ -9,7 +9,7 @@ func ChallengeApi(action string) (res any, err error) {
 	case "challengeInfo":
 		res, err = challengeInfo()
 	default:
-		err = fmt.Errorf("unimplemented action: challenge: %s", action)
+		err = honokautils.NewUnimplementedActionError("challenge", action)
 	}
 	return res, err
 }

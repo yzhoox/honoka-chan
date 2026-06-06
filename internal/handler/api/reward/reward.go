@@ -1,7 +1,7 @@
 package reward
 
 import (
-	"fmt"
+	honokautils "honoka-chan/internal/utils"
 )
 
 func RewardApi(action string) (res any, err error) {
@@ -11,7 +11,7 @@ func RewardApi(action string) (res any, err error) {
 	case "rewardHistory":
 		res, err = rewardHistory()
 	default:
-		err = fmt.Errorf("unimplemented action: reward: %s", action)
+		err = honokautils.NewUnimplementedActionError("reward", action)
 	}
 	return res, err
 }

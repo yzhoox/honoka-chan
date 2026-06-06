@@ -1,7 +1,7 @@
 package user
 
 import (
-	"fmt"
+	honokautils "honoka-chan/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,7 +13,7 @@ func UserApi(ctx *gin.Context, action string) (res any, err error) {
 	case "userInfo":
 		res, err = userInfo(ctx)
 	default:
-		err = fmt.Errorf("unimplemented action: user: %s", action)
+		err = honokautils.NewUnimplementedActionError("user", action)
 	}
 	return res, err
 }

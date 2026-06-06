@@ -1,7 +1,7 @@
 package eventscenario
 
 import (
-	"fmt"
+	honokautils "honoka-chan/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,7 +11,7 @@ func EventScenarioApi(ctx *gin.Context, action string) (res any, err error) {
 	case "status":
 		res, err = eventScenarioStatus(ctx)
 	default:
-		err = fmt.Errorf("unimplemented action: costume: %s", action)
+		err = honokautils.NewUnimplementedActionError("eventscenario", action)
 	}
 	return res, err
 }

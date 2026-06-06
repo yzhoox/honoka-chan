@@ -1,13 +1,13 @@
 package costume
 
-import "fmt"
+import honokautils "honoka-chan/internal/utils"
 
 func CostumeApi(action string) (res any, err error) {
 	switch action {
 	case "costumeList":
 		res, err = costumeList()
 	default:
-		err = fmt.Errorf("unimplemented action: costume: %s", action)
+		err = honokautils.NewUnimplementedActionError("costume", action)
 	}
 	return res, err
 }

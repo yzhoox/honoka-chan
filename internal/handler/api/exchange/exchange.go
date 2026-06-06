@@ -1,7 +1,7 @@
 package exchange
 
 import (
-	"fmt"
+	honokautils "honoka-chan/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,7 +11,7 @@ func ExchangeApi(ctx *gin.Context, action string) (res any, err error) {
 	case "owningPoint":
 		res, err = owningPoint(ctx)
 	default:
-		err = fmt.Errorf("unimplemented action: exchange: %s", action)
+		err = honokautils.NewUnimplementedActionError("exchange", action)
 	}
 	return res, err
 }

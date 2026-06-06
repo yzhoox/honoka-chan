@@ -2,6 +2,9 @@
 package router
 
 import (
+	"honoka-chan/internal/constant"
+	commonschema "honoka-chan/internal/schema/common"
+	"honoka-chan/internal/session"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -103,6 +106,21 @@ func SifRouter(r *gin.Engine) {
 	r.GET("/manga", func(ctx *gin.Context) {
 		ctx.HTML(http.StatusOK, "common/manga.html", gin.H{})
 	})
+
+	notFoundHandler := func(ctx *gin.Context) {
+		ss := session.Attach(ctx)
+		defer ss.Finalize()
+
+		ss.Respond(commonschema.ErrorResp{
+			ResponseData: commonschema.ErrorData{
+				ErrorCode: constant.ErrorCodeUnknown,
+			},
+			ReleaseInfo: []any{},
+			StatusCode:  600,
+		})
+	}
+	r.NoRoute(notFoundHandler)
+	r.NoMethod(notFoundHandler)
 
 	// router
 	for groupPath, groupInfo := range groups {

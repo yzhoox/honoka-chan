@@ -1,11 +1,12 @@
 package event
 
 import (
+	"honoka-chan/internal/constant"
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
+	commonschema "honoka-chan/internal/schema/common"
 	eventschema "honoka-chan/internal/schema/event"
 	"honoka-chan/internal/session"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,21 +23,12 @@ func list(ctx *gin.Context) {
 		})
 	}
 
-	// ss.Respond(event.ListResp{
-	// 	ResponseData: map[string]int{
-	// 		"error_code": 10004,
-	// 	},
-	// 	ReleaseInfo: []any{},
-	// 	StatusCode:  600,
-	// })
-
 	ss.Respond(eventschema.ListResp{
-		ResponseData: eventschema.ListData{
-			TargetList:      targets,
-			ServerTimestamp: time.Now().Unix(),
+		ResponseData: commonschema.ErrorData{
+			ErrorCode: constant.ErrorCodeEventNoEventData,
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  200,
+		StatusCode:  600,
 	})
 }
 
