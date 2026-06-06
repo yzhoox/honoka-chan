@@ -11,19 +11,20 @@ import (
 func liveSchedule(ctx *gin.Context) (res any, err error) {
 	ss := session.Get(ctx)
 
-	var liveID []int
-	err = ss.MainEng.Table("special_live_m").
-		Cols("live_difficulty_id").OrderBy("live_difficulty_id ASC").Find(&liveID)
+	now := time.Now()
+	liveIDs, err := listTodaySpecialRotationDifficultyIDs(ss, now)
 	if err != nil {
 		return nil, err
 	}
 
-	liveList := []liveapischema.LiveList{}
-	for _, id := range liveID {
+	liveList := make([]liveapischema.LiveList, 0, len(liveIDs))
+	startDate := startOfDay(now.In(jst)).Format("2006-01-02 15:04:05")
+	endDate := nextDayStart(now.In(jst)).Format("2006-01-02 15:04:05")
+	for _, id := range liveIDs {
 		liveList = append(liveList, liveapischema.LiveList{
 			LiveDifficultyID: id,
-			StartDate:        "2023-01-01 00:00:00",
-			EndDate:          "2037-01-01 00:00:00",
+			StartDate:        startDate,
+			EndDate:          endDate,
 			IsRandom:         false,
 		})
 	}
@@ -34,7 +35,7 @@ func liveSchedule(ctx *gin.Context) (res any, err error) {
 			LiveList:               liveList,
 			LimitedBonusList:       []any{},
 			LimitedBonusCommonList: []liveapischema.LimitedBonusCommonList{},
-			RandomLiveList:         []liveapischema.RandomLiveList{},
+			RandomLiveList:         buildRandomLiveList(),
 			FreeLiveList:           []any{},
 			TrainingLiveList:       []liveapischema.TrainingLiveList{},
 		},

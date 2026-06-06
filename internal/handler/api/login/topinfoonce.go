@@ -10,14 +10,15 @@ import (
 
 func loginTopInfoOnce(ctx *gin.Context) (res any, err error) {
 	ss := session.Get(ctx)
+	userInfo := ss.GetUserInfo()
 
 	res = loginapischema.TopInfoOnceResp{
 		Result: loginapischema.TopInfoOnceData{
 			NewAchievementCnt:            0,
 			UnaccomplishedAchievementCnt: 0,
 			LiveDailyRewardExist:         false,
-			TrainingEnergy:               10,
-			TrainingEnergyMax:            10,
+			TrainingEnergy:               userInfo.TrainingEnergy,
+			TrainingEnergyMax:            userInfo.TrainingEnergyMax,
 			Notification: loginapischema.Notification{
 				Push:       false,
 				Lp:         false,

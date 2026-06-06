@@ -14,6 +14,7 @@ import (
 func partyList(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
+	userInfo := ss.GetUserInfo()
 
 	pref := usermodel.UserPref{}
 	_, err := ss.UserEng.Table("user_pref").Where("user_id = ?", ss.UserID).Get(&pref)
@@ -37,7 +38,7 @@ func partyList(ctx *gin.Context) {
 
 	if len(partyList) == 0 {
 		selfParty := liveschema.PartyList{
-			UserInfo:       ss.GetUserInfo(),
+			UserInfo:       userInfo,
 			SettingAwardID: pref.AwardID,
 			FriendStatus:   usermodel.ClientFriendStatusNone,
 		}
@@ -52,8 +53,8 @@ func partyList(ctx *gin.Context) {
 	ss.Respond(liveschema.PartyListResp{
 		ResponseData: liveschema.PartyListData{
 			PartyList:         partyList,
-			TrainingEnergy:    10,
-			TrainingEnergyMax: 10,
+			TrainingEnergy:    userInfo.TrainingEnergy,
+			TrainingEnergyMax: userInfo.TrainingEnergyMax,
 			ServerTimestamp:   time.Now().Unix(),
 		},
 		ReleaseInfo: []any{},

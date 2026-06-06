@@ -16,6 +16,8 @@ var defaultLpRecoveryItemIDs = []int{
 	777015, 777016, 777017, 777018, 777019, 777020,
 }
 
+const defaultTrainingEnergy = 999
+
 func (ss *Session) GetUserPref(userID string) usermodel.UserPref {
 	pref := usermodel.UserPref{}
 	has, err := ss.UserEng.Table(new(usermodel.UserPref)).
@@ -62,8 +64,8 @@ func (ss *Session) GetUserInfo() userschema.UserInfo {
 		LicenseLiveEnergyRecoverlyTime: 60,
 		EnergyFullNeedTime:             0,
 		OverMaxEnergy:                  ss.UserPref.EffectiveCurrentEnergy(),
-		TrainingEnergy:                 10,
-		TrainingEnergyMax:              10,
+		TrainingEnergy:                 defaultTrainingEnergy,
+		TrainingEnergyMax:              defaultTrainingEnergy,
 		FriendMax:                      99,
 		InviteCode:                     ss.UserPref.InviteCode,
 		InsertDate:                     "2015-08-10 18:58:30",
