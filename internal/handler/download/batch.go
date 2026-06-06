@@ -25,8 +25,16 @@ func batch(ctx *gin.Context) {
 
 	pkgList := []downloadschema.BatchData{}
 	if downloadReq.ClientVersion == config.PackageVersion {
-		// 直接使用 downloadReq.PackageType 会导致下载数据量计算错误
-		pkgType := 4
+		pkgType := downloadReq.PackageType
+
+		// 首次下载时客户端发送的 downloadReq.PackageType = 0 但是实际下载的是 [0,4]
+		// 此时直接使用 downloadReq.PackageType 会导致下载数据量计算错误
+		// 游戏会自动将 [0,4] 的包大小合并计算
+		// downloadReq.PackageType = 0 的包已经在 /download/additional 中获取
+		// 所以这里只需要返回 downloadReq.PackageType = 4 的包即可
+		if downloadReq.PackageType == 0 {
+			pkgType = 4
+		}
 
 		var pkgInfo []PkgInfo
 		err := ss.MainEng.Table("download_m").
