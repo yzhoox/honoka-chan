@@ -11,7 +11,9 @@ LoveLive! 学园偶像祭 自用私服。
 
 ## 特别感谢
 
- - 虹原翼 @ [LLSIF 查卡器
-](https://card.ganbaru.by/) 的技术支持。
- - tungnotpunk @ LL Hax 在 iOS 客户端修改方面的支持。
- - 其他可能一时没想起来的大佬们和项目。
+ - [虹原翼](https://github.com/NijiharaTsubasa) @ [LLSIF 查卡器
+](https://card.ganbaru.by/) 的技术支持
+ - tungnotpunk @ LL Hax 在 iOS 客户端修改方面的支持
+ - [NPPS4](https://github.com/DarkEnergyProcessor/NPPS4) 项目在歌曲、随机打歌等逻辑实现上的参考
+ - [alay](https://github.com/Salaron/alay) 项目在接口行为和功能补全上的参考
+ - 其他可能一时没想起来的大佬们和项目
