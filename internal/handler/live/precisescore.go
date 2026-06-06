@@ -10,7 +10,6 @@ import (
 	liverecordschema "honoka-chan/internal/schema/liverecord"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
-	"honoka-chan/pkg/utils"
 	"strconv"
 	"time"
 
@@ -30,71 +29,17 @@ func preciseScore(ctx *gin.Context) {
 
 	difficultyID, _ := strconv.Atoi(playScoreReq.LiveDifficultyID)
 
-	// 歌曲类型: normal / special
-	// sqlite3 不支持 FULL OUTER JOIN 所以这里使用 UNION ALL
-	var liveSetting struct {
-		NotesSettingAsset string `xorm:"notes_setting_asset"`
-		ARankScore        int    `xorm:"a_rank_score"`
-		BRankScore        int    `xorm:"b_rank_score"`
-		CRankScore        int    `xorm:"c_rank_score"`
-		SRankScore        int    `xorm:"s_rank_score"`
-		AcFlag            int    `xorm:"ac_flag"`
-		SwingFlag         int    `xorm:"swing_flag"`
-	}
-	sql := `
-		SELECT notes_setting_asset,
-			a_rank_score,
-			b_rank_score,
-			c_rank_score,
-			s_rank_score,
-			ac_flag,
-			swing_flag
-		FROM live_setting_m
-		WHERE live_setting_id IN (
-			SELECT live_setting_id
-			FROM normal_live_m
-			WHERE live_difficulty_id = ?
-			UNION ALL
-			SELECT live_setting_id
-			FROM special_live_m
-			WHERE live_difficulty_id = ?
-		)
-		`
-	_, err = ss.MainEng.SQL(sql, difficultyID, difficultyID).Get(&liveSetting)
-	if ss.CheckErr(err) {
-		return
-	}
-	// fmt.Println("liveSetting", liveSetting)
-
-	notesList := []liveschema.NotesList{}
-	noteData := utils.ReadAllText("./assets/serverdata/beatmaps/" + liveSetting.NotesSettingAsset)
-	err = json.Unmarshal([]byte(noteData), &notesList)
+	liveSetting, err := loadLiveSetting(ss, difficultyID)
 	if ss.CheckErr(err) {
 		return
 	}
 
-	ranks := []liveschema.RankInfo{}
-	ranks = append(ranks, liveschema.RankInfo{
-		Rank:    5,
-		RankMin: 0,
-		RankMax: liveSetting.CRankScore,
-	}, liveschema.RankInfo{
-		Rank:    4,
-		RankMin: liveSetting.CRankScore + 1,
-		RankMax: liveSetting.BRankScore,
-	}, liveschema.RankInfo{
-		Rank:    3,
-		RankMin: liveSetting.BRankScore + 1,
-		RankMax: liveSetting.ARankScore,
-	}, liveschema.RankInfo{
-		Rank:    2,
-		RankMin: liveSetting.ARankScore + 1,
-		RankMax: liveSetting.SRankScore,
-	}, liveschema.RankInfo{
-		Rank:    1,
-		RankMin: liveSetting.SRankScore + 1,
-		RankMax: 0,
-	})
+	notesList, err := loadLiveNotes(liveSetting.NotesSettingAsset)
+	if ss.CheckErr(err) {
+		return
+	}
+
+	ranks := buildRankInfo(liveSetting)
 
 	// 检查是否正在进行 Live
 	progress, _ := ss.GetLiveInProgress()

@@ -14,7 +14,7 @@ const announceContent = `目前开发完毕的主要功能包括：<br><ul><li>�
 
 func index(ctx *gin.Context) {
 	ctx.HTML(http.StatusOK, "common/announce.html", gin.H{
-		"title": "Love Live! 学园偶像祭",
+		"title":   "Love Live! 学园偶像祭",
 		"content": template.HTML(announceContent),
 	})
 }
