@@ -1,12 +1,39 @@
 package liveschema
 
+import (
+	"encoding/json"
+	"strconv"
+)
+
+type FlexibleLiveDifficultyID int
+
+func (id *FlexibleLiveDifficultyID) UnmarshalJSON(data []byte) error {
+	var intValue int
+	if err := json.Unmarshal(data, &intValue); err == nil {
+		*id = FlexibleLiveDifficultyID(intValue)
+		return nil
+	}
+
+	var stringValue string
+	if err := json.Unmarshal(data, &stringValue); err != nil {
+		return err
+	}
+
+	parsed, err := strconv.Atoi(stringValue)
+	if err != nil {
+		return err
+	}
+	*id = FlexibleLiveDifficultyID(parsed)
+	return nil
+}
+
 type PlayScoreReq struct {
-	Module           string `json:"module"`
-	Action           string `json:"action"`
-	TimeStamp        int64  `json:"timeStamp"`
-	Mgd              int    `json:"mgd"`
-	LiveDifficultyID string `json:"live_difficulty_id"`
-	CommandNum       string `json:"commandNum"`
+	Module           string                   `json:"module"`
+	Action           string                   `json:"action"`
+	TimeStamp        int64                    `json:"timeStamp"`
+	Mgd              int                      `json:"mgd"`
+	LiveDifficultyID FlexibleLiveDifficultyID `json:"live_difficulty_id"`
+	CommandNum       string                   `json:"commandNum"`
 }
 
 type On struct {

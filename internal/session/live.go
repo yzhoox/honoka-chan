@@ -10,6 +10,10 @@ import (
 // https://github.com/YumeMichi/honoka-chan/blob/a749efad9fd0789668dedcb59948248da369d32c/handler/live.go#L554
 // https://github.com/DarkEnergyProcessor/NPPS4/blob/29aaba6e7a3b4b80d414e58f4b511a9627cb0e24/npps4/system/live.py#L360
 func (ss *Session) GetLiveInProgress() (bool, *usermodel.UserLiveInProgress) {
+	if ss.UserEng == nil {
+		return false, nil
+	}
+
 	progress := usermodel.UserLiveInProgress{}
 	has, err := ss.UserEng.Table(new(usermodel.UserLiveInProgress)).
 		Where("user_id = ?", ss.UserID).Get(&progress)
@@ -24,6 +28,10 @@ func (ss *Session) GetLiveInProgress() (bool, *usermodel.UserLiveInProgress) {
 // https://github.com/YumeMichi/honoka-chan/blob/a749efad9fd0789668dedcb59948248da369d32c/handler/live.go#L45
 // https://github.com/DarkEnergyProcessor/NPPS4/blob/29aaba6e7a3b4b80d414e58f4b511a9627cb0e24/npps4/system/live.py#L372
 func (ss *Session) RegisterLiveInProgress(deckID int) {
+	if ss.UserEng == nil {
+		return
+	}
+
 	var err error
 	has, progress := ss.GetLiveInProgress()
 	if has {
@@ -45,10 +53,37 @@ func (ss *Session) RegisterLiveInProgress(deckID int) {
 // https://github.com/YumeMichi/honoka-chan/blob/a749efad9fd0789668dedcb59948248da369d32c/handler/live.go#L554
 // https://github.com/DarkEnergyProcessor/NPPS4/blob/29aaba6e7a3b4b80d414e58f4b511a9627cb0e24/npps4/system/live.py#L366
 func (ss *Session) ClearLiveInProgress() {
+	if ss.UserEng == nil {
+		return
+	}
+
 	_, err := ss.UserEng.Table(new(usermodel.UserLiveInProgress)).Where("user_id = ?", ss.UserID).Delete()
 	if ss.CheckErr(err) {
 		return
 	}
+}
+
+func (ss *Session) GetActiveRandomLiveByDifficulty(liveDifficultyID int) (bool, *usermodel.UserLiveRandom, error) {
+	randomLive := usermodel.UserLiveRandom{}
+	has, err := ss.UserEng.Table(new(usermodel.UserLiveRandom)).
+		Where("user_id = ? AND live_difficulty_id = ? AND in_progress = ?", ss.UserID, liveDifficultyID, true).
+		Get(&randomLive)
+	if err != nil {
+		return false, nil, err
+	}
+	return has, &randomLive, nil
+}
+
+func (ss *Session) ResetRandomLiveInProgress() error {
+	if ss.UserEng == nil {
+		return nil
+	}
+
+	_, err := ss.UserEng.Table(new(usermodel.UserLiveRandom)).
+		Where("user_id = ? AND in_progress = ?", ss.UserID, true).
+		Cols("in_progress").
+		Update(&usermodel.UserLiveRandom{InProgress: false})
+	return err
 }
 
 func (ss *Session) GetLiveInfo(LiveDifficultyID int) (bool, *liveschema.LiveInfo) {

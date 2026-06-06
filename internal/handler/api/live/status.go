@@ -16,9 +16,13 @@ func liveStatus(ctx *gin.Context) (res any, err error) {
 		return nil, err
 	}
 
-	specialIDs, err := listTodaySpecialRotationDifficultyIDs(ss, time.Now())
+	specialSchedules, err := listCurrentAndNextSpecialRotationSchedules(ss, time.Now())
 	if err != nil {
 		return nil, err
+	}
+	specialIDs := make([]int, 0, len(specialSchedules))
+	for _, schedule := range specialSchedules {
+		specialIDs = append(specialIDs, schedule.LiveDifficultyID)
 	}
 	trainingIDs, err := listAvailableTrainingLiveDifficultyIDs(ss)
 	if err != nil {

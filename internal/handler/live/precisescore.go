@@ -10,7 +10,6 @@ import (
 	liverecordschema "honoka-chan/internal/schema/liverecord"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -27,7 +26,7 @@ func preciseScore(ctx *gin.Context) {
 	}
 	// fmt.Println(ctx.MustGet("request_data").(string))
 
-	difficultyID, _ := strconv.Atoi(playScoreReq.LiveDifficultyID)
+	difficultyID := int(playScoreReq.LiveDifficultyID)
 
 	liveSetting, err := loadLiveSetting(ss, difficultyID)
 	if ss.CheckErr(err) {
@@ -43,6 +42,14 @@ func preciseScore(ctx *gin.Context) {
 
 	// 检查是否正在进行 Live
 	progress, _ := ss.GetLiveInProgress()
+	isRandom := false
+	if progress {
+		hasRandomLive, _, err := ss.GetActiveRandomLiveByDifficulty(difficultyID)
+		if ss.CheckErr(err) {
+			return
+		}
+		isRandom = hasRandomLive
+	}
 
 	// 检查是否有 Live 记录
 	liveRecord := ss.GetUserLiveRecord(difficultyID)
@@ -60,7 +67,7 @@ func preciseScore(ctx *gin.Context) {
 					HasRecord: false,
 					LiveInfo: liveschema.LiveInfo{
 						LiveDifficultyID: difficultyID,
-						IsRandom:         false,
+						IsRandom:         isRandom,
 						AcFlag:           liveSetting.AcFlag,
 						SwingFlag:        liveSetting.SwingFlag,
 						NotesList:        notesList,
@@ -70,7 +77,7 @@ func preciseScore(ctx *gin.Context) {
 					HasRecord: false,
 					LiveInfo: liveschema.LiveInfo{
 						LiveDifficultyID: difficultyID,
-						IsRandom:         false,
+						IsRandom:         isRandom,
 						AcFlag:           liveSetting.AcFlag,
 						SwingFlag:        liveSetting.SwingFlag,
 						NotesList:        notesList,

@@ -23,8 +23,9 @@ type AppConfigs struct {
 }
 
 type Settings struct {
-	ListenPort string `json:"listen_port"`
-	CdnServer  string `json:"cdn_server"`
+	ListenPort               string `json:"listen_port"`
+	CdnServer                string `json:"cdn_server"`
+	UnlockAllSpecialRotation bool   `json:"unlock_all_special_rotation"`
 }
 
 func InitConfig() {
@@ -35,8 +36,9 @@ func DefaultConfigs() *AppConfigs {
 	return &AppConfigs{
 		AppName: "honoka-chan",
 		Settings: Settings{
-			ListenPort: "8080",
-			CdnServer:  "http://127.0.0.1:8080/static",
+			ListenPort:               "8080",
+			CdnServer:                "http://127.0.0.1:8080/static",
+			UnlockAllSpecialRotation: false,
 		},
 	}
 }

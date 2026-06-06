@@ -29,6 +29,7 @@ func CreateTables() {
 	db.UserEng.Sync2(new(usermodel.UserLiveGoal))
 	db.UserEng.Sync2(new(usermodel.UserLiveStatus))
 	db.UserEng.Sync2(new(usermodel.UserLiveInProgress))
+	db.UserEng.Sync2(new(usermodel.UserLiveRandom))
 	db.UserEng.Sync2(new(usermodel.UserLiveRecord))
 	db.UserEng.Sync2(new(usermodel.UserFriend))
 	db.UserEng.Sync2(new(usermodel.UserGreet))

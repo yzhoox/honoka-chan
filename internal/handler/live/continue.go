@@ -14,7 +14,11 @@ func continuee(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer ss.Finalize()
 
-	ss.Respond(liveschema.ContinueResp{
+	ss.Respond(BuildContinueResp(ss))
+}
+
+func BuildContinueResp(ss *session.Session) liveschema.ContinueResp {
+	return liveschema.ContinueResp{
 		ResponseData: liveschema.ContinueData{
 			BeforeSnsCoin:   ss.UserPref.SnsCoin,
 			AfterSnsCoin:    ss.UserPref.SnsCoin,
@@ -22,7 +26,7 @@ func continuee(ctx *gin.Context) {
 		},
 		ReleaseInfo: []any{},
 		StatusCode:  200,
-	})
+	}
 }
 
 func init() {

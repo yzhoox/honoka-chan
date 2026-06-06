@@ -1,6 +1,7 @@
 package live
 
 import (
+	"errors"
 	"honoka-chan/internal/middleware"
 	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
@@ -16,7 +17,9 @@ import (
 func reward(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer func() {
-		ss.ClearLiveInProgress()
+		if ss.UserEng != nil {
+			ss.ClearLiveInProgress()
+		}
 		ss.Finalize()
 	}()
 
@@ -26,37 +29,53 @@ func reward(ctx *gin.Context) {
 		return
 	}
 
+	playResp, err := BuildRewardResp(ss, playRewardReq, false)
+	if ss.CheckErr(err) {
+		return
+	}
+
+	ss.Respond(playResp)
+}
+
+func BuildRewardResp(ss *session.Session, playRewardReq liveschema.RewardReq, isRandom bool) (liveschema.RewardResp, error) {
 	difficultyID := playRewardReq.LiveDifficultyID
 	_, liveInfo := ss.GetLiveInfo(difficultyID)
+	if liveInfo == nil {
+		return liveschema.RewardResp{}, errors.New("live info not found")
+	}
+	liveInfo.IsRandom = isRandom
 	_, progress := ss.GetLiveInProgress()
+	if progress == nil {
+		return liveschema.RewardResp{}, errors.New("live progress not found")
+	}
 	_, deckInfo := ss.GetDeckInfo(progress.DeckID)
 	deckInfo.LiveDifficultyID = difficultyID
 
 	unitsList := []liveschema.PlayRewardUnitList{}
-	err = ss.UserEng.Table("user_deck_unit").
+	err := ss.UserEng.Table("user_deck_unit").
 		Join("LEFT", "user_deck", "user_deck_unit.user_deck_id = user_deck.id").
 		Where("user_deck.user_id = ? AND user_deck.deck_id = ?", ss.UserID, progress.DeckID).
 		Find(&unitsList)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return liveschema.RewardResp{}, err
 	}
 
 	totalScore := playRewardReq.ScoreSmile + playRewardReq.ScoreCool + playRewardReq.ScoreCute
 	beforeLiveStatus, afterLiveStatus, err := ss.UpdateUserLiveStatus(difficultyID, totalScore, playRewardReq.MaxCombo)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return liveschema.RewardResp{}, err
 	}
 	newGoalRewardIDs, err := ss.SyncUserLiveGoals(difficultyID, afterLiveStatus.HiScore, afterLiveStatus.HiComboCount, afterLiveStatus.ClearCnt)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return liveschema.RewardResp{}, err
 	}
 
 	goalAccomplishedIDs := make([]any, 0, len(newGoalRewardIDs))
 	goalRewards := make([]any, 0, len(newGoalRewardIDs))
 	if len(newGoalRewardIDs) > 0 {
 		goalRewardRows, err := ss.GetLiveGoalRewardRowsByIDs(newGoalRewardIDs)
-		if ss.CheckErr(err) {
-			return
+		if err != nil {
+			return liveschema.RewardResp{}, err
 		}
 		for _, goalRewardID := range newGoalRewardIDs {
 			goalAccomplishedIDs = append(goalAccomplishedIDs, goalRewardID)
@@ -77,7 +96,7 @@ func reward(ctx *gin.Context) {
 			LiveInfo: []liveschema.RewardLiveInfo{
 				{
 					LiveDifficultyID: difficultyID,
-					IsRandom:         false,
+					IsRandom:         isRandom,
 					AcFlag:           liveInfo.AcFlag,
 					SwingFlag:        liveInfo.SwingFlag,
 				},
@@ -205,7 +224,7 @@ func reward(ctx *gin.Context) {
 		ss.UpdateUserLiveRecord(&newLiveRecord, liveSetting.PreciseScoreUpdateType)
 	}
 
-	ss.Respond(playResp)
+	return playResp, nil
 }
 
 func init() {

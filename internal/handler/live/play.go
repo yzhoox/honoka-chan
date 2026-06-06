@@ -25,93 +25,104 @@ func play(ctx *gin.Context) {
 	}
 	// fmt.Println(ctx.MustGet("request_data").(string))
 
+	if err := ss.ResetRandomLiveInProgress(); ss.CheckErr(err) {
+		return
+	}
+
 	ss.RegisterLiveInProgress(playReq.UnitDeckID)
 
-	difficultyID, err := strconv.Atoi(playReq.LiveDifficultyID)
+	playResp, err := BuildPlayResp(ss, playReq, false)
 	if ss.CheckErr(err) {
 		return
+	}
+
+	ss.Respond(playResp)
+}
+
+func BuildPlayResp(ss *session.Session, playReq liveschema.PlayReq, isRandom bool) (liveschema.PlayResp, error) {
+	difficultyID, err := strconv.Atoi(playReq.LiveDifficultyID)
+	if err != nil {
+		return liveschema.PlayResp{}, err
 	}
 
 	liveSetting, err := loadLiveSetting(ss, difficultyID)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return liveschema.PlayResp{}, err
 	}
 
 	notes, err := loadLiveNotes(liveSetting.NotesSettingAsset)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return liveschema.PlayResp{}, err
 	}
 
 	ranks := buildRankInfo(liveSetting)
 
-	owningIdList := []int{}
+	owningIDList := []int{}
 	err = ss.UserEng.Table("user_deck_unit").
 		Join("LEFT", "user_deck", "user_deck_unit.user_deck_id = user_deck.id").
 		Where("user_deck.user_id = ? AND user_deck.deck_id = ?", ss.UserID, playReq.UnitDeckID).
-		Cols("unit_owning_user_id").OrderBy("user_deck_unit.position ASC").Find(&owningIdList)
-	if ss.CheckErr(err) {
-		return
+		Cols("unit_owning_user_id").OrderBy("user_deck_unit.position ASC").Find(&owningIDList)
+	if err != nil {
+		return liveschema.PlayResp{}, err
 	}
-	if len(owningIdList) == 0 {
-		ss.CheckErr(errors.New("deck has no units"))
-		return
+	if len(owningIDList) == 0 {
+		return liveschema.PlayResp{}, errors.New("deck has no units")
 	}
 
 	museumBuff, err := getMuseumBuff(ss)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return liveschema.PlayResp{}, err
 	}
 
 	myCenterUnitID, err := getDeckCenterUnitID(ss, playReq.UnitDeckID)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return liveschema.PlayResp{}, err
 	}
 	myLeaderSkill, err := getLeaderSkillData(ss, myCenterUnitID)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return liveschema.PlayResp{}, err
 	}
 
 	tomoUnitID, err := getSupportCenterUnitID(ss, int(playReq.PartyUserID), myCenterUnitID)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return liveschema.PlayResp{}, err
 	}
 	tomoLeaderSkill, err := getLeaderSkillData(ss, tomoUnitID)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return liveschema.PlayResp{}, err
 	}
 
 	memberTagCache := map[memberTagMatchKey]bool{}
-	unitDataMap, err := loadDeckUnitDataMap(ss, owningIdList)
-	if ss.CheckErr(err) {
-		return
+	unitDataMap, err := loadDeckUnitDataMap(ss, owningIDList)
+	if err != nil {
+		return liveschema.PlayResp{}, err
 	}
-	accessoryBonusMap, err := loadAccessoryBonusMap(ss, ss.UserID, owningIdList)
-	if ss.CheckErr(err) {
-		return
+	accessoryBonusMap, err := loadAccessoryBonusMap(ss, ss.UserID, owningIDList)
+	if err != nil {
+		return liveschema.PlayResp{}, err
 	}
-	removableSkillMap, err := loadDeckRemovableSkillMap(ss, ss.UserID, owningIdList)
-	if ss.CheckErr(err) {
-		return
+	removableSkillMap, err := loadDeckRemovableSkillMap(ss, ss.UserID, owningIDList)
+	if err != nil {
+		return liveschema.PlayResp{}, err
 	}
 	allRemovableSkillIDs := make([]int, 0)
 	for _, skillIDs := range removableSkillMap {
 		allRemovableSkillIDs = append(allRemovableSkillIDs, skillIDs...)
 	}
 	removableSkillMetaMap, err := loadRemovableSkillMetaMap(ss, allRemovableSkillIDs)
-	if ss.CheckErr(err) {
-		return
+	if err != nil {
+		return liveschema.PlayResp{}, err
 	}
 
-	unitList := make([]liveschema.UnitList, 0, len(owningIdList))
+	unitList := make([]liveschema.UnitList, 0, len(owningIDList))
 	var totalSmile, totalPure, totalCool float64
-	var totalHp int
-	for _, owningId := range owningIdList {
+	var totalHP int
+	for _, owningID := range owningIDList {
 		// 卡片基础属性
 		var baseSmile, basePure, baseCool, smileMax, pureMax, coolMax float64
-		unitData, ok := unitDataMap[owningId]
+		unitData, ok := unitDataMap[owningID]
 		if !ok {
-			ss.CheckErr(errors.New("unit data not found in deck"))
-			return
+			return liveschema.PlayResp{}, errors.New("unit data not found in deck")
 		}
 		baseSmile = float64(unitData.Smile)
 		basePure = float64(unitData.Cute)
@@ -120,7 +131,7 @@ func play(ctx *gin.Context) {
 		// fmt.Println("基础属性:", baseSmile, basePure, baseCool)
 
 		// 饰品属性加成（满级）
-		if bonus, ok := accessoryBonusMap[owningId]; ok {
+		if bonus, ok := accessoryBonusMap[owningID]; ok {
 			// 饰品属性加成（该加成会影响个宝等百分比宝石属性加成的计算，故先计算。）
 			baseSmile += bonus.Smile
 			basePure += bonus.Pure
@@ -153,14 +164,12 @@ func play(ctx *gin.Context) {
 		var skillSmile, skillPure, skillCool float64
 
 		// 宝石加成（满级）
-		removableSkillIds := removableSkillMap[owningId]
-
-		for _, sk := range removableSkillIds {
+		removableSkillIDs := removableSkillMap[owningID]
+		for _, skillID := range removableSkillIDs {
 			// 判断宝石效果类型（效果范围、效果类型、效果值、是否固定数值）
-			meta, ok := removableSkillMetaMap[sk]
+			meta, ok := removableSkillMetaMap[skillID]
 			if !ok {
-				ss.CheckErr(errors.New("removable skill meta not found"))
-				return
+				return liveschema.PlayResp{}, errors.New("removable skill meta not found")
 			}
 
 			if meta.FixedValueFlag == 1 {
@@ -174,37 +183,28 @@ func play(ctx *gin.Context) {
 					kissCool += meta.EffectValue
 				}
 				// fmt.Println("吻、眼神属性加成:", kissSmile, kissPure, kissCool)
-			} else {
-				// 仅效果类型为1、2、3的有属性加成
-				if meta.EffectType == 1 || meta.EffectType == 2 || meta.EffectType == 3 {
-					// 加成范围：2:全员 1:非全员
-					if meta.EffectRange == 2 {
-						switch meta.EffectType {
-						case 1:
-							skillSmile += math.Ceil(baseSmile * (meta.EffectValue / 100))
-						case 2:
-							skillPure += math.Ceil(basePure * (meta.EffectValue / 100))
-						case 3:
-							skillCool += math.Ceil(baseCool * (meta.EffectValue / 100))
-						}
-						// fmt.Println("全员类宝石属性加成:", skillSmile, skillPure, skillCool)
-					} else {
-						// refType: 1 -> 年级类加成, target_type -> 指定年级（这里不需要使用，因为能装上宝石肯定是符合的）
-						// refType: 2 -> 个宝
-						// refType: 3 -> 爆分、奶、判宝石, 0 -> 竞技场宝石
-						if meta.TargetReferenceType == 1 || meta.TargetReferenceType == 2 { // 年级类和个宝都是百分比加成
-							switch meta.EffectType {
-							case 1:
-								skillSmile += math.Ceil(baseSmile * (meta.EffectValue / 100))
-							case 2:
-								skillPure += math.Ceil(basePure * (meta.EffectValue / 100))
-							case 3:
-								skillCool += math.Ceil(baseCool * (meta.EffectValue / 100))
-							}
-							// fmt.Println("年级类宝石、个宝属性加成:", skillSmile, skillPure, skillCool)
-						}
-					}
+				continue
+			}
+
+			// 仅效果类型为1、2、3的有属性加成
+			if meta.EffectType != 1 && meta.EffectType != 2 && meta.EffectType != 3 {
+				continue
+			}
+
+			// 加成范围：2:全员 1:非全员
+			if meta.EffectRange == 2 || meta.TargetReferenceType == 1 || meta.TargetReferenceType == 2 {
+				// refType: 1 -> 年级类加成, target_type -> 指定年级（这里不需要使用，因为能装上宝石肯定是符合的）
+				// refType: 2 -> 个宝
+				// refType: 3 -> 爆分、奶、判宝石, 0 -> 竞技场宝石
+				switch meta.EffectType {
+				case 1:
+					skillSmile += math.Ceil(baseSmile * (meta.EffectValue / 100))
+				case 2:
+					skillPure += math.Ceil(basePure * (meta.EffectValue / 100))
+				case 3:
+					skillCool += math.Ceil(baseCool * (meta.EffectValue / 100))
 				}
+				// fmt.Println("年级类宝石、个宝属性加成:", skillSmile, skillPure, skillCool)
 			}
 		}
 
@@ -223,8 +223,8 @@ func play(ctx *gin.Context) {
 
 		// 主唱技能加成：副C技能
 		matched, err := matchMemberTag(ss, memberTagCache, unitData.UnitTypeID, myLeaderSkill.MemberTagID)
-		if ss.CheckErr(err) {
-			return
+		if err != nil {
+			return liveschema.PlayResp{}, err
 		}
 
 		var mySubSmile, mySubPure, mySubCool float64
@@ -247,9 +247,10 @@ func play(ctx *gin.Context) {
 
 		// 好友主唱技能加成：副C技能
 		matched, err = matchMemberTag(ss, memberTagCache, unitData.UnitTypeID, tomoLeaderSkill.MemberTagID)
-		if ss.CheckErr(err) {
-			return
+		if err != nil {
+			return liveschema.PlayResp{}, err
 		}
+
 		var tomoSubSmile, tomoSubPure, tomoSubCool float64
 		if matched {
 			tomoSubSmile, tomoSubPure, tomoSubCool = applyAttributeBonus(
@@ -264,7 +265,7 @@ func play(ctx *gin.Context) {
 		totalSmile += smileMax + myCenterSmile + mySubSmile + tomoCenterSmile + tomoSubSmile
 		totalPure += pureMax + myCenterPure + mySubPure + tomoCenterPure + tomoSubPure
 		totalCool += coolMax + myCenterCool + mySubCool + tomoCenterCool + tomoSubCool
-		totalHp += unitData.MaxHp
+		totalHP += unitData.MaxHp
 		// fmt.Println("smileMax, myCenterSmile, mySubSmile, tomoCenterSmile, tomoSubSmile, totalSmile",
 		// 	smileMax, myCenterSmile, mySubSmile, tomoCenterSmile, tomoSubSmile,
 		// 	smileMax+myCenterSmile+mySubSmile+tomoCenterSmile+tomoSubSmile)
@@ -276,45 +277,38 @@ func play(ctx *gin.Context) {
 		// 	coolMax+myCenterCool+mySubCool+tomoCenterCool+tomoSubCool)
 
 		// 单卡属性计算结果取上取整
-		fixedSmileMax := int(smileMax)
-		fixedPureMax := int(pureMax)
-		fixedCoolMax := int(coolMax)
-		// fmt.Println("单卡属性:", fixedSmileMax, fixedPureMax, fixedCoolMax)
-
 		unitList = append(unitList, liveschema.UnitList{
-			Smile: fixedSmileMax,
-			Cute:  fixedPureMax,
-			Cool:  fixedCoolMax,
+			Smile: int(smileMax),
+			Cute:  int(pureMax),
+			Cool:  int(coolMax),
 		})
+		// fmt.Println("单卡属性:", int(smileMax), int(pureMax), int(coolMax))
 	}
 
 	// 全部卡属性计算结果取上取整
-	fixedTotalSmile := int(math.Ceil(totalSmile))
-	fixedTotalPure := int(math.Ceil(totalPure))
-	fixedTotalCool := int(math.Ceil(totalCool))
-	// fmt.Println("全卡组属性:", fixedTotalSmile, fixedTotalPure, fixedTotalCool)
-
-	lives := []liveschema.PlayLiveList{}
-	lives = append(lives, liveschema.PlayLiveList{
-		LiveInfo: liveschema.LiveInfo{
-			LiveDifficultyID: difficultyID,
-			IsRandom:         false,
-			AcFlag:           liveSetting.AcFlag,
-			SwingFlag:        liveSetting.SwingFlag,
-			NotesList:        notes,
+	lives := []liveschema.PlayLiveList{
+		{
+			LiveInfo: liveschema.LiveInfo{
+				LiveDifficultyID: difficultyID,
+				IsRandom:         isRandom,
+				AcFlag:           liveSetting.AcFlag,
+				SwingFlag:        liveSetting.SwingFlag,
+				NotesList:        notes,
+			},
+			DeckInfo: liveschema.DeckInfo{
+				UnitDeckID:       playReq.UnitDeckID,
+				TotalSmile:       int(math.Ceil(totalSmile)),
+				TotalCute:        int(math.Ceil(totalPure)),
+				TotalCool:        int(math.Ceil(totalCool)),
+				TotalHp:          totalHP,
+				PreparedHpDamage: 0,
+				UnitList:         unitList,
+			},
 		},
-		DeckInfo: liveschema.DeckInfo{
-			UnitDeckID:       playReq.UnitDeckID,
-			TotalSmile:       fixedTotalSmile,
-			TotalCute:        fixedTotalPure,
-			TotalCool:        fixedTotalCool,
-			TotalHp:          totalHp,
-			PreparedHpDamage: 0,
-			UnitList:         unitList,
-		},
-	})
+	}
+	// fmt.Println("全卡组属性:", int(math.Ceil(totalSmile)), int(math.Ceil(totalPure)), int(math.Ceil(totalCool)))
 
-	playResp := liveschema.PlayResp{
+	return liveschema.PlayResp{
 		ResponseData: liveschema.PlayData{
 			RankInfo:            ranks,
 			EnergyFullTime:      "2023-03-20 01:28:55",
@@ -329,9 +323,7 @@ func play(ctx *gin.Context) {
 		},
 		ReleaseInfo: []any{},
 		StatusCode:  200,
-	}
-
-	ss.Respond(playResp)
+	}, nil
 }
 
 func init() {

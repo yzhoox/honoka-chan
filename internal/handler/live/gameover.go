@@ -12,15 +12,21 @@ import (
 func gameOver(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	defer func() {
-		ss.ClearLiveInProgress()
+		if ss.UserEng != nil {
+			ss.ClearLiveInProgress()
+		}
 		ss.Finalize()
 	}()
 
-	ss.Respond(liveschema.GameOverResp{
+	ss.Respond(BuildGameOverResp())
+}
+
+func BuildGameOverResp() liveschema.GameOverResp {
+	return liveschema.GameOverResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
 		StatusCode:   200,
-	})
+	}
 }
 
 func init() {

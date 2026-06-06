@@ -26,6 +26,7 @@ import (
 	_ "honoka-chan/internal/handler/profile"
 	_ "honoka-chan/internal/handler/ranking"
 	_ "honoka-chan/internal/handler/reward"
+	_ "honoka-chan/internal/handler/rlive"
 	_ "honoka-chan/internal/handler/scenario"
 	_ "honoka-chan/internal/handler/secretbox"
 	_ "honoka-chan/internal/handler/subscenario"

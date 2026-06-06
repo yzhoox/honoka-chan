@@ -11,20 +11,17 @@ import (
 func liveSchedule(ctx *gin.Context) (res any, err error) {
 	ss := session.Get(ctx)
 
-	now := time.Now()
-	liveIDs, err := listTodaySpecialRotationDifficultyIDs(ss, now)
+	schedules, err := listCurrentAndNextSpecialRotationSchedules(ss, time.Now())
 	if err != nil {
 		return nil, err
 	}
 
-	liveList := make([]liveapischema.LiveList, 0, len(liveIDs))
-	startDate := startOfDay(now.In(jst)).Format("2006-01-02 15:04:05")
-	endDate := nextDayStart(now.In(jst)).Format("2006-01-02 15:04:05")
-	for _, id := range liveIDs {
+	liveList := make([]liveapischema.LiveList, 0, len(schedules))
+	for _, schedule := range schedules {
 		liveList = append(liveList, liveapischema.LiveList{
-			LiveDifficultyID: id,
-			StartDate:        startDate,
-			EndDate:          endDate,
+			LiveDifficultyID: schedule.LiveDifficultyID,
+			StartDate:        schedule.StartTime.Format("2006-01-02 15:04:05"),
+			EndDate:          schedule.EndTime.Format("2006-01-02 15:04:05"),
 			IsRandom:         false,
 		})
 	}
