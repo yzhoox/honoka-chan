@@ -30,6 +30,7 @@ import (
 	_ "honoka-chan/internal/handler/scenario"
 	_ "honoka-chan/internal/handler/secretbox"
 	_ "honoka-chan/internal/handler/subscenario"
+	_ "honoka-chan/internal/handler/system"
 	_ "honoka-chan/internal/handler/tos"
 	_ "honoka-chan/internal/handler/unit"
 	_ "honoka-chan/internal/handler/user"

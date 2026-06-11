@@ -12,6 +12,7 @@ var (
 	Conf = &AppConfigs{}
 
 	PackageVersion = "97.4.6"
+	ConfigPath     = "./config.json"
 
 	PrivateKeyPath = "assets/certs/privatekey.pem"
 	PublicKeyPath  = "assets/certs/publickey.pem"
@@ -25,11 +26,17 @@ type AppConfigs struct {
 type Settings struct {
 	ListenPort               string `json:"listen_port"`
 	CdnServer                string `json:"cdn_server"`
+	ReloadToken              string `json:"reload_token"`
 	UnlockAllSpecialRotation bool   `json:"unlock_all_special_rotation"`
 }
 
 func InitConfig() {
-	Conf = Load("./config.json")
+	ReloadConfig()
+}
+
+func ReloadConfig() *AppConfigs {
+	Conf = Load(ConfigPath)
+	return Conf
 }
 
 func DefaultConfigs() *AppConfigs {
@@ -38,6 +45,7 @@ func DefaultConfigs() *AppConfigs {
 		Settings: Settings{
 			ListenPort:               "8080",
 			CdnServer:                "http://127.0.0.1:8080/static",
+			ReloadToken:              "",
 			UnlockAllSpecialRotation: false,
 		},
 	}

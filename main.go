@@ -1,56 +1,27 @@
 package main
 
 import (
-	"honoka-chan/config"
-	_ "honoka-chan/internal/handler"
-	"honoka-chan/internal/router"
-	"honoka-chan/internal/startup"
-	"honoka-chan/pkg/db"
+	"context"
+	"honoka-chan/internal/app"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	// 初始化配置
-	config.InitConfig()
-
-	// 初始化数据库表和用户数据
-	startup.StartUp()
+	if err := app.Start("."); err != nil {
+		log.Fatalln(err)
+	}
 
 	// 处理系统信号，确保程序退出时关闭数据库
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 
-	go func() {
-		<-signalChan
-		log.Println("正在退出...")
-		db.MainEng.Close()
-		db.UserEng.Close()
-		os.Exit(0)
-	}()
-
-	// Gin
-	gin.SetMode(gin.ReleaseMode)
-
-	// Router
-	r := gin.New()
-
-	// Logger
-	r.Use(gin.LoggerWithConfig(gin.LoggerConfig{
-		SkipPaths: []string{
-			"/agreement/all",
-			"/integration/appReport/initialize",
-			"/report/ge/app",
-			"/v1/account/reportRole",
-		},
-	}))
-
-	// SIF
-	router.SifRouter(r)
-
-	r.Run(":" + config.Conf.Settings.ListenPort) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	<-signalChan
+	log.Println("正在退出...")
+	if err := app.Stop(context.Background()); err != nil {
+		log.Println(err.Error())
+	}
+	os.Exit(0)
 }

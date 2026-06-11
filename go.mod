@@ -7,6 +7,7 @@ require github.com/gin-gonic/gin v1.12.0
 require (
 	github.com/gin-contrib/sessions v1.1.0
 	github.com/go-think/openssl v1.20.0
+	github.com/mattn/go-sqlite3 v1.14.45
 	github.com/tidwall/gjson v1.19.0
 	modernc.org/sqlite v1.51.0
 	xorm.io/builder v0.3.13
