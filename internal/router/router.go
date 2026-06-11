@@ -107,6 +107,11 @@ func SifRouter(r *gin.Engine) {
 		ctx.HTML(http.StatusOK, "common/manga.html", gin.H{})
 	})
 
+	// webui
+	r.GET("/", func(ctx *gin.Context) {
+		ctx.Redirect(http.StatusFound, "/admin/index")
+	})
+
 	notFoundHandler := func(ctx *gin.Context) {
 		ss := session.Attach(ctx)
 		defer ss.Finalize()
