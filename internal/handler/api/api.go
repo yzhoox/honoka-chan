@@ -2,6 +2,7 @@ package api
 
 import (
 	"honoka-chan/internal/constant"
+	"honoka-chan/internal/handler/api/achievement"
 	"honoka-chan/internal/handler/api/album"
 	"honoka-chan/internal/handler/api/award"
 	"honoka-chan/internal/handler/api/background"
@@ -57,6 +58,8 @@ func api(ctx *gin.Context) {
 		switch v.Module {
 		case "album":
 			result, err = album.AlbumApi(ctx, v.Action)
+		case "achievement":
+			result, err = achievement.AchievementApi(ctx, v.Action)
 		case "award":
 			result, err = award.AwardApi(ctx, v.Action)
 		case "background":

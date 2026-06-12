@@ -1,6 +1,7 @@
 package handler
 
 import (
+	_ "honoka-chan/internal/handler/achievement"
 	_ "honoka-chan/internal/handler/album"
 	_ "honoka-chan/internal/handler/announce"
 	_ "honoka-chan/internal/handler/api"
