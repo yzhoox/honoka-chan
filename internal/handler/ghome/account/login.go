@@ -290,6 +290,14 @@ func addUser(dbSession *xorm.Session, phone, password string, isDefault bool) (g
 				}
 				return loginData, loginCode, loginMsg, created, err
 			}
+
+			err = usermodel.EnsureUserAccessories(dbSession, db.MainEng, userID, nil)
+			if err != nil {
+				if localSession {
+					dbSession.Rollback()
+				}
+				return loginData, loginCode, loginMsg, created, err
+			}
 		}
 
 		// 检查用户卡组配置

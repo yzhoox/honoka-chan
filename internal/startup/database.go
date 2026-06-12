@@ -22,6 +22,7 @@ func CreateTables() {
 	// db.UserEng.ShowSQL(true)
 	db.UserEng.Sync2(new(ghomemodel.DeviceKey))
 	db.UserEng.Sync2(new(loginmodel.AuthKey))
+	db.UserEng.Sync2(new(usermodel.UserAccessory))
 	db.UserEng.Sync2(new(usermodel.UserAccessoryWear))
 	db.UserEng.Sync2(new(usermodel.UserDeck))
 	db.UserEng.Sync2(new(usermodel.UserDeckUnit))
@@ -39,6 +40,7 @@ func CreateTables() {
 	db.UserEng.Sync2(new(usermodel.UserUnitSkillEquip))
 
 	MigrateUserPref()
+	MigrateUserAccessories()
 	MigrateUserLiveData()
 }
 
@@ -65,6 +67,209 @@ func MigrateUserPref() {
 			log.Fatalln("迁移 user_pref 失败:", err.Error())
 		}
 	}
+}
+
+type accessoryOwningMapRow struct {
+	AccessoryOwningUserID int `xorm:"accessory_owning_user_id"`
+	AccessoryID           int `xorm:"accessory_id"`
+}
+
+func MigrateUserAccessories() {
+	session := db.UserEng.NewSession()
+	defer session.Close()
+
+	if err := session.Begin(); err != nil {
+		log.Fatalln("迁移 user_accessory 失败:", err.Error())
+	}
+
+	userIDs := []int{}
+	if err := session.Table(new(usermodel.Users)).Cols("user_id").Find(&userIDs); err != nil {
+		session.Rollback()
+		log.Fatalln("迁移 user_accessory 失败:", err.Error())
+	}
+
+	templateAccessoryIDs, err := usermodel.LoadAccessoryTemplateIDs(db.MainEng)
+	if err != nil {
+		session.Rollback()
+		log.Fatalln("迁移 user_accessory 失败:", err.Error())
+	}
+
+	legacyAccessoryMap := map[int]int{}
+	hasLegacyTable, err := db.MainEng.IsTableExist("common_accessory_m")
+	if err != nil {
+		session.Rollback()
+		log.Fatalln("迁移 user_accessory 失败:", err.Error())
+	}
+	if hasLegacyTable {
+		legacyRows := []accessoryOwningMapRow{}
+		if err := db.MainEng.Table("common_accessory_m").
+			Cols("accessory_owning_user_id,accessory_id").
+			Find(&legacyRows); err != nil {
+			session.Rollback()
+			log.Fatalln("迁移 user_accessory 失败:", err.Error())
+		}
+		for _, row := range legacyRows {
+			legacyAccessoryMap[row.AccessoryOwningUserID] = row.AccessoryID
+		}
+	}
+
+	wearRows := []usermodel.UserAccessoryWear{}
+	if err := session.Table(new(usermodel.UserAccessoryWear)).Find(&wearRows); err != nil {
+		session.Rollback()
+		log.Fatalln("迁移 user_accessory 失败:", err.Error())
+	}
+
+	existingAccessories := []usermodel.UserAccessory{}
+	if err := session.Table(new(usermodel.UserAccessory)).Find(&existingAccessories); err != nil {
+		session.Rollback()
+		log.Fatalln("迁移 user_accessory 失败:", err.Error())
+	}
+
+	currentAccessoryMap := make(map[int]map[int]int)
+	for _, row := range existingAccessories {
+		if currentAccessoryMap[row.UserID] == nil {
+			currentAccessoryMap[row.UserID] = map[int]int{}
+		}
+		currentAccessoryMap[row.UserID][row.AccessoryOwningUserID] = row.AccessoryID
+	}
+
+	requiredCountsByUser := make(map[int]map[int]int, len(userIDs))
+	for _, row := range wearRows {
+		accessoryID, ok := resolveAccessoryIDForWear(currentAccessoryMap, legacyAccessoryMap, templateAccessoryIDs, row.UserID, row.AccessoryOwningUserID)
+		if !ok {
+			continue
+		}
+		if requiredCountsByUser[row.UserID] == nil {
+			requiredCountsByUser[row.UserID] = map[int]int{}
+		}
+		requiredCountsByUser[row.UserID][accessoryID]++
+	}
+
+	for _, userID := range userIDs {
+		if err := usermodel.EnsureUserAccessories(session, db.MainEng, userID, requiredCountsByUser[userID]); err != nil {
+			session.Rollback()
+			log.Fatalln("迁移 user_accessory 失败:", err.Error())
+		}
+	}
+
+	updatedAccessories := []usermodel.UserAccessory{}
+	if err := session.Table(new(usermodel.UserAccessory)).
+		OrderBy("user_id ASC, accessory_id ASC, accessory_owning_user_id ASC").
+		Find(&updatedAccessories); err != nil {
+		session.Rollback()
+		log.Fatalln("迁移 user_accessory 失败:", err.Error())
+	}
+
+	currentAccessoryMap = make(map[int]map[int]int)
+	availableOwningIDs := make(map[int]map[int][]int)
+	for _, row := range updatedAccessories {
+		if currentAccessoryMap[row.UserID] == nil {
+			currentAccessoryMap[row.UserID] = map[int]int{}
+		}
+		if availableOwningIDs[row.UserID] == nil {
+			availableOwningIDs[row.UserID] = map[int][]int{}
+		}
+		currentAccessoryMap[row.UserID][row.AccessoryOwningUserID] = row.AccessoryID
+		availableOwningIDs[row.UserID][row.AccessoryID] = append(availableOwningIDs[row.UserID][row.AccessoryID], row.AccessoryOwningUserID)
+	}
+
+	usedOwningIDs := make(map[int]map[int]struct{})
+	for _, row := range wearRows {
+		if currentAccessoryMap[row.UserID] == nil {
+			continue
+		}
+		if _, ok := currentAccessoryMap[row.UserID][row.AccessoryOwningUserID]; !ok {
+			continue
+		}
+		if usedOwningIDs[row.UserID] == nil {
+			usedOwningIDs[row.UserID] = map[int]struct{}{}
+		}
+		usedOwningIDs[row.UserID][row.AccessoryOwningUserID] = struct{}{}
+	}
+
+	for i := range wearRows {
+		row := wearRows[i]
+		if row.AccessoryOwningUserID <= 0 {
+			continue
+		}
+		if currentAccessoryMap[row.UserID] != nil {
+			if _, ok := currentAccessoryMap[row.UserID][row.AccessoryOwningUserID]; ok {
+				continue
+			}
+		}
+
+		accessoryID, ok := resolveAccessoryIDForWear(currentAccessoryMap, legacyAccessoryMap, templateAccessoryIDs, row.UserID, row.AccessoryOwningUserID)
+		if !ok {
+			continue
+		}
+
+		candidates := availableOwningIDs[row.UserID][accessoryID]
+		if len(candidates) == 0 {
+			continue
+		}
+
+		if usedOwningIDs[row.UserID] == nil {
+			usedOwningIDs[row.UserID] = map[int]struct{}{}
+		}
+
+		newOwningID := 0
+		for _, candidate := range candidates {
+			if _, used := usedOwningIDs[row.UserID][candidate]; used {
+				continue
+			}
+			newOwningID = candidate
+			break
+		}
+		if newOwningID == 0 {
+			newOwningID = candidates[0]
+		}
+
+		if _, err := session.Table(new(usermodel.UserAccessoryWear)).
+			ID(row.ID).
+			Cols("accessory_owning_user_id").
+			Update(&usermodel.UserAccessoryWear{AccessoryOwningUserID: newOwningID}); err != nil {
+			session.Rollback()
+			log.Fatalln("迁移 user_accessory 失败:", err.Error())
+		}
+		wearRows[i].AccessoryOwningUserID = newOwningID
+		usedOwningIDs[row.UserID][newOwningID] = struct{}{}
+	}
+
+	if err := session.Commit(); err != nil {
+		session.Rollback()
+		log.Fatalln("迁移 user_accessory 失败:", err.Error())
+	}
+}
+
+func resolveAccessoryIDForWear(currentAccessoryMap map[int]map[int]int, legacyAccessoryMap map[int]int, accessoryIDs []int, userID int, accessoryOwningUserID int) (int, bool) {
+	if accessoryOwningUserID <= 0 {
+		return 0, false
+	}
+
+	if currentAccessoryMap[userID] != nil {
+		if accessoryID, ok := currentAccessoryMap[userID][accessoryOwningUserID]; ok {
+			return accessoryID, true
+		}
+	}
+
+	if accessoryID, ok := legacyAccessoryMap[accessoryOwningUserID]; ok {
+		return accessoryID, true
+	}
+
+	return legacyAccessoryOwningUserIDToAccessoryID(accessoryIDs, accessoryOwningUserID)
+}
+
+func legacyAccessoryOwningUserIDToAccessoryID(accessoryIDs []int, accessoryOwningUserID int) (int, bool) {
+	if accessoryOwningUserID <= 0 {
+		return 0, false
+	}
+
+	index := (accessoryOwningUserID - 1) / 9
+	if index < 0 || index >= len(accessoryIDs) {
+		return 0, false
+	}
+
+	return accessoryIDs[index], true
 }
 
 type liveGoalRewardMigrationRow struct {

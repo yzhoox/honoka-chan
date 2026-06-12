@@ -12,7 +12,7 @@ func unitAccessoryAll(ctx *gin.Context) (res any, err error) {
 	ss := session.Get(ctx)
 
 	accessoryList := []unitapischema.AccessoryList{}
-	err = ss.MainEng.Table("common_accessory_m").Find(&accessoryList)
+	err = ss.UserEng.Table("user_accessory").Where("user_id = ?", ss.UserID).Find(&accessoryList)
 	if err != nil {
 		return nil, err
 	}

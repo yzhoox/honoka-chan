@@ -17,15 +17,36 @@ func (ss *Session) GetUserAccessoryWearByUnitOwningUserID(unitOwningUserID int) 
 	return has, &wearData
 }
 
-func (ss *Session) GetAccessoryByAccessoryOwningUserID(accessoryOwningUserID int) (bool, *accessorymodel.Accessory) {
-	accessoryData := accessorymodel.Accessory{}
-	has, err := ss.MainEng.Table("common_accessory_m").Alias("a").
-		Join("LEFT", "accessory_m", "a.accessory_id = accessory_m.accessory_id").
-		Where("a.accessory_owning_user_id = ?", accessoryOwningUserID).
-		Cols("accessory_m.*,a.exp").Get(&accessoryData)
+func (ss *Session) GetUserAccessoryByAccessoryOwningUserID(accessoryOwningUserID int) (bool, *usermodel.UserAccessory) {
+	accessoryData := usermodel.UserAccessory{}
+	has, err := ss.UserEng.Table(new(usermodel.UserAccessory)).
+		Where("accessory_owning_user_id = ?", accessoryOwningUserID).
+		Get(&accessoryData)
 	if ss.CheckErr(err) {
 		return false, nil
 	}
+
+	return has, &accessoryData
+}
+
+func (ss *Session) GetAccessoryByAccessoryOwningUserID(accessoryOwningUserID int) (bool, *accessorymodel.Accessory) {
+	has, userAccessoryData := ss.GetUserAccessoryByAccessoryOwningUserID(accessoryOwningUserID)
+	if !has {
+		return false, nil
+	}
+
+	accessoryData := accessorymodel.Accessory{}
+	has, err := ss.MainEng.Table("accessory_m").
+		Where("accessory_id = ?", userAccessoryData.AccessoryID).
+		Get(&accessoryData)
+	if ss.CheckErr(err) {
+		return false, nil
+	}
+	if !has {
+		return false, nil
+	}
+
+	accessoryData.Exp = userAccessoryData.Exp
 
 	return has, &accessoryData
 }

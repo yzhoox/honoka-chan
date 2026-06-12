@@ -134,17 +134,7 @@ func getGreetingAccessoryInfo(ss *session.Session, userID, unitOwningUserID int)
 		return nil, nil
 	}
 
-	accessoryData := struct {
-		AccessoryID int `xorm:"accessory_id"`
-		Exp         int `xorm:"exp"`
-	}{}
-	has, err = ss.MainEng.Table("common_accessory_m").
-		Where("accessory_owning_user_id = ?", accessoryWear.AccessoryOwningUserID).
-		Cols("accessory_id,exp").
-		Get(&accessoryData)
-	if err != nil {
-		return nil, err
-	}
+	has, accessoryData := ss.GetAccessoryByAccessoryOwningUserID(accessoryWear.AccessoryOwningUserID)
 	if !has {
 		return nil, nil
 	}
@@ -154,9 +144,9 @@ func getGreetingAccessoryInfo(ss *session.Session, userID, unitOwningUserID int)
 		AccessoryID:           accessoryData.AccessoryID,
 		Exp:                   accessoryData.Exp,
 		NextExp:               0,
-		Level:                 8,
-		MaxLevel:              8,
-		RankUpCount:           4,
+		Level:                 accessoryData.MaxLevel,
+		MaxLevel:              accessoryData.MaxLevel,
+		RankUpCount:           accessoryData.MaxLevel - accessoryData.DefaultMaxLevel,
 		FavoriteFlag:          true,
 	}, nil
 }

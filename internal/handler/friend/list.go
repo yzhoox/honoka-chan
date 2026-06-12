@@ -178,23 +178,18 @@ func buildCenterUnitInfo(ss *session.Session, userID, unitOwningUserID, awardID 
 		return info, err
 	}
 	if has && accessoryWear.AccessoryOwningUserID > 0 {
-		var accessoryID, exp int
-		_, err = ss.MainEng.Table("common_accessory_m").
-			Where("accessory_owning_user_id = ?", accessoryWear.AccessoryOwningUserID).
-			Cols("accessory_id,exp").
-			Get(&accessoryID, &exp)
-		if err != nil {
-			return info, err
-		}
-		accessoryInfo = friendschema.AccessoryInfo{
-			AccessoryOwningUserID: accessoryWear.AccessoryOwningUserID,
-			AccessoryID:           accessoryID,
-			Exp:                   exp,
-			NextExp:               0,
-			Level:                 8,
-			MaxLevel:              8,
-			RankUpCount:           4,
-			FavoriteFlag:          true,
+		hasAccessory, accessoryData := ss.GetAccessoryByAccessoryOwningUserID(accessoryWear.AccessoryOwningUserID)
+		if hasAccessory {
+			accessoryInfo = friendschema.AccessoryInfo{
+				AccessoryOwningUserID: accessoryWear.AccessoryOwningUserID,
+				AccessoryID:           accessoryData.AccessoryID,
+				Exp:                   accessoryData.Exp,
+				NextExp:               0,
+				Level:                 accessoryData.MaxLevel,
+				MaxLevel:              accessoryData.MaxLevel,
+				RankUpCount:           accessoryData.MaxLevel - accessoryData.DefaultMaxLevel,
+				FavoriteFlag:          true,
+			}
 		}
 	}
 

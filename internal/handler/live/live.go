@@ -47,6 +47,7 @@ type memberTagMatchKey struct {
 
 type accessoryBonusRow struct {
 	AccessoryOwningUserID int     `xorm:"accessory_owning_user_id"`
+	AccessoryID           int     `xorm:"accessory_id"`
 	Smile                 float64 `xorm:"smile_max"`
 	Pure                  float64 `xorm:"pure_max"`
 	Cool                  float64 `xorm:"cool_max"`
@@ -219,22 +220,49 @@ func loadAccessoryBonusMap(ss *session.Session, userID int, unitOwningUserIDs []
 	}
 
 	rows := []accessoryBonusRow{}
-	err = ss.MainEng.Table("common_accessory_m").
-		Join("LEFT", "accessory_m", "common_accessory_m.accessory_id = accessory_m.accessory_id").
-		In("common_accessory_m.accessory_owning_user_id", accessoryIDs).
-		Cols("common_accessory_m.accessory_owning_user_id,smile_max,pure_max,cool_max").
+	err = ss.UserEng.Table("user_accessory").
+		In("accessory_owning_user_id", accessoryIDs).
+		Cols("accessory_owning_user_id,accessory_id").
 		Find(&rows)
 	if err != nil {
 		return nil, err
 	}
 
-	accessoryMap := make(map[int]accessoryBonus, len(rows))
+	accessoryIDSet := make(map[int]struct{}, len(rows))
 	for _, row := range rows {
-		accessoryMap[row.AccessoryOwningUserID] = accessoryBonus{
+		accessoryIDSet[row.AccessoryID] = struct{}{}
+	}
+
+	accessoryIDList := make([]int, 0, len(accessoryIDSet))
+	for accessoryID := range accessoryIDSet {
+		accessoryIDList = append(accessoryIDList, accessoryID)
+	}
+
+	staticRows := []accessoryBonusRow{}
+	err = ss.MainEng.Table("accessory_m").
+		In("accessory_id", accessoryIDList).
+		Cols("accessory_id,smile_max,pure_max,cool_max").
+		Find(&staticRows)
+	if err != nil {
+		return nil, err
+	}
+
+	staticBonusMap := make(map[int]accessoryBonus, len(staticRows))
+	for _, row := range staticRows {
+		staticBonusMap[row.AccessoryID] = accessoryBonus{
 			Smile: row.Smile,
 			Pure:  row.Pure,
 			Cool:  row.Cool,
 		}
+	}
+
+	accessoryMap := make(map[int]accessoryBonus, len(rows))
+	for _, row := range rows {
+		bonus, ok := staticBonusMap[row.AccessoryID]
+		if !ok {
+			continue
+		}
+		accessoryMap[row.AccessoryOwningUserID] = bonus
 	}
 
 	result := make(map[int]accessoryBonus, len(unitToAccessoryID))
