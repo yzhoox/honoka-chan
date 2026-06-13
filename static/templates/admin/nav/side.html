@@ -5,16 +5,16 @@
             <li class="layui-nav-item {{ if eq .menu 2 }} layui-nav-itemed {{ end }}">
                 <a class="" href="javascript:;">用户设置</a>
                 <dl class="layui-nav-child">
-                    <dd><a class="{{ if eq .url " /admin/profile" }}admin-subnav-active{{ end }}"
+                    <dd><a class="{{ if eq .url "/admin/profile" }}admin-subnav-active{{ end }}"
                             href="/admin/profile">个人资料</a></dd>
                 </dl>
             </li>
             <li class="layui-nav-item {{ if eq .menu 1 }} layui-nav-itemed {{ end }}">
                 <a class="" href="javascript:;">卡片管理</a>
                 <dl class="layui-nav-child">
-                    <dd><a class="{{ if eq .url " /admin/card" }}admin-subnav-active{{ end }}"
+                    <dd><a class="{{ if eq .url "/admin/card" }}admin-subnav-active{{ end }}"
                             href="/admin/card">卡片一览</a></dd>
-                    <dd><a class="{{ if eq .url " /admin/upload" }}admin-subnav-active{{ end }}"
+                    <dd><a class="{{ if eq .url "/admin/upload" }}admin-subnav-active{{ end }}"
                             href="/admin/upload">卡片导入</a>
                     </dd>
                 </dl>
@@ -22,9 +22,9 @@
             <li class="layui-nav-item {{ if eq .menu 3 }} layui-nav-itemed {{ end }}">
                 <a class="" href="javascript:;">饰品管理</a>
                 <dl class="layui-nav-child">
-                    <dd><a class="{{ if eq .url " /admin/accessory/list" }}admin-subnav-active{{ end }}"
+                    <dd><a class="{{ if eq .url "/admin/accessory/list" }}admin-subnav-active{{ end }}"
                             href="/admin/accessory/list">饰品一览</a></dd>
-                    <dd><a class="{{ if eq .url " /admin/accessory" }}admin-subnav-active{{ end }}"
+                    <dd><a class="{{ if eq .url "/admin/accessory" }}admin-subnav-active{{ end }}"
                             href="/admin/accessory">添加饰品</a></dd>
                 </dl>
             </li>
