@@ -1,0 +1,857 @@
+{{ define "admin/accessory.html" }}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>SIF 小助手</title>
+    {{ template "admin/nav/css.html" . }}
+    <style>
+        :root {
+            --attr-smile: #d33a65;
+            --attr-smile-soft: rgba(211, 58, 101, 0.12);
+            --attr-pure: #2f9e44;
+            --attr-pure-soft: rgba(47, 158, 68, 0.12);
+            --attr-cool: #2f6fd6;
+            --attr-cool-soft: rgba(47, 111, 214, 0.12);
+            --attr-other: #8a5cf6;
+            --attr-other-soft: rgba(138, 92, 246, 0.12);
+        }
+
+        .accessory-panel {
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(228, 0, 127, 0.08);
+            padding: 20px;
+        }
+
+        .accessory-toolbar {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 14px;
+            align-items: end;
+        }
+
+        .accessory-toolbar .layui-form-item {
+            margin-bottom: 0;
+        }
+
+        .accessory-summary {
+            margin: 14px 0 18px;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .accessory-filter-hidden {
+            display: none;
+        }
+
+        .accessory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
+        }
+
+        .accessory-card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border: 1px solid #f2d4e4;
+            border-radius: 14px;
+            padding: 16px;
+            background: linear-gradient(180deg, #fff 0%, #fff7fb 100%);
+        }
+
+        .accessory-card-head {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .accessory-icon-wrap {
+            position: relative;
+            width: 72px;
+            height: 72px;
+            flex: 0 0 72px;
+        }
+
+        .accessory-frame,
+        .accessory-icon {
+            position: absolute;
+            inset: 0;
+            width: 72px;
+            height: 72px;
+            object-fit: contain;
+        }
+
+        .accessory-meta {
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .accessory-name {
+            margin: 0 0 6px;
+            font-size: 15px;
+            line-height: 1.45;
+            color: #222;
+            word-break: break-word;
+        }
+
+        .accessory-level-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .accessory-level-label {
+            flex: 0 0 auto;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .accessory-level-select {
+            flex: 1 1 auto;
+        }
+
+        .accessory-id {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .accessory-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            min-height: 56px;
+            align-content: flex-start;
+        }
+
+        .accessory-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0 8px;
+            height: 24px;
+            border-radius: 999px;
+            background: rgba(228, 0, 127, 0.09);
+            color: #c21874;
+            font-size: 12px;
+        }
+
+        .accessory-tags.attr-smile .accessory-tag {
+            background: var(--attr-smile-soft);
+            color: var(--attr-smile);
+        }
+
+        .accessory-tags.attr-pure .accessory-tag {
+            background: var(--attr-pure-soft);
+            color: var(--attr-pure);
+        }
+
+        .accessory-tags.attr-cool .accessory-tag {
+            background: var(--attr-cool-soft);
+            color: var(--attr-cool);
+        }
+
+        .accessory-tags.attr-other .accessory-tag {
+            background: var(--attr-other-soft);
+            color: var(--attr-other);
+        }
+
+        .accessory-stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .accessory-stat {
+            border-radius: 10px;
+            padding: 8px 10px;
+            background: #fff;
+            border: 1px solid #f5e3ec;
+        }
+
+        .accessory-stat-label {
+            display: block;
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 4px;
+        }
+
+        .accessory-stat-value {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .accessory-stat-smile {
+            border-color: rgba(211, 58, 101, 0.22);
+            background: linear-gradient(180deg, #fff 0%, rgba(211, 58, 101, 0.08) 100%);
+        }
+
+        .accessory-stat-smile .accessory-stat-label,
+        .accessory-stat-smile .accessory-stat-value {
+            color: var(--attr-smile);
+        }
+
+        .accessory-stat-pure {
+            border-color: rgba(47, 158, 68, 0.22);
+            background: linear-gradient(180deg, #fff 0%, rgba(47, 158, 68, 0.08) 100%);
+        }
+
+        .accessory-stat-pure .accessory-stat-label,
+        .accessory-stat-pure .accessory-stat-value {
+            color: var(--attr-pure);
+        }
+
+        .accessory-stat-cool {
+            border-color: rgba(47, 111, 214, 0.22);
+            background: linear-gradient(180deg, #fff 0%, rgba(47, 111, 214, 0.08) 100%);
+        }
+
+        .accessory-stat-cool .accessory-stat-label,
+        .accessory-stat-cool .accessory-stat-value {
+            color: var(--attr-cool);
+        }
+
+        .accessory-desc {
+            margin: 0;
+            color: #555;
+            font-size: 13px;
+            line-height: 1.7;
+            min-height: 44px;
+        }
+
+        .accessory-action {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .accessory-action-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .accessory-quantity-label {
+            flex: 0 0 auto;
+            color: #666;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .accessory-quantity-input {
+            width: 78px;
+            height: 32px;
+            padding: 0 10px;
+            border: 1px solid #e6c5d6;
+            border-radius: 6px;
+            background: #fff;
+            box-sizing: border-box;
+        }
+
+        .accessory-empty {
+            padding: 36px 16px;
+            text-align: center;
+            color: #999;
+            background: #fff;
+            border: 1px dashed #f0bfd8;
+            border-radius: 14px;
+        }
+
+        @media screen and (max-width: 991.98px) {
+            .accessory-toolbar {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media screen and (max-width: 767.98px) {
+            .accessory-panel {
+                padding: 16px;
+                border-radius: 12px;
+            }
+
+            .accessory-toolbar {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .accessory-action {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .accessory-action-controls {
+                width: 100%;
+                margin-left: 0;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .accessory-action .layui-btn,
+            .accessory-quantity-input {
+                width: 100%;
+            }
+
+            .accessory-quantity-label {
+                white-space: normal;
+            }
+
+            .accessory-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media screen and (max-width: 520px) {
+            .accessory-toolbar {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body class="layui-layout-body">
+    <div class="layui-layout layui-layout-admin">
+        {{ template "admin/nav/header.html" . }}
+        {{ template "admin/nav/side.html" . }}
+
+        <div class="layui-body">
+            <div style="padding: 0 5px 24px;">
+                <div class="accessory-panel">
+                    <form class="layui-form" id="accessory-filter-form">
+                        <div class="accessory-toolbar">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">名称 / ID</label>
+                                <div class="layui-input-block">
+                                    <input type="text" id="accessory-keyword" autocomplete="off" class="layui-input"
+                                        placeholder="输入饰品名称或 ID">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">主属性</label>
+                                <div class="layui-input-block">
+                                    <select id="accessory-main-attribute" lay-filter="accessory-filter">
+                                        <option value="">全部</option>
+                                        <option value="smile">甜美</option>
+                                        <option value="pure">清纯</option>
+                                        <option value="cool">洒脱</option>
+                                        <option value="other">其它</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">效果类型</label>
+                                <div class="layui-input-block">
+                                    <select id="accessory-effect-type" lay-filter="accessory-filter">
+                                        <option value="">全部</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">分类</label>
+                                <div class="layui-input-block">
+                                    <select id="accessory-category" lay-filter="accessory-filter">
+                                        <option value="">全部</option>
+                                        <option value="common">通用</option>
+                                        <option value="personal">个人</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="layui-form-item accessory-filter-hidden" id="accessory-member-filter-wrap">
+                                <label class="layui-form-label">角色</label>
+                                <div class="layui-input-block">
+                                    <select id="accessory-member-name" lay-filter="accessory-filter" disabled>
+                                        <option value="">全部</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="accessory-summary" id="accessory-summary">正在加载饰品数据...</div>
+                    <div class="accessory-grid layui-form" id="accessory-grid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/static/js/layui.js"></script>
+    <script>
+        layui.use(['form', 'layer'], function () {
+            var $ = layui.jquery
+                , form = layui.form
+                , layer = layui.layer;
+
+            var rawAccessories = [];
+            var accessoryMap = {};
+            var effectTypeLabels = {
+                5: "小判定",
+                9: "回血",
+                11: "加分",
+                2000: "技能发动率",
+                2100: "重复",
+                2201: "完美加分",
+                2300: "连击加分",
+                2400: "属性同步",
+                2500: "技能等级",
+                2600: "属性提升",
+                2800: "火花"
+            };
+            var targetLabels = {
+                1: "高坂穗乃果",
+                2: "绚濑绘里",
+                3: "南小鸟",
+                4: "园田海未",
+                5: "星空凛",
+                6: "西木野真姬",
+                7: "东条希",
+                8: "小泉花阳",
+                9: "矢泽妮可",
+                101: "高海千歌",
+                102: "樱内梨子",
+                103: "松浦果南",
+                104: "黑泽黛雅",
+                105: "渡边曜",
+                106: "津岛善子",
+                107: "国木田花丸",
+                108: "小原鞠莉",
+                109: "黑泽露比",
+                301: "μ's",
+                302: "Aqours",
+                305: "圣良 / 理亚"
+            };
+            var attributeLabels = {
+                smile: "甜美",
+                pure: "清纯",
+                cool: "洒脱",
+                other: "其它"
+            };
+            var attributeThemeClass = {
+                smile: "attr-smile",
+                pure: "attr-pure",
+                cool: "attr-cool",
+                other: "attr-other"
+            };
+            var memberSortOrder = [
+                "高坂穗乃果", "绚濑绘里", "南琴梨", "园田海未", "星空凛", "西木野真姬", "东条希", "小泉花阳", "矢泽日香",
+                "高海千歌", "樱内梨子", "松浦果南", "黑泽黛雅", "渡边曜", "津岛善子", "国木田花丸", "小原鞠莉", "黑泽露比",
+                "上原步梦", "中须霞", "樱阪雫", "朝香果林", "宫下爱", "近江彼方", "优木雪菜", "艾玛·维尔德", "天王寺璃奈", "三船栞子", "米娅·泰勒", "钟岚珠",
+                "涩谷香音", "唐可可", "岚千砂都", "平安名堇", "叶月恋", "樱小路希奈子", "米女芽衣", "若菜四季", "鬼塚夏美"
+            ];
+            var memberSortOrderMap = memberSortOrder.reduce(function (result, name, index) {
+                result[name] = index;
+                return result;
+            }, {});
+
+            function parseAccessories(data) {
+                return Object.keys(data).map(function (id) {
+                    var item = data[id];
+                    item.id = Number(id);
+                    item.effect_type = Number(item.effect_type || 0);
+                    item.trigger_type = Number(item.trigger_type || 0);
+                    item.trigger_effect_type = Number(item.trigger_effect_type || 0);
+                    item.unit_id = String(item.unit_id || "");
+                    item.main_attribute = getMainAttribute(item);
+                    item.category = getAccessoryCategory(item);
+                    return item;
+                }).sort(function (a, b) {
+                    return a.id - b.id;
+                });
+            }
+
+            function getEffectTypeLabel(effectType) {
+                return effectTypeLabels[effectType] || ("未知效果(" + effectType + ")");
+            }
+
+            function getAttributeLabel(attribute) {
+                return attributeLabels[attribute] || "其它";
+            }
+
+            function getAttributeThemeClass(attribute) {
+                return attributeThemeClass[attribute] || attributeThemeClass.other;
+            }
+
+            function getAccessoryCategory(item) {
+                return item.unit_id ? "personal" : "common";
+            }
+
+            function getAccessoryCategoryLabel(item) {
+                return item.category === "personal" ? "个人" : "通用";
+            }
+
+            function getMemberName(item) {
+                return item.unit_id || "";
+            }
+
+            function getMainAttribute(item) {
+                var smile = Number(item.smile || 0);
+                var pure = Number(item.pure || 0);
+                var cool = Number(item.cool || 0);
+                var maxValue = Math.max(smile, pure, cool);
+                var winners = 0;
+                var result = "other";
+                if (smile === maxValue) {
+                    result = "smile";
+                    winners++;
+                }
+                if (pure === maxValue) {
+                    result = winners ? "other" : "pure";
+                    winners++;
+                }
+                if (cool === maxValue) {
+                    result = winners ? "other" : "cool";
+                }
+                return result;
+            }
+
+            function getLevelEntries(item) {
+                return (item.levels || []).filter(function (level) {
+                    return level && level.level != null;
+                });
+            }
+
+            function getSelectedLevelEntry(item, level) {
+                var entries = getLevelEntries(item);
+                if (!entries.length) {
+                    return {};
+                }
+                var selected = entries.find(function (entry) {
+                    return Number(entry.level) === Number(level);
+                });
+                return selected || entries[0];
+            }
+
+            function escapeHtml(value) {
+                return String(value == null ? "" : value)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/\"/g, "&quot;")
+                    .replace(/'/g, "&#39;");
+            }
+
+            function getTargetLabel(item) {
+                var targets = item.effect_target || [];
+                if (!targets.length) {
+                    return "全员";
+                }
+                return targets.map(function (target) {
+                    return targetLabels[target] || ("对象 " + target);
+                }).join(" / ");
+            }
+
+            function getTargetTagLabel(item) {
+                var targets = item.effect_target || [];
+                if (!targets.length) {
+                    return "";
+                }
+                return targets.map(function (target) {
+                    return targetLabels[target] || ("对象 " + target);
+                }).join(" / ");
+            }
+
+            function getTriggerText(item, level) {
+                if (item.trigger_type === 201) {
+                    return "每发动 " + (level.trigger_value || 0) + " 次" + getEffectTypeLabel(item.trigger_effect_type) + "技能时";
+                }
+                return "特技未发动时";
+            }
+
+            function getEffectText(item, level) {
+                var targetLabel = getTargetLabel(item);
+                switch (item.effect_type) {
+                    case 5:
+                        return "增强判定 " + (level.time || 0) + " 秒";
+                    case 9:
+                        return "恢复 " + (level.effect_value || 0) + " 点体力";
+                    case 11:
+                        return "提升分数 " + (level.effect_value || 0) + " 点";
+                    case 2000:
+                        return (level.time || 0) + " 秒内其它特技发动概率提升到 " + (level.effect_value || 0) + " 倍";
+                    case 2100:
+                        return "发动上一个已发动的非重复特技";
+                    case 2201:
+                        return (level.time || 0) + " 秒内 PERFECT 提升 " + (level.effect_value || 0) + " 分";
+                    case 2300:
+                        return (level.time || 0) + " 秒内点击得分按连击数追加 " + (level.effect_value || 0) + " 到 " + ((level.effect_value || 0) * 10) + " 分";
+                    case 2400:
+                        return (level.time || 0) + " 秒内自身属性同步为 " + targetLabel + " 的随机一位成员";
+                    case 2500:
+                        return "使下一个发动的技能等级提升 " + (level.effect_value || 0) + " 级";
+                    case 2600:
+                        return (level.time || 0) + " 秒内" + targetLabel + "的属性 P 提高到 " + (level.effect_value || 0) + " 倍";
+                    case 2800:
+                        return (level.time || 0) + " 秒内点击得分提升 " + (level.effect_value || 0) + " 分";
+                    default:
+                        return "效果类型 " + item.effect_type;
+                }
+            }
+
+            function buildDescription(item) {
+                var level = getSelectedLevelEntry(item, 1);
+                return getTriggerText(item, level) + "，有 " + (level.rate || 0) + "% 概率" + getEffectText(item, level);
+            }
+
+            function buildEffectTypeOptions(accessories) {
+                var values = [];
+                var seen = {};
+                accessories.forEach(function (item) {
+                    if (!item.effect_type || seen[item.effect_type]) {
+                        return;
+                    }
+                    seen[item.effect_type] = true;
+                    values.push(item.effect_type);
+                });
+                values.sort(function (a, b) { return a - b; });
+                values.forEach(function (value) {
+                    $("#accessory-effect-type").append(
+                        $("<option>").attr("value", value).text(getEffectTypeLabel(value))
+                    );
+                });
+                form.render("select");
+            }
+
+            function decorateAttributeFilterSelect() {
+                var $selectWrap = $("#accessory-main-attribute").next(".layui-form-select");
+                if (!$selectWrap.length) {
+                    return;
+                }
+                $selectWrap.find('dd[lay-value="smile"]').css("color", "var(--attr-smile)");
+                $selectWrap.find('dd[lay-value="pure"]').css("color", "var(--attr-pure)");
+                $selectWrap.find('dd[lay-value="cool"]').css("color", "var(--attr-cool)");
+                $selectWrap.find('dd[lay-value="other"]').css("color", "var(--attr-other)");
+            }
+
+            function buildMemberOptions(accessories) {
+                var values = [];
+                var seen = {};
+                accessories.forEach(function (item) {
+                    var memberName = getMemberName(item);
+                    if (!memberName || seen[memberName]) {
+                        return;
+                    }
+                    seen[memberName] = true;
+                    values.push(memberName);
+                });
+                values.sort(function (a, b) {
+                    var aOrder = Object.prototype.hasOwnProperty.call(memberSortOrderMap, a) ? memberSortOrderMap[a] : Number.MAX_SAFE_INTEGER;
+                    var bOrder = Object.prototype.hasOwnProperty.call(memberSortOrderMap, b) ? memberSortOrderMap[b] : Number.MAX_SAFE_INTEGER;
+                    if (aOrder !== bOrder) {
+                        return aOrder - bOrder;
+                    }
+                    return a.localeCompare(b, "zh-Hans-CN");
+                });
+
+                var $select = $("#accessory-member-name");
+                $select.find("option:not(:first)").remove();
+                values.forEach(function (value) {
+                    $select.append(
+                        $("<option>").attr("value", value).text(value)
+                    );
+                });
+                form.render("select");
+            }
+
+            function syncMemberFilterState() {
+                var isPersonal = $("#accessory-category").val() === "personal";
+                var $wrap = $("#accessory-member-filter-wrap");
+                var $select = $("#accessory-member-name");
+                if (isPersonal) {
+                    $wrap.removeClass("accessory-filter-hidden");
+                    $select.prop("disabled", false);
+                } else {
+                    $wrap.addClass("accessory-filter-hidden");
+                    $select.val("");
+                    $select.prop("disabled", true);
+                }
+                form.render("select");
+                decorateAttributeFilterSelect();
+            }
+
+            function getQuantity(input) {
+                var quantity = parseInt($(input).val(), 10);
+                if (!quantity || quantity < 1) {
+                    quantity = 1;
+                }
+                if (quantity > 99) {
+                    quantity = 99;
+                }
+                $(input).val(quantity);
+                return quantity;
+            }
+
+            function filterAccessories() {
+                var keyword = $.trim($("#accessory-keyword").val()).toLowerCase();
+                var mainAttribute = $("#accessory-main-attribute").val();
+                var effectType = $("#accessory-effect-type").val();
+                var category = $("#accessory-category").val();
+                var memberName = $("#accessory-member-name").val();
+
+                return rawAccessories.filter(function (item) {
+                    if (keyword) {
+                        var keywordMatched = String(item.id).indexOf(keyword) >= 0
+                            || String(item.jpname || "").toLowerCase().indexOf(keyword) >= 0;
+                        if (!keywordMatched) {
+                            return false;
+                        }
+                    }
+                    if (mainAttribute && item.main_attribute !== mainAttribute) {
+                        return false;
+                    }
+                    if (effectType && String(item.effect_type) !== effectType) {
+                        return false;
+                    }
+                    if (category && item.category !== category) {
+                        return false;
+                    }
+                    if (category === "personal" && memberName && getMemberName(item) !== memberName) {
+                        return false;
+                    }
+                    return true;
+                });
+            }
+
+            function renderAccessories() {
+                var list = filterAccessories();
+                var $grid = $("#accessory-grid");
+                $("#accessory-summary").text("共 " + rawAccessories.length + " 个饰品，当前筛选结果 " + list.length + " 个。");
+                $grid.empty();
+
+                if (!list.length) {
+                    $grid.html('<div class="accessory-empty">没有匹配的饰品。</div>');
+                    return;
+                }
+
+                list.forEach(function (item) {
+                    var description = buildDescription(item);
+                    var targetLabel = getTargetLabel(item);
+                    var targetTagLabel = getTargetTagLabel(item);
+                    var memberName = getMemberName(item);
+                    if (targetTagLabel && memberName && targetTagLabel === memberName) {
+                        targetTagLabel = "";
+                    }
+                    var levelEntries = getLevelEntries(item);
+                    var levelOptions = levelEntries.map(function (entry) {
+                        return '<option value="' + entry.level + '">' + entry.level + '</option>';
+                    }).join("");
+                    var selectedLevel = levelEntries.length ? levelEntries[0].level : 1;
+                    var levelData = getSelectedLevelEntry(item, selectedLevel);
+                    var frameName = item.unit_id ? "frame_ur_special.png" : "frame_ur_common.png";
+                    var $card = $('<div class="accessory-card"></div>');
+                    var html = ''
+                        + '<div class="accessory-card-head" data-accessory-id="' + item.id + '">'
+                        + '  <div class="accessory-icon-wrap">'
+                        + '    <img class="accessory-frame" src="/static/images/accessory_frame/' + frameName + '" alt="">'
+                        + '    <img class="accessory-icon" src="/static/images/accessory/' + escapeHtml(item.icon_asset || ('icon_' + item.id + '.png')) + '" alt="">'
+                        + '  </div>'
+                        + '  <div class="accessory-meta">'
+                        + '    <h3 class="accessory-name">' + escapeHtml(item.jpname || "") + '</h3>'
+                        + '    <div class="accessory-id">ID: ' + item.id + '</div>'
+                        + '  </div>'
+                        + '</div>'
+                        + '<div class="accessory-tags ' + getAttributeThemeClass(item.main_attribute) + '">'
+                        + '  <span class="accessory-tag">' + escapeHtml(getAttributeLabel(item.main_attribute)) + '</span>'
+                        + '  <span class="accessory-tag">' + escapeHtml(getAccessoryCategoryLabel(item)) + '</span>'
+                        + (memberName ? '  <span class="accessory-tag">' + escapeHtml(memberName) + '</span>' : '')
+                        + '  <span class="accessory-tag">' + escapeHtml(getEffectTypeLabel(item.effect_type)) + '</span>'
+                        + (targetTagLabel ? '  <span class="accessory-tag">' + escapeHtml(targetTagLabel) + '</span>' : '')
+                        + '</div>'
+                        + '<div class="accessory-level-row">'
+                        + '  <div class="accessory-level-label">技能等级</div>'
+                        + '  <div class="accessory-level-select">'
+                        + '    <select class="accessory-card-level" lay-filter="accessory-card-level" data-id="' + item.id + '">' + levelOptions + '</select>'
+                        + '  </div>'
+                        + '</div>'
+                        + '<div class="accessory-stats">'
+                        + '  <div class="accessory-stat accessory-stat-smile"><span class="accessory-stat-label">甜美</span><span class="accessory-stat-value accessory-stat-value-smile">' + (levelData.smile != null ? levelData.smile : (item.smile || 0)) + '</span></div>'
+                        + '  <div class="accessory-stat accessory-stat-pure"><span class="accessory-stat-label">清纯</span><span class="accessory-stat-value accessory-stat-value-pure">' + (levelData.pure != null ? levelData.pure : (item.pure || 0)) + '</span></div>'
+                        + '  <div class="accessory-stat accessory-stat-cool"><span class="accessory-stat-label">洒脱</span><span class="accessory-stat-value accessory-stat-value-cool">' + (levelData.cool != null ? levelData.cool : (item.cool || 0)) + '</span></div>'
+                        + '</div>'
+                        + '<p class="accessory-desc">' + escapeHtml(getTriggerText(item, levelData) + "，有 " + (levelData.rate || 0) + "% 概率" + getEffectText(item, levelData)) + '</p>'
+                        + '<div class="accessory-action">'
+                        + '  <div class="accessory-action-controls">'
+                        + '    <span class="accessory-quantity-label">添加数量</span>'
+                        + '    <input type="number" class="accessory-quantity-input" min="1" max="99" value="1">'
+                        + '    <button type="button" class="layui-btn layui-btn-sm accessory-add-btn" data-id="' + item.id + '">添加饰品</button>'
+                        + '  </div>'
+                        + '</div>';
+                    $card.html(html);
+                    $grid.append($card);
+                });
+
+                form.render("select");
+                decorateAttributeFilterSelect();
+            }
+
+            function updateAccessoryCardLevel(accessoryID, level) {
+                var item = accessoryMap[String(accessoryID)];
+                if (!item) {
+                    return;
+                }
+                var levelData = getSelectedLevelEntry(item, level);
+                var $card = $('.accessory-card-level[data-id="' + accessoryID + '"]').closest(".accessory-card");
+                if (!$card.length) {
+                    return;
+                }
+                $card.find(".accessory-stat-value-smile").text(levelData.smile != null ? levelData.smile : (item.smile || 0));
+                $card.find(".accessory-stat-value-pure").text(levelData.pure != null ? levelData.pure : (item.pure || 0));
+                $card.find(".accessory-stat-value-cool").text(levelData.cool != null ? levelData.cool : (item.cool || 0));
+                $card.find(".accessory-desc").text(getTriggerText(item, levelData) + "，有 " + (levelData.rate || 0) + "% 概率" + getEffectText(item, levelData));
+            }
+
+            function bindEvents() {
+                $("#accessory-keyword").on("input", renderAccessories);
+                form.on("select(accessory-filter)", function (data) {
+                    if (data.elem && data.elem.id === "accessory-category") {
+                        syncMemberFilterState();
+                    }
+                    renderAccessories();
+                });
+                form.on("select(accessory-card-level)", function (data) {
+                    updateAccessoryCardLevel(data.elem.getAttribute("data-id"), data.value);
+                });
+
+                $(document).on("click", ".accessory-add-btn", function () {
+                    var accessoryID = $(this).data("id");
+                    var quantity = getQuantity($(this).siblings(".accessory-quantity-input"));
+                    var $button = $(this);
+                    $button.addClass("layui-btn-disabled").prop("disabled", true);
+
+                    $.post("/admin/accessory/add", {
+                        accessory_id: accessoryID,
+                        quantity: quantity
+                    }, function (res) {
+                        layer.msg(res.message || "请求完成");
+                    }).fail(function () {
+                        layer.msg("请求失败，请稍后再试");
+                    }).always(function () {
+                        $button.removeClass("layui-btn-disabled").prop("disabled", false);
+                    });
+                });
+            }
+
+            $.getJSON("/admin/accessory/data", function (data) {
+                rawAccessories = parseAccessories(data);
+                rawAccessories.forEach(function (item) {
+                    accessoryMap[String(item.id)] = item;
+                });
+                buildEffectTypeOptions(rawAccessories);
+                buildMemberOptions(rawAccessories);
+                syncMemberFilterState();
+                renderAccessories();
+                bindEvents();
+            }).fail(function (xhr) {
+                var message = "饰品数据加载失败";
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                $("#accessory-summary").text(message);
+                $("#accessory-grid").html('<div class="accessory-empty">' + escapeHtml(message) + '</div>');
+            });
+        });
+    </script>
+</body>
+
+</html>
+{{ end }}
