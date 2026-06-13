@@ -42,6 +42,7 @@ func CreateTables() {
 	MigrateUserPref()
 	MigrateUserAccessories()
 	MigrateUserLiveData()
+	ForceAllUsersRelogin()
 }
 
 func MigrateUserPref() {
@@ -66,6 +67,14 @@ func MigrateUserPref() {
 		if err != nil {
 			log.Fatalln("迁移 user_pref 失败:", err.Error())
 		}
+	}
+}
+
+func ForceAllUsersRelogin() {
+	if _, err := db.UserEng.Table(new(usermodel.UserPref)).
+		Cols("force_relogin").
+		Update(&usermodel.UserPref{ForceRelogin: true}); err != nil {
+		log.Fatalln("设置全员重新登录失败:", err.Error())
 	}
 }
 
