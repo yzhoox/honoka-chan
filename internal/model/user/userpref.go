@@ -4,6 +4,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"xorm.io/xorm"
 )
 
 const CurrentUserPrefProfileVersion = 2
@@ -40,6 +42,7 @@ type UserPref struct {
 	OverMaxEnergy    int    `xorm:"over_max_energy"`
 	BirthMonth       int    `xorm:"birth_month"`
 	BirthDay         int    `xorm:"birth_day"`
+	ForceRelogin     bool   `xorm:"force_relogin"`
 	ProfileVersion   int    `xorm:"profile_version"`
 	UpdateTime       int64  `xorm:"update_time"`
 }
@@ -154,8 +157,25 @@ func UserPrefProfileColumns() []string {
 		"over_max_energy",
 		"birth_month",
 		"birth_day",
+		"force_relogin",
 		"profile_version",
 	}
+}
+
+func MarkUserForceRelogin(exec xorm.Interface, userID int) error {
+	_, err := exec.Table(new(UserPref)).
+		Where("user_id = ?", userID).
+		Cols("force_relogin").
+		Update(&UserPref{ForceRelogin: true})
+	return err
+}
+
+func ClearUserForceRelogin(exec xorm.Interface, userID int) error {
+	_, err := exec.Table(new(UserPref)).
+		Where("user_id = ?", userID).
+		Cols("force_relogin").
+		Update(&UserPref{ForceRelogin: false})
+	return err
 }
 
 func (UserPref) TableName() string {

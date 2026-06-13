@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"honoka-chan/internal/middleware"
+	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
 	loginschema "honoka-chan/internal/schema/login"
 	"honoka-chan/internal/session"
@@ -65,6 +66,10 @@ func login(ctx *gin.Context) {
 
 	if !exists || userID == 0 {
 		ss.Abort(errors.New("invalid user"))
+		return
+	}
+
+	if err := usermodel.ClearUserForceRelogin(ss.UserEng, userID); ss.CheckErr(err) {
 		return
 	}
 

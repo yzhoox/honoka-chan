@@ -147,6 +147,14 @@ func updateProfile(ctx *gin.Context) {
 		return
 	}
 
+	if err := usermodel.MarkUserForceRelogin(db.UserEng, ctx.GetInt("userid")); err != nil {
+		ctx.JSON(http.StatusOK, webuischema.Msg{
+			Code:    1,
+			Message: "保存成功，但登录状态刷新失败！",
+		})
+		return
+	}
+
 	ctx.JSON(http.StatusOK, webuischema.Msg{
 		Code:    0,
 		Message: "保存成功！",
@@ -191,6 +199,14 @@ func resetProfile(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, webuischema.Msg{
 			Code:    1,
 			Message: "重置失败！",
+		})
+		return
+	}
+
+	if err := usermodel.MarkUserForceRelogin(db.UserEng, ctx.GetInt("userid")); err != nil {
+		ctx.JSON(http.StatusOK, webuischema.Msg{
+			Code:    1,
+			Message: "重置成功，但登录状态刷新失败！",
 		})
 		return
 	}

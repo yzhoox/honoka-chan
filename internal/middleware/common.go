@@ -11,16 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CheckErr(ctx *gin.Context, err error) bool {
-	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"code":    20001,
-			"message": err.Error(),
-		})
-	}
-	return err != nil
-}
-
 func Common(ctx *gin.Context) {
 	reqData := ""
 	if form, err := ctx.MultipartForm(); err == nil {
@@ -39,9 +29,17 @@ func Common(ctx *gin.Context) {
 	ss := session.Attach(ctx)
 	ctx.Set("session", ss)
 
+	if ctx.Request.URL.Path != "/login/authkey" && ctx.Request.URL.Path != "/login/login" {
+		if ss.UserPref.ForceRelogin {
+			ctx.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+	}
+
 	authorize := ctx.GetHeader("Authorize")
 	params, err := url.ParseQuery(authorize)
-	if CheckErr(ctx, err) {
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 

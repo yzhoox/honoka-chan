@@ -111,6 +111,11 @@ func upload(ctx *gin.Context) {
 		return
 	}
 
+	if err := usermodel.MarkUserForceRelogin(db.UserEng, ctx.GetInt("userid")); err != nil {
+		ctx.JSON(http.StatusOK, ErrMsg{Error: 1, Msg: "卡片添加成功，但登录状态刷新失败！"})
+		return
+	}
+
 	ctx.JSON(http.StatusOK, ErrMsg{Error: 0, Msg: "导入成功，请重新打开游戏！"})
 }
 

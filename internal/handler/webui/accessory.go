@@ -23,6 +23,17 @@ type accessoryInventoryItem struct {
 	WornCount   int `json:"worn_count"`
 }
 
+func markAccessoryUserForceRelogin(ctx *gin.Context) bool {
+	if err := usermodel.MarkUserForceRelogin(db.UserEng, ctx.GetInt("userid")); err != nil {
+		ctx.JSON(http.StatusOK, webuischema.Msg{
+			Code:    1,
+			Message: "操作成功，但登录状态刷新失败！",
+		})
+		return false
+	}
+	return true
+}
+
 func accessoryPage(ctx *gin.Context) {
 	ctx.HTML(http.StatusOK, "admin/accessory.html", gin.H{
 		"menu": 3,
@@ -118,6 +129,10 @@ func addAccessory(ctx *gin.Context) {
 			Code:    1,
 			Message: "饰品添加失败！",
 		})
+		return
+	}
+
+	if !markAccessoryUserForceRelogin(ctx) {
 		return
 	}
 
@@ -319,6 +334,10 @@ func deleteAccessory(ctx *gin.Context) {
 			Code:    1,
 			Message: "饰品删除失败！",
 		})
+		return
+	}
+
+	if !markAccessoryUserForceRelogin(ctx) {
 		return
 	}
 
