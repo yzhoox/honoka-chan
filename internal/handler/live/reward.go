@@ -49,6 +49,9 @@ func BuildRewardResp(ss *session.Session, playRewardReq liveschema.RewardReq, is
 		return liveschema.RewardResp{}, errors.New("live progress not found")
 	}
 	_, deckInfo := ss.GetDeckInfo(progress.DeckID)
+	if deckInfo == nil {
+		return liveschema.RewardResp{}, errors.New("deck info not found")
+	}
 	deckInfo.LiveDifficultyID = difficultyID
 
 	unitsList := []liveschema.PlayRewardUnitList{}

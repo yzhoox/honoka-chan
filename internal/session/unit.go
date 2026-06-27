@@ -19,6 +19,10 @@ func (ss *Session) GetBasicUnitInfo() *xorm.Session {
 }
 
 func (ss *Session) GetUnitInfo(unitID int) (bool, *unitmodel.CommonUnitData) {
+	if ss.UserEng == nil {
+		return false, nil
+	}
+
 	unitInfo := unitmodel.CommonUnitData{}
 	has, err := ss.UserEng.Table(new(unitmodel.CommonUnitData)).
 		Where("unit_id = ?", unitID).Get(&unitInfo)

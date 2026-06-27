@@ -188,12 +188,20 @@ func (ss *Session) GetLiveInfo(LiveDifficultyID int) (bool, *liveschema.LiveInfo
 }
 
 func (ss *Session) GetDeckInfo(deckID int) (bool, *liverecordschema.DeckInfo) {
+	if ss.UserEng == nil {
+		return false, nil
+	}
+
 	// 卡片信息
 	totalHp, totalSmile, totalCute, totalCool := 0, 0, 0, 0
 	unitData := []liverecordschema.UnitList{}
 	units := ss.GetUserDeckUnit(deckID)
 	for _, u := range units {
-		_, uData := ss.GetUnitInfo(u.UnitID)
+		has, uData := ss.GetUnitInfo(u.UnitID)
+		if !has || uData == nil {
+			return false, nil
+		}
+
 		tempUnitData := liverecordschema.UnitList{
 			UnitID:                     u.UnitID,
 			Position:                   u.Position,
@@ -225,10 +233,16 @@ func (ss *Session) GetDeckInfo(deckID int) (bool, *liverecordschema.DeckInfo) {
 
 		// 技能宝石信息
 		skillData := ss.GetUserUnitSkillEquipID(u.UnitOwningUserID)
+		if ss.UserEng == nil {
+			return false, nil
+		}
 		tempUnitData.RemovableSkillIds = skillData
 
 		// 饰品信息
 		has, accessoryData := ss.GetUserAccessoryInfoByUnitOwningUserID(u.UnitOwningUserID)
+		if ss.UserEng == nil {
+			return false, nil
+		}
 		if has {
 			tempUnitData.AccessoryInfo = accessoryData
 		}

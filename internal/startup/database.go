@@ -78,6 +78,12 @@ func ForceAllUsersRelogin() {
 	}
 }
 
+func MigrateLegacyUnitTables() {
+	if err := db.UserEng.Sync2(new(unitmodel.CommonUnitData), new(usermodel.UserUnitData)); err != nil {
+		log.Fatalln("迁移卡片历史数据表失败:", err.Error())
+	}
+}
+
 type accessoryOwningMapRow struct {
 	AccessoryOwningUserID int `xorm:"accessory_owning_user_id"`
 	AccessoryID           int `xorm:"accessory_id"`
