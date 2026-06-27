@@ -82,6 +82,60 @@ func MigrateLegacyUnitTables() {
 	if err := db.UserEng.Sync2(new(unitmodel.CommonUnitData), new(usermodel.UserUnitData)); err != nil {
 		log.Fatalln("迁移卡片历史数据表失败:", err.Error())
 	}
+	if err := BackfillCommonUnitExp(); err != nil {
+		log.Fatalln("回填卡片经验失败:", err.Error())
+	}
+}
+
+func BackfillCommonUnitExp() error {
+	session := db.UserEng.NewSession()
+	defer session.Close()
+
+	if err := session.Begin(); err != nil {
+		return err
+	}
+
+	var unitIDs []int
+	if err := session.Table(new(unitmodel.CommonUnitData)).Cols("unit_id").Find(&unitIDs); err != nil {
+		session.Rollback()
+		return err
+	}
+	if len(unitIDs) == 0 {
+		return session.Commit()
+	}
+
+	unitRows := []unitmodel.UnitM{}
+	if err := db.MainEng.Table(new(unitmodel.UnitM)).
+		In("unit_id", unitIDs).
+		Cols("unit_id,unit_level_up_pattern_id").
+		Find(&unitRows); err != nil {
+		session.Rollback()
+		return err
+	}
+
+	expByPattern := map[int]int{}
+	for _, row := range unitRows {
+		exp, ok := expByPattern[row.UnitLevelUpPatternId]
+		if !ok {
+			var err error
+			exp, _, err = calculateUnitMaxLevelAndExp(row.UnitLevelUpPatternId)
+			if err != nil {
+				session.Rollback()
+				return err
+			}
+			expByPattern[row.UnitLevelUpPatternId] = exp
+		}
+
+		if _, err := session.Table(new(unitmodel.CommonUnitData)).
+			Where("unit_id = ?", row.UnitId).
+			Cols("exp").
+			Update(&unitmodel.CommonUnitData{Exp: exp}); err != nil {
+			session.Rollback()
+			return err
+		}
+	}
+
+	return session.Commit()
 }
 
 type accessoryOwningMapRow struct {
@@ -526,7 +580,16 @@ func LoadUnitData() {
 	userUnitExist, err := userEng.IsTableExist(new(usermodel.UserUnitData))
 	CheckErr(err)
 
-	if !commonUnitExist || !userUnitExist {
+	needInit := !commonUnitExist || !userUnitExist
+	if !needInit {
+		commonUnitCount, err := userEng.Table(new(unitmodel.CommonUnitData)).Count()
+		CheckErr(err)
+		userUnitCount, err := userEng.Table(new(usermodel.UserUnitData)).Count()
+		CheckErr(err)
+		needInit = commonUnitCount == 0 && userUnitCount == 0
+	}
+
+	if needInit {
 		log.Println("卡片数据不存在，正在同步...")
 
 		userEng.DropTable(new(unitmodel.CommonUnitData))
@@ -540,17 +603,7 @@ func LoadUnitData() {
 
 		checked := false
 		for _, u := range unitData {
-			// 判断卡片最大等级
-			var unitMaxLevel, nextExp, sumExp int
-			_, err = db.MainEng.Table("unit_level_up_pattern_m").
-				Where("unit_level_up_pattern_id = ?", u.UnitLevelUpPatternId).
-				Select("MAX(unit_level),next_exp").Get(&unitMaxLevel, &nextExp)
-			CheckErr(err)
-
-			// 计算突破前的经验总和
-			_, err = db.MainEng.Table("unit_level_up_pattern_m").
-				Where("unit_level_up_pattern_id = ?", u.UnitLevelUpPatternId).
-				Where("unit_level = ?", unitMaxLevel-1).Cols("next_exp").Get(&sumExp)
+			sumExp, unitMaxLevel, err := calculateUnitMaxLevelAndExp(u.UnitLevelUpPatternId)
 			CheckErr(err)
 
 			// 计算突破前的属性
@@ -559,17 +612,8 @@ func LoadUnitData() {
 			pureMax = u.PureMax
 			coolMax = u.CoolMax
 
-			// 如果 nexpExp 不为零，则说明卡片等级没有达到上限
-			if nextExp != 0 {
+			if unitMaxLevel == 350 {
 				// 计算突破后的经验总和
-				_, err = db.MainEng.Table("unit_level_limit_pattern_m").
-					Where("unit_level_limit_id = 1 AND unit_level = 349").
-					Cols("next_exp").Get(&sumExp)
-				CheckErr(err)
-
-				// 突破后最大等级
-				unitMaxLevel = 350
-
 				// 计算突破后的属性
 				smileMax += 6000
 				pureMax += 6000
@@ -698,6 +742,39 @@ func LoadUnitData() {
 
 		log.Println("同步完成！")
 	}
+}
+
+func calculateUnitMaxLevelAndExp(unitLevelUpPatternID int) (sumExp int, unitMaxLevel int, err error) {
+	var nextExp int
+	_, err = db.MainEng.Table("unit_level_up_pattern_m").
+		Where("unit_level_up_pattern_id = ?", unitLevelUpPatternID).
+		Select("MAX(unit_level),next_exp").
+		Get(&unitMaxLevel, &nextExp)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	_, err = db.MainEng.Table("unit_level_up_pattern_m").
+		Where("unit_level_up_pattern_id = ?", unitLevelUpPatternID).
+		Where("unit_level = ?", unitMaxLevel-1).
+		Cols("next_exp").
+		Get(&sumExp)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	if nextExp != 0 {
+		_, err = db.MainEng.Table("unit_level_limit_pattern_m").
+			Where("unit_level_limit_id = 1 AND unit_level = 349").
+			Cols("next_exp").
+			Get(&sumExp)
+		if err != nil {
+			return 0, 0, err
+		}
+		unitMaxLevel = 350
+	}
+
+	return sumExp, unitMaxLevel, nil
 }
 
 func CheckErr(err error) {

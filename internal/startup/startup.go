@@ -2,8 +2,8 @@ package startup
 
 func StartUp() {
 	CreateTables()
-	LoadUnitData()
 	MigrateLegacyUnitTables()
+	LoadUnitData()
 	CreateDefaultUser()
 	EnsureDefaultFriends()
 }
