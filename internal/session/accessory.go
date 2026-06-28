@@ -35,7 +35,12 @@ func (ss *Session) GetAccessoryByAccessoryOwningUserID(accessoryOwningUserID int
 		return false, nil
 	}
 
-	accessoryData := accessorymodel.Accessory{}
+	type accessoryWithUserExp struct {
+		accessorymodel.Accessory `xorm:"extends"`
+		Exp                      int `xorm:"-"`
+	}
+
+	accessoryData := accessoryWithUserExp{}
 	has, err := ss.MainEng.Table("accessory_m").
 		Where("accessory_id = ?", userAccessoryData.AccessoryID).
 		Get(&accessoryData)
@@ -48,7 +53,7 @@ func (ss *Session) GetAccessoryByAccessoryOwningUserID(accessoryOwningUserID int
 
 	accessoryData.Exp = userAccessoryData.Exp
 
-	return has, &accessoryData
+	return has, &accessoryData.Accessory
 }
 
 func (ss *Session) GetUserAccessoryInfoByUnitOwningUserID(unitOwningUserID int) (bool, *liverecordschema.AccessoryInfo) {

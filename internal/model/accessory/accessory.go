@@ -2,7 +2,7 @@ package accessorymodel
 
 type Accessory struct {
 	AccessoryID     int `xorm:"accessory_id pk"`
-	Exp             int `xorm:"exp"`
+	Exp             int `xorm:"-"`
 	SmileMax        int `xorm:"smile_max"`
 	PureMax         int `xorm:"pure_max"`
 	CoolMax         int `xorm:"cool_max"`
