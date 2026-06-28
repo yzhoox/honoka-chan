@@ -3,11 +3,14 @@ package session
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/pkg/db"
 	"honoka-chan/pkg/encrypt"
 	"log"
 	"net/http"
+	"runtime"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"xorm.io/xorm"
@@ -116,7 +119,26 @@ func (ss *Session) Abort(err error) {
 		ss.UserEng = nil
 	}
 
-	ss.resp.writeJSON(500, gin.H{"error": err.Error()})
+	skip := 1
+	if pc, _, _, ok := runtime.Caller(1); ok {
+		fn := runtime.FuncForPC(pc)
+		if fn != nil && strings.HasSuffix(fn.Name(), ".(*Session).CheckErr") {
+			skip = 2
+		}
+	}
+	loc := "unknown"
+	if pc, file, line, ok := runtime.Caller(skip); ok {
+		fn := runtime.FuncForPC(pc)
+		funcName := ""
+		if fn != nil {
+			funcName = fn.Name()
+		}
+		loc = fmt.Sprintf("%s:%d (%s)", file, line, funcName)
+	}
+	msg := fmt.Sprintf("[%s] %s", loc, err.Error())
+	log.Println(msg)
+
+	ss.resp.writeJSON(500, gin.H{"error": msg})
 	ss.resp.abort()
 }
 
