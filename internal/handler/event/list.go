@@ -28,7 +28,7 @@ func list(ctx *gin.Context) {
 			ErrorCode: constant.ErrorCodeEventNoEventData,
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  600,
+		StatusCode:  constant.ErrorCodeAcceptableError,
 	})
 }
 

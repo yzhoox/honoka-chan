@@ -9,6 +9,7 @@ import (
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
 	"honoka-chan/pkg/utils"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -172,7 +173,7 @@ func BuildRewardResp(ss *session.Session, playRewardReq liveschema.RewardReq, is
 			PresentCnt:                   0,
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  200,
+		StatusCode:  http.StatusOK,
 	}
 
 	if playRewardReq.MaxCombo >= liveInfo.SRankCombo {

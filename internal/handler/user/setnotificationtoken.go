@@ -5,6 +5,7 @@ import (
 	"honoka-chan/internal/router"
 	userschema "honoka-chan/internal/schema/user"
 	"honoka-chan/internal/session"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,7 +17,7 @@ func setNotificationToken(ctx *gin.Context) {
 	ss.Respond(userschema.SetNotificationTokenResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

@@ -4,6 +4,7 @@ import (
 	usermodel "honoka-chan/internal/model/user"
 	profileapischema "honoka-chan/internal/schema/api/profile"
 	"honoka-chan/internal/session"
+	"net/http"
 	"sort"
 	"time"
 
@@ -82,7 +83,7 @@ func liveCnt(ctx *gin.Context, targetUserID int) (res any, err error) {
 
 	res = profileapischema.LiveCntResp{
 		Result:     result,
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

@@ -3,6 +3,7 @@ package main
 import (
 	"honoka-chan/config"
 	_ "honoka-chan/internal/handler"
+	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
 	"honoka-chan/internal/startup"
 	"honoka-chan/pkg/db"
@@ -48,6 +49,7 @@ func main() {
 			"/v1/account/reportRole",
 		},
 	}))
+	r.Use(middleware.Recovery())
 
 	// SIF
 	router.SifRouter(r)

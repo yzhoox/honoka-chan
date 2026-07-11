@@ -9,6 +9,7 @@ import (
 	rankingschema "honoka-chan/internal/schema/ranking"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -103,7 +104,7 @@ func live(ctx *gin.Context) {
 			Page:       page,
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  200,
+		StatusCode:  http.StatusOK,
 	})
 }
 

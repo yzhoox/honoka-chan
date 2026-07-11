@@ -2,6 +2,7 @@ package greet
 
 import (
 	"errors"
+	"net/http"
 	"strings"
 	"time"
 
@@ -76,7 +77,7 @@ func user(ctx *gin.Context) {
 	ss.Respond(greetschema.EmptyResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

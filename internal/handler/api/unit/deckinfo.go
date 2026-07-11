@@ -3,6 +3,7 @@ package unit
 import (
 	unitapischema "honoka-chan/internal/schema/api/unit"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -46,7 +47,7 @@ func unitDeckInfo(ctx *gin.Context) (res any, err error) {
 	}
 	res = unitapischema.DeckInfoResp{
 		Result:     unitDeckInfo,
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

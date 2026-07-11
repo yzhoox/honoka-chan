@@ -8,6 +8,7 @@ import (
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
 	"math"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -322,7 +323,7 @@ func BuildPlayResp(ss *session.Session, playReq liveschema.PlayReq, isRandom boo
 			ServerTimestamp:     time.Now().Unix(),
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  200,
+		StatusCode:  http.StatusOK,
 	}, nil
 }
 

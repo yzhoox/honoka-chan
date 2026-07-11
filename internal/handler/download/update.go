@@ -64,7 +64,7 @@ func update(ctx *gin.Context) {
 	ss.Respond(downloadschema.UpdateResp{
 		ResponseData: pkgList,
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

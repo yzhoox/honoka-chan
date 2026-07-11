@@ -10,6 +10,7 @@ import (
 	liverecordschema "honoka-chan/internal/schema/liverecord"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -88,7 +89,7 @@ func preciseScore(ctx *gin.Context) {
 				ServerTimestamp:   time.Now().Unix(),
 			},
 			ReleaseInfo: []any{},
-			StatusCode:  200,
+			StatusCode:  http.StatusOK,
 		}
 	} else {
 		// 如果有 Live 记录
@@ -181,7 +182,7 @@ func preciseScore(ctx *gin.Context) {
 					ServerTimestamp:   time.Now().Unix(),
 				},
 				ReleaseInfo: []any{},
-				StatusCode:  200,
+				StatusCode:  http.StatusOK,
 			}
 		} else {
 			playResp = liveschema.PreciseScoreResp{
@@ -189,7 +190,7 @@ func preciseScore(ctx *gin.Context) {
 					ErrorCode: constant.ErrorCodeLivePreciseListNotFound,
 				},
 				ReleaseInfo: []any{},
-				StatusCode:  600,
+				StatusCode:  constant.ErrorCodeAcceptableError,
 			}
 		}
 	}

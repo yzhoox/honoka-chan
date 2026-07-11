@@ -5,6 +5,7 @@ import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
 	"honoka-chan/internal/session"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,7 +25,7 @@ func favoriteAccessory(ctx *gin.Context) {
 	ss.Respond(SetResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

@@ -3,6 +3,7 @@ package scenario
 import (
 	scenarioapischema "honoka-chan/internal/schema/api/scenario"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -28,7 +29,7 @@ func scenarioStatus(ctx *gin.Context) (res any, err error) {
 		Result: scenarioapischema.StatusData{
 			ScenarioStatusList: scenarioLists,
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

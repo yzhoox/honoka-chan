@@ -3,6 +3,7 @@ package multiunit
 import (
 	multiunitapischema "honoka-chan/internal/schema/api/multiunit"
 	"honoka-chan/internal/session"
+	"net/http"
 	"strings"
 	"time"
 
@@ -53,7 +54,7 @@ func MultiUnitScenarioStatus(ctx *gin.Context) (res any, err error) {
 			MultiUnitScenarioStatusList:  multiUnitsList,
 			UnlockedMultiUnitScenarioIds: []any{},
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

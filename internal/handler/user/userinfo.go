@@ -5,6 +5,7 @@ import (
 	"honoka-chan/internal/router"
 	userschema "honoka-chan/internal/schema/user"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +25,7 @@ func userInfo(ctx *gin.Context) {
 			ServerTimestamp: time.Now().Unix(),
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  200,
+		StatusCode:  http.StatusOK,
 	}
 
 	ss.Respond(userResp)

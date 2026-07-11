@@ -5,6 +5,7 @@ import (
 	"honoka-chan/internal/router"
 	liveschema "honoka-chan/internal/schema/live"
 	"honoka-chan/internal/session"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +26,7 @@ func BuildGameOverResp() liveschema.GameOverResp {
 	return liveschema.GameOverResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	}
 }
 

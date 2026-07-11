@@ -4,6 +4,7 @@ import (
 	userapischema "honoka-chan/internal/schema/api/user"
 	userschema "honoka-chan/internal/schema/user"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +21,7 @@ func userInfo(ctx *gin.Context) (res any, err error) {
 				BirthDay:   ss.UserPref.EffectiveBirthDay(),
 			},
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

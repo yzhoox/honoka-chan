@@ -7,6 +7,7 @@ import (
 	achievementschema "honoka-chan/internal/schema/achievement"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,7 +37,7 @@ func pagingAccomplishedList(ctx *gin.Context) {
 	ss.Respond(achievementschema.PagingAccomplishedListResp{
 		ResponseData: items[start:end],
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

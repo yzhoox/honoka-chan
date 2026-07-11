@@ -3,6 +3,7 @@ package stamp
 import (
 	stampapischema "honoka-chan/internal/schema/api/stamp"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 	"time"
 )
 
@@ -14,7 +15,7 @@ func stampInfo() (res any, err error) {
 
 	res = stampapischema.InfoResp{
 		Result:     stampData,
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

@@ -8,6 +8,7 @@ import (
 	downloadschema "honoka-chan/internal/schema/download"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -42,7 +43,7 @@ func additional(ctx *gin.Context) {
 	ss.Respond(downloadschema.AdditionalResp{
 		ResponseData: pkgList,
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

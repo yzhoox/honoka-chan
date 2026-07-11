@@ -3,6 +3,7 @@ package user
 import (
 	userapischema "honoka-chan/internal/schema/api/user"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +25,7 @@ func userGetNavi(ctx *gin.Context) (res any, err error) {
 				UnitOwningUserID: oID,
 			},
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

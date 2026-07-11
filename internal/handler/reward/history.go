@@ -5,6 +5,7 @@ import (
 	"honoka-chan/internal/router"
 	rewardschema "honoka-chan/internal/schema/reward"
 	"honoka-chan/internal/session"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +21,7 @@ func history(ctx *gin.Context) {
 			History:   []any{},
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  200,
+		StatusCode:  http.StatusOK,
 	})
 }
 

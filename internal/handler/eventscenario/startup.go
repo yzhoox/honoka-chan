@@ -6,6 +6,7 @@ import (
 	eventscenarioschema "honoka-chan/internal/schema/eventscenario"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,7 +24,7 @@ func startup(ctx *gin.Context) {
 	ss.Respond(eventscenarioschema.StartUpResp{
 		ResponseData: eventscenarioschema.StartUpData{},
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

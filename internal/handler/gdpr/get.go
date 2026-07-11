@@ -5,6 +5,7 @@ import (
 	"honoka-chan/internal/router"
 	gdprschema "honoka-chan/internal/schema/gdpr"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +22,7 @@ func get(ctx *gin.Context) {
 			ServerTimestamp: time.Now().Unix(),
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  200,
+		StatusCode:  http.StatusOK,
 	})
 }
 

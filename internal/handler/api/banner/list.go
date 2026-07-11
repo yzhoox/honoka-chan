@@ -2,6 +2,7 @@ package banner
 
 import (
 	bannerapischema "honoka-chan/internal/schema/api/banner"
+	"net/http"
 	"time"
 )
 
@@ -63,7 +64,7 @@ func bannerList() (res any, err error) {
 				},
 			},
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

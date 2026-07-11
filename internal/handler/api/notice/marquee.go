@@ -2,6 +2,7 @@ package notice
 
 import (
 	noticeapischema "honoka-chan/internal/schema/api/notice"
+	"net/http"
 	"time"
 )
 
@@ -11,7 +12,7 @@ func noticeMarquee() (res any, err error) {
 			ItemCount:   0,
 			MarqueeList: []any{},
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

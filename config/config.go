@@ -59,7 +59,7 @@ func Load(p string) *AppConfigs {
 }
 
 func (c *AppConfigs) Save(p string) error {
-	data, err := json.MarshalIndent(c, "", "	")
+	data, err := json.MarshalIndent(c, "", "    ")
 	if err != nil {
 		return err
 	}

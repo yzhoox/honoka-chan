@@ -3,6 +3,7 @@ package payment
 import (
 	paymentapischema "honoka-chan/internal/schema/api/payment"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -27,7 +28,7 @@ func productList(ctx *gin.Context) (res any, err error) {
 			SubscriptionList: []paymentapischema.Subscription{},
 			ShowPointShop:    false,
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

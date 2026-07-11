@@ -3,6 +3,7 @@ package museum
 import (
 	museumapischema "honoka-chan/internal/schema/api/museum"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -42,7 +43,7 @@ func museumInfo(ctx *gin.Context) (res any, err error) {
 				ContentsIDList: museumID,
 			},
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

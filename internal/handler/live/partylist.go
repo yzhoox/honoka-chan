@@ -6,6 +6,7 @@ import (
 	"honoka-chan/internal/router"
 	liveschema "honoka-chan/internal/schema/live"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -22,7 +23,7 @@ func partyList(ctx *gin.Context) {
 	ss.Respond(liveschema.PartyListResp{
 		ResponseData: partyListData,
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

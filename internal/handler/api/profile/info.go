@@ -6,6 +6,7 @@ import (
 	usermodel "honoka-chan/internal/model/user"
 	profileapischema "honoka-chan/internal/schema/api/profile"
 	"honoka-chan/internal/session"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -89,7 +90,7 @@ func profileInfo(ctx *gin.Context, targetUserID int) (res any, err error) {
 			SettingAwardID:      targetPref.AwardID,
 			SettingBackgroundID: targetPref.BackgroundID,
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

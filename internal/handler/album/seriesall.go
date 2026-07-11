@@ -5,6 +5,7 @@ import (
 	"honoka-chan/internal/router"
 	albumschema "honoka-chan/internal/schema/album"
 	"honoka-chan/internal/session"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -81,7 +82,7 @@ func seriesAll(ctx *gin.Context) {
 	ss.Respond(albumschema.SeriesAllResp{
 		ResponseData: albumSeriesAllRes,
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

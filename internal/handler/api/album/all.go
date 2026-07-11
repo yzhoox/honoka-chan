@@ -3,6 +3,7 @@ package album
 import (
 	albumapischema "honoka-chan/internal/schema/api/album"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -61,7 +62,7 @@ func albumAll(ctx *gin.Context) (res any, err error) {
 
 	res = albumapischema.AllResp{
 		Result:     albumLists,
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

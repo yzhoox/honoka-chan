@@ -7,6 +7,7 @@ import (
 	unitschema "honoka-chan/internal/schema/unit"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,7 +34,7 @@ func favorite(ctx *gin.Context) {
 	ss.Respond(unitschema.FavoriteResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

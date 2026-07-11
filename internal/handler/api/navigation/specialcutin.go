@@ -2,6 +2,7 @@ package navigation
 
 import (
 	navigationapischema "honoka-chan/internal/schema/api/navigation"
+	"net/http"
 	"time"
 )
 
@@ -10,7 +11,7 @@ func SpecialCutin() (res any, err error) {
 		Result: navigationapischema.SpecialCutinData{
 			SpecialCutinList: []any{},
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

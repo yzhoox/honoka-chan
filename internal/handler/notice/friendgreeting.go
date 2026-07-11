@@ -7,6 +7,7 @@ import (
 	noticeschema "honoka-chan/internal/schema/notice"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -80,7 +81,7 @@ func friendGreeting(ctx *gin.Context) {
 			ServerTimestamp: time.Now().Unix(),
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  200,
+		StatusCode:  http.StatusOK,
 	})
 }
 

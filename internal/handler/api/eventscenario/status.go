@@ -4,6 +4,7 @@ import (
 	"fmt"
 	eventscenarioapischema "honoka-chan/internal/schema/api/eventscenario"
 	"honoka-chan/internal/session"
+	"net/http"
 	"strings"
 	"time"
 
@@ -71,7 +72,7 @@ func eventScenarioStatus(ctx *gin.Context) (res any, err error) {
 		Result: eventscenarioapischema.StatusData{
 			EventScenarioList: eventsList,
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

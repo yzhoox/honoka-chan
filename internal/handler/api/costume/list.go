@@ -2,6 +2,7 @@ package costume
 
 import (
 	costumeapischema "honoka-chan/internal/schema/api/costume"
+	"net/http"
 	"time"
 )
 
@@ -10,7 +11,7 @@ func costumeList() (res any, err error) {
 		Result: costumeapischema.ListData{
 			CostumeList: []costumeapischema.CostumeList{},
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

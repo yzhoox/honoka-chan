@@ -12,6 +12,7 @@ import (
 	honokautils "honoka-chan/internal/utils"
 	pkgutils "honoka-chan/pkg/utils"
 	"math/big"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -67,7 +68,7 @@ func lot(ctx *gin.Context) {
 			Token:             randomLive.Token,
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  200,
+		StatusCode:  http.StatusOK,
 	})
 }
 

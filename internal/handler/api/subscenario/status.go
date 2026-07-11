@@ -3,6 +3,7 @@ package subscenario
 import (
 	subscenarioapischema "honoka-chan/internal/schema/api/subscenario"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -29,7 +30,7 @@ func subscenarioStatus(ctx *gin.Context) (res any, err error) {
 			SubscenarioStatusList:  subScenarioLists,
 			UnlockedSubscenarioIds: []any{},
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

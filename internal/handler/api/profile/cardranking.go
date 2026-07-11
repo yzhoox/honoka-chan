@@ -3,6 +3,7 @@ package profile
 import (
 	profileapischema "honoka-chan/internal/schema/api/profile"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 	"time"
 )
 
@@ -14,7 +15,7 @@ func cardRanking() (res any, err error) {
 
 	res = profileapischema.CardRankingResp{
 		Result:     cardRankingData,
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

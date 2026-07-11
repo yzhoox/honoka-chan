@@ -9,6 +9,7 @@ import (
 	"honoka-chan/internal/session"
 	"honoka-chan/pkg/encrypt"
 	utils "honoka-chan/pkg/utils"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -51,7 +52,7 @@ func authKey(ctx *gin.Context) {
 			DummyToken:     serverToken,
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  200,
+		StatusCode:  http.StatusOK,
 	})
 }
 

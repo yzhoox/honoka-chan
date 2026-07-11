@@ -3,6 +3,7 @@ package unit
 import (
 	unitapischema "honoka-chan/internal/schema/api/unit"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -67,7 +68,7 @@ func unitRemovableSkillInfo(ctx *gin.Context) (res any, err error) {
 			OwningInfo:    owingInfo,
 			EquipmentInfo: equipInfo,
 		}, // 宝石
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

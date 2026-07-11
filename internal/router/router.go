@@ -2,9 +2,7 @@
 package router
 
 import (
-	"honoka-chan/internal/constant"
-	commonschema "honoka-chan/internal/schema/common"
-	"honoka-chan/internal/session"
+	honokautils "honoka-chan/internal/utils"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -113,16 +111,12 @@ func SifRouter(r *gin.Engine) {
 	})
 
 	notFoundHandler := func(ctx *gin.Context) {
-		ss := session.Attach(ctx)
-		defer ss.Finalize()
+		if !honokautils.IsMainPHPRequest(ctx.Request.URL.Path) {
+			ctx.AbortWithStatus(http.StatusNotFound)
+			return
+		}
 
-		ss.Respond(commonschema.ErrorResp{
-			ResponseData: commonschema.ErrorData{
-				ErrorCode: constant.ErrorCodeUnknown,
-			},
-			ReleaseInfo: []any{},
-			StatusCode:  600,
-		})
+		honokautils.AbortMaintenanceJSON(ctx, http.StatusNotFound, honokautils.NewNotFoundContent(ctx.Request.URL.String()))
 	}
 	r.NoRoute(notFoundHandler)
 	r.NoMethod(notFoundHandler)

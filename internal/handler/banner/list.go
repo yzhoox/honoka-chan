@@ -5,6 +5,7 @@ import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
 	"honoka-chan/internal/session"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,7 +34,7 @@ func list(ctx *gin.Context) {
 	ss.Respond(bannerResp{
 		ResponseData: extractBannerResult(data),
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

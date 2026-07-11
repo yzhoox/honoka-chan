@@ -3,6 +3,7 @@ package item
 import (
 	itemapischema "honoka-chan/internal/schema/api/item"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 	"time"
 )
 
@@ -14,7 +15,7 @@ func itemList() (res any, err error) {
 
 	res = itemapischema.ListResp{
 		Result:     itemData,
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

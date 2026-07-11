@@ -7,6 +7,7 @@ import (
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
 	"honoka-chan/pkg/db"
+	"net/http"
 	"sort"
 	"time"
 )
@@ -21,7 +22,7 @@ func loadSecretBoxAllData() (secretboxapischema.AllResp, error) {
 
 	return secretboxapischema.AllResp{
 		Result:     data,
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}, nil

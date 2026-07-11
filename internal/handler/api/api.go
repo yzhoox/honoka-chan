@@ -1,7 +1,6 @@
 package api
 
 import (
-	"honoka-chan/internal/constant"
 	"honoka-chan/internal/handler/api/achievement"
 	"honoka-chan/internal/handler/api/album"
 	"honoka-chan/internal/handler/api/award"
@@ -33,10 +32,9 @@ import (
 	"honoka-chan/internal/middleware"
 	"honoka-chan/internal/router"
 	apischema "honoka-chan/internal/schema/api"
-	commonschema "honoka-chan/internal/schema/common"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
-	"time"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -117,15 +115,8 @@ func api(ctx *gin.Context) {
 		}
 
 		if honokautils.IsUnimplementedError(err) {
-			results = append(results, commonschema.ApiErrorResp{
-				Result: commonschema.ErrorData{
-					ErrorCode: constant.ErrorCodeUnknown,
-				},
-				Status:     600,
-				CommandNum: false,
-				TimeStamp:  time.Now().Unix(),
-			})
-			continue
+			ss.AbortWithStatus(http.StatusNotFound, honokautils.NewDetailContent(err.Error()))
+			return
 		}
 		if ss.CheckErr(err) {
 			return
@@ -136,7 +127,7 @@ func api(ctx *gin.Context) {
 	apiResp := apischema.ApiResp{
 		ResponseData: results,
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	}
 
 	ss.Respond(apiResp)

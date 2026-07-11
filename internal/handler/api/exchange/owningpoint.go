@@ -3,6 +3,7 @@ package exchange
 import (
 	exchangeapischema "honoka-chan/internal/schema/api/exchange"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -28,7 +29,7 @@ func owningPoint(ctx *gin.Context) (res any, err error) {
 		Result: exchangeapischema.OwningPointData{
 			ExchangePointList: exPointsList,
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

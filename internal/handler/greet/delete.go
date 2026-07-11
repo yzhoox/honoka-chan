@@ -2,6 +2,7 @@ package greet
 
 import (
 	"errors"
+	"net/http"
 
 	"honoka-chan/internal/middleware"
 	usermodel "honoka-chan/internal/model/user"
@@ -57,7 +58,7 @@ func deleteMail(ctx *gin.Context) {
 	ss.Respond(greetschema.EmptyResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

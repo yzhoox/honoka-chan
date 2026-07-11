@@ -3,6 +3,7 @@ package background
 import (
 	backgroundapischema "honoka-chan/internal/schema/api/background"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -40,7 +41,7 @@ func backgroundInfo(ctx *gin.Context) (res any, err error) {
 		Result: backgroundapischema.InfoData{
 			BackgroundInfo: backgroundsList,
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

@@ -6,6 +6,7 @@ import (
 	subscenarioschema "honoka-chan/internal/schema/subscenario"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -28,7 +29,7 @@ func startup(ctx *gin.Context) {
 			ServerTimestamp:    time.Now().Unix(),
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  200,
+		StatusCode:  http.StatusOK,
 	})
 }
 

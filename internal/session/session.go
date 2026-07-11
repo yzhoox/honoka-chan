@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	usermodel "honoka-chan/internal/model/user"
+	honokautils "honoka-chan/internal/utils"
 	"honoka-chan/pkg/db"
 	"honoka-chan/pkg/encrypt"
 	"log"
@@ -81,24 +82,19 @@ func (ss *Session) Finalize() {
 	}
 	ss.done = true
 
-	if ss.MainEng != nil {
-		ss.MainEng.Close()
-		ss.MainEng = nil
-	}
-
 	if ss.UserEng == nil {
+		ss.closeMainSession()
 		return
 	}
 
 	if err := ss.UserEng.Commit(); err != nil {
 		log.Println(err.Error())
-		ss.UserEng.Close()
-		ss.UserEng = nil
-		ss.resp.writeJSON(500, gin.H{"error": err.Error()})
-		ss.resp.abort()
+		ss.closeAllSessions(false)
+		ss.respondError(http.StatusInternalServerError, honokautils.NewInternalErrorContent(err))
 		return
 	}
 
+	ss.closeMainSession()
 	ss.UserEng.Close()
 	ss.UserEng = nil
 }
@@ -107,23 +103,25 @@ func (ss *Session) Abort(err error) {
 	if ss.done {
 		return
 	}
-	ss.done = true
 
-	if ss.MainEng != nil {
-		ss.MainEng.Close()
-		ss.MainEng = nil
-	}
-	if ss.UserEng != nil {
-		ss.UserEng.Rollback()
-		ss.UserEng.Close()
-		ss.UserEng = nil
-	}
+	msg := ss.formatAbortMessage(err)
+	log.Println(msg)
+	ss.abortWithContent(http.StatusInternalServerError, honokautils.NewErrorContent("SessionAbort", msg))
+}
 
-	skip := 1
-	if pc, _, _, ok := runtime.Caller(1); ok {
+func (ss *Session) AbortWithStatus(status int, content any) {
+	if ss.done {
+		return
+	}
+	ss.abortWithContent(status, content)
+}
+
+func (ss *Session) formatAbortMessage(err error) string {
+	skip := 2
+	if pc, _, _, ok := runtime.Caller(2); ok {
 		fn := runtime.FuncForPC(pc)
 		if fn != nil && strings.HasSuffix(fn.Name(), ".(*Session).CheckErr") {
-			skip = 2
+			skip = 3
 		}
 	}
 	loc := "unknown"
@@ -135,11 +133,7 @@ func (ss *Session) Abort(err error) {
 		}
 		loc = fmt.Sprintf("%s:%d (%s)", file, line, funcName)
 	}
-	msg := fmt.Sprintf("[%s] %s", loc, err.Error())
-	log.Println(msg)
-
-	ss.resp.writeJSON(500, gin.H{"error": msg})
-	ss.resp.abort()
+	return fmt.Sprintf("[%s] %s", loc, err.Error())
 }
 
 func (ss *Session) CheckErr(err error) bool {
@@ -160,4 +154,34 @@ func (ss *Session) Respond(resp any) {
 	ss.resp.setHeader("Content-Type", "application/json")
 	ss.resp.setHeader("X-Message-Sign", base64.StdEncoding.EncodeToString(encrypt.RSASignSHA1(data)))
 	ss.resp.writeBody(http.StatusOK, string(data))
+}
+
+func (ss *Session) abortWithContent(status int, content any) {
+	ss.done = true
+	ss.closeAllSessions(true)
+	ss.respondError(status, content)
+}
+
+func (ss *Session) respondError(status int, content any) {
+	honokautils.WriteMaintenanceJSON(ss.resp.setHeader, ss.resp.writeJSON, status, content)
+	ss.resp.abort()
+}
+
+func (ss *Session) closeAllSessions(rollbackUser bool) {
+	ss.closeMainSession()
+	if ss.UserEng == nil {
+		return
+	}
+	if rollbackUser {
+		_ = ss.UserEng.Rollback()
+	}
+	ss.UserEng.Close()
+	ss.UserEng = nil
+}
+
+func (ss *Session) closeMainSession() {
+	if ss.MainEng != nil {
+		ss.MainEng.Close()
+		ss.MainEng = nil
+	}
 }

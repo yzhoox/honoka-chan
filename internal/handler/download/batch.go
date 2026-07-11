@@ -8,6 +8,7 @@ import (
 	downloadschema "honoka-chan/internal/schema/download"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"xorm.io/builder"
@@ -57,7 +58,7 @@ func batch(ctx *gin.Context) {
 	ss.Respond(downloadschema.BatchResp{
 		ResponseData: pkgList,
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

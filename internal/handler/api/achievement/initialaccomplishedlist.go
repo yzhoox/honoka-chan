@@ -3,6 +3,7 @@ package achievement
 import (
 	achievementapischema "honoka-chan/internal/schema/api/achievement"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -37,7 +38,7 @@ func initialAccomplishedList(ctx *gin.Context) (res any, err error) {
 
 	return achievementapischema.UnaccomplishListResp{
 		Result:     listData,
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}, nil

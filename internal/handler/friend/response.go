@@ -8,6 +8,7 @@ import (
 	friendschema "honoka-chan/internal/schema/friend"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -59,7 +60,7 @@ func response(ctx *gin.Context) {
 	ss.Respond(friendschema.ResponseResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

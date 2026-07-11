@@ -5,6 +5,7 @@ import (
 	"honoka-chan/internal/router"
 	announceschema "honoka-chan/internal/schema/announce"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +21,7 @@ func checkState(ctx *gin.Context) {
 			ServerTimestamp:   time.Now().Unix(),
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  200,
+		StatusCode:  http.StatusOK,
 	})
 }
 

@@ -3,6 +3,7 @@ package login
 import (
 	loginapischema "honoka-chan/internal/schema/api/login"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -36,7 +37,7 @@ func loginTopInfoOnce(ctx *gin.Context) (res any, err error) {
 			ArenaSiSkillUniqueCheck: true,
 			OpenV98:                 true,
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

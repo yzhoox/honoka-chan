@@ -6,6 +6,7 @@ import (
 	paymentapischema "honoka-chan/internal/schema/api/payment"
 	paymentschema "honoka-chan/internal/schema/payment"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -33,7 +34,7 @@ func productList(ctx *gin.Context) {
 			ServerTimestamp:  time.Now().Unix(),
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  200,
+		StatusCode:  http.StatusOK,
 	}
 
 	ss.Respond(prodResp)

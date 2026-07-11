@@ -6,6 +6,7 @@ import (
 	"honoka-chan/internal/router"
 	awardschema "honoka-chan/internal/schema/award"
 	"honoka-chan/internal/session"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
@@ -28,7 +29,7 @@ func set(ctx *gin.Context) {
 	ss.Respond(awardschema.SetResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

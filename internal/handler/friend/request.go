@@ -8,6 +8,7 @@ import (
 	friendschema "honoka-chan/internal/schema/friend"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -41,7 +42,7 @@ func request(ctx *gin.Context) {
 				IsFriend: true,
 			},
 			ReleaseInfo: []any{},
-			StatusCode:  200,
+			StatusCode:  http.StatusOK,
 		})
 		return
 	}
@@ -75,7 +76,7 @@ func request(ctx *gin.Context) {
 				IsFriend: true,
 			},
 			ReleaseInfo: []any{},
-			StatusCode:  200,
+			StatusCode:  http.StatusOK,
 		})
 		return
 	}
@@ -94,7 +95,7 @@ func request(ctx *gin.Context) {
 			IsFriend: false,
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  200,
+		StatusCode:  http.StatusOK,
 	})
 }
 

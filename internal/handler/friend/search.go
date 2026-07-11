@@ -9,6 +9,7 @@ import (
 	friendschema "honoka-chan/internal/schema/friend"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -112,7 +113,7 @@ func search(ctx *gin.Context) {
 			ServerTimestamp: time.Now().Unix(),
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  200,
+		StatusCode:  http.StatusOK,
 	})
 }
 

@@ -6,6 +6,7 @@ import (
 	secretboxschema "honoka-chan/internal/schema/secretbox"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,7 +29,7 @@ func multi(ctx *gin.Context) {
 	ss.Respond(secretboxschema.MultiResp{
 		ResponseData: data,
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

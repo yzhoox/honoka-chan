@@ -2,6 +2,7 @@ package achievement
 
 import (
 	achievementapischema "honoka-chan/internal/schema/api/achievement"
+	"net/http"
 	"time"
 )
 
@@ -18,7 +19,7 @@ func unaccomplishList() (res any, err error) {
 
 	res = achievementapischema.UnaccomplishListResp{
 		Result:     listData,
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

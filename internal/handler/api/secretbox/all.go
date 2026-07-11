@@ -3,6 +3,7 @@ package secretbox
 import (
 	secretboxapischema "honoka-chan/internal/schema/api/secretbox"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 	"time"
 )
 
@@ -35,7 +36,7 @@ func all() (res any, err error) {
 
 	res = secretboxapischema.AllResp{
 		Result:     secretBoxData,
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

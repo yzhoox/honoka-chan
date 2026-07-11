@@ -20,7 +20,7 @@ func sellUnit(ctx *gin.Context) {
 			ErrorCode: constant.ErrorCodeNoUnitIsSellable,
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  600,
+		StatusCode:  constant.ErrorCodeAcceptableError,
 	})
 }
 

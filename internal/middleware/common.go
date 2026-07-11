@@ -3,6 +3,7 @@ package middleware
 import (
 	"fmt"
 	"honoka-chan/internal/session"
+	honokautils "honoka-chan/internal/utils"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -31,7 +32,7 @@ func Common(ctx *gin.Context) {
 
 	if ctx.Request.URL.Path != "/login/authkey" && ctx.Request.URL.Path != "/login/login" {
 		if ss.UserPref.ForceRelogin {
-			ctx.AbortWithStatus(http.StatusNotFound)
+			honokautils.AbortMaintenanceJSON(ctx, http.StatusNotFound, honokautils.NewNotFoundContent(ctx.Request.URL.String()))
 			return
 		}
 	}
@@ -39,7 +40,7 @@ func Common(ctx *gin.Context) {
 	authorize := ctx.GetHeader("Authorize")
 	params, err := url.ParseQuery(authorize)
 	if err != nil {
-		ctx.AbortWithStatus(http.StatusNotFound)
+		honokautils.AbortMaintenanceJSON(ctx, http.StatusNotFound, honokautils.NewNotFoundContent(ctx.Request.URL.String()))
 		return
 	}
 
@@ -58,7 +59,7 @@ func Common(ctx *gin.Context) {
 	ctx.Header("server_version", "20120129")
 	ctx.Header("Server-Version", "97.4.6")
 	ctx.Header("version_up", "0")
-	ctx.Header("status_code", "200")
+	ctx.Header("status_code", strconv.Itoa(http.StatusOK))
 
 	ctx.Next()
 }

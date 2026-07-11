@@ -3,6 +3,7 @@ package award
 import (
 	awardapischema "honoka-chan/internal/schema/api/award"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -40,7 +41,7 @@ func awardInfo(ctx *gin.Context) (res any, err error) {
 		Result: awardapischema.InfoData{
 			AwardInfo: awardsList,
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

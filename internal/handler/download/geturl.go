@@ -8,6 +8,7 @@ import (
 	downloadschema "honoka-chan/internal/schema/download"
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -34,7 +35,7 @@ func getUrl(ctx *gin.Context) {
 			UrlList: urlList,
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  200,
+		StatusCode:  http.StatusOK,
 	})
 }
 

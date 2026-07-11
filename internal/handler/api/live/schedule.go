@@ -3,6 +3,7 @@ package live
 import (
 	liveapischema "honoka-chan/internal/schema/api/live"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -36,7 +37,7 @@ func liveSchedule(ctx *gin.Context) (res any, err error) {
 			FreeLiveList:           []any{},
 			TrainingLiveList:       []liveapischema.TrainingLiveList{},
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

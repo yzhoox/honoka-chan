@@ -2,6 +2,7 @@ package reward
 
 import (
 	rewardapischema "honoka-chan/internal/schema/api/reward"
+	"net/http"
 	"time"
 )
 
@@ -12,7 +13,7 @@ func rewardHistory() (res any, err error) {
 			Limit:     20,
 			History:   []any{},
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}

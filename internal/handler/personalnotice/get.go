@@ -5,6 +5,7 @@ import (
 	"honoka-chan/internal/router"
 	personalnoticeschema "honoka-chan/internal/schema/personalnotice"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +25,7 @@ func get(ctx *gin.Context) {
 			ServerTimestamp: time.Now().Unix(),
 		},
 		ReleaseInfo: []any{},
-		StatusCode:  200,
+		StatusCode:  http.StatusOK,
 	}
 
 	ss.Respond(noticeResp)

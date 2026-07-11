@@ -10,6 +10,7 @@ import (
 	"honoka-chan/internal/session"
 	honokautils "honoka-chan/internal/utils"
 	"math/rand"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -33,7 +34,7 @@ func pon(ctx *gin.Context) {
 	ss.Respond(secretboxschema.PonResp{
 		ResponseData: data,
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

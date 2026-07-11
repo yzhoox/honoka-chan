@@ -5,6 +5,7 @@ import (
 	"honoka-chan/internal/router"
 	downloadschema "honoka-chan/internal/schema/download"
 	"honoka-chan/internal/session"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,7 +17,7 @@ func event(ctx *gin.Context) {
 	ss.Respond(downloadschema.EventResp{
 		ResponseData: []any{},
 		ReleaseInfo:  []any{},
-		StatusCode:   200,
+		StatusCode:   http.StatusOK,
 	})
 }
 

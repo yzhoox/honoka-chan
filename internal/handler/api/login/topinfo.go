@@ -4,6 +4,7 @@ import (
 	usermodel "honoka-chan/internal/model/user"
 	loginapischema "honoka-chan/internal/schema/api/login"
 	"honoka-chan/internal/session"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -68,7 +69,7 @@ func loginTopInfo(ctx *gin.Context) (res any, err error) {
 			AdFlag:            false,
 			HasAdReward:       false,
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  now.Unix(),
 	}

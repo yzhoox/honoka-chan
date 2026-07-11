@@ -3,6 +3,7 @@ package unit
 import (
 	unitapischema "honoka-chan/internal/schema/api/unit"
 	honokautils "honoka-chan/internal/utils"
+	"net/http"
 	"time"
 )
 
@@ -16,7 +17,7 @@ func unitAccessoryTab() (res any, err error) {
 		Result: unitapischema.AccessoryTabData{
 			TabList: tabList,
 		},
-		Status:     200,
+		Status:     http.StatusOK,
 		CommandNum: false,
 		TimeStamp:  time.Now().Unix(),
 	}
