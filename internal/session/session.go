@@ -53,13 +53,16 @@ func New(ctx *gin.Context) *Session {
 	ss.UserEng = db.UserEng.NewSession()
 	ss.UserEng.Begin()
 
-	userID := ctx.GetString("userid")
-	if userID != "" {
-		ss.UserPref = ss.GetUserPref(userID)
-		ss.UserID = ss.UserPref.UserID
-	}
-
 	return ss
+}
+
+func (ss *Session) LoadUser(userID string) {
+	ss.UserPref = ss.GetUserPref(userID)
+	ss.UserID = ss.UserPref.UserID
+}
+
+func (ss *Session) Done() bool {
+	return ss.done
 }
 
 func Get(ctx *gin.Context) *Session {

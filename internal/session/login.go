@@ -19,3 +19,13 @@ func (ss *Session) SetAuthKey(authKey *loginmodel.AuthKey) {
 		return
 	}
 }
+
+func (ss *Session) IsAuthorizeTokenForUser(token string, userID int) (bool, error) {
+	if token == "" || userID <= 0 {
+		return false, nil
+	}
+
+	return ss.UserEng.Table(new(loginmodel.AuthKey)).
+		Where("authorize_token = ? AND user_id = ?", token, userID).
+		Exist()
+}

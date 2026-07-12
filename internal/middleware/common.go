@@ -25,7 +25,6 @@ func Common(ctx *gin.Context) {
 	ctx.Set("request_data", reqData)
 
 	uid := ctx.GetHeader("User-ID")
-	ctx.Set("userid", uid)
 
 	ss := session.Attach(ctx)
 	ctx.Set("session", ss)
@@ -33,13 +32,6 @@ func Common(ctx *gin.Context) {
 
 	if ctx.IsAborted() {
 		return
-	}
-
-	if !honokautils.IsMainLoginEndpoint(ctx.Request.URL.Path) {
-		if ss.UserPref.ForceRelogin {
-			ss.AbortWithStatus(http.StatusNotFound, honokautils.NewNotFoundContent(ctx.Request.URL.Path))
-			return
-		}
 	}
 
 	authorize := ctx.GetHeader("Authorize")
@@ -55,6 +47,34 @@ func Common(ctx *gin.Context) {
 
 	token := params.Get("token")
 	ctx.Set("token", token)
+
+	if !honokautils.IsMainLoginEndpoint(ctx.Request.URL.Path) {
+		userID, err := strconv.Atoi(uid)
+		if err != nil || userID <= 0 {
+			ss.AbortWithStatus(http.StatusNotFound, honokautils.NewNotFoundContent(ctx.Request.URL.Path))
+			return
+		}
+
+		valid, err := ss.IsAuthorizeTokenForUser(token, userID)
+		if ss.CheckErr(err) {
+			return
+		}
+		if !valid {
+			ss.AbortWithStatus(http.StatusNotFound, honokautils.NewNotFoundContent(ctx.Request.URL.Path))
+			return
+		}
+
+		ctx.Set("userid", uid)
+		ss.LoadUser(uid)
+		if ss.Done() {
+			return
+		}
+
+		if ss.UserPref.ForceRelogin {
+			ss.AbortWithStatus(http.StatusNotFound, honokautils.NewNotFoundContent(ctx.Request.URL.Path))
+			return
+		}
+	}
 
 	ctx.Header("user_id", uid)
 	ctx.Header("authorize", fmt.Sprintf("consumerKey=lovelive_test&timeStamp=%d&version=1.1&token=%s&nonce=%d&user_id=%s&requestTimeStamp=%d", time.Now().Unix(), token, nonce, uid, time.Now().Unix()))

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"honoka-chan/internal/middleware"
+	loginmodel "honoka-chan/internal/model/login"
 	usermodel "honoka-chan/internal/model/user"
 	"honoka-chan/internal/router"
 	loginschema "honoka-chan/internal/schema/login"
@@ -71,6 +72,15 @@ func login(ctx *gin.Context) {
 	}
 
 	if err := usermodel.ClearUserForceRelogin(ss.UserEng, userID); ss.CheckErr(err) {
+		return
+	}
+
+	ss.SetAuthKey(&loginmodel.AuthKey{
+		AuthorizeToken: authorizeToken,
+		UserID:         userID,
+		InsertDate:     time.Now().Format("2006-01-02 15:04:05"),
+	})
+	if ss.Done() {
 		return
 	}
 
