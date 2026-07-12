@@ -33,7 +33,10 @@ func handshake(ctx *gin.Context) {
 		return
 	}
 
-	decryptedData := encrypt.RSADecrypt(data)
+	decryptedData, err := encrypt.RSADecrypt(data)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	params, err := url.ParseQuery(string(decryptedData))
 	if ss.CheckErr(err) {

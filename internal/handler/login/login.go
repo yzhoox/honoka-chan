@@ -41,6 +41,10 @@ func login(ctx *gin.Context) {
 	}
 
 	xmcKey := utils.XOR(clientToken, serverToken)
+	if len(xmcKey) < 16 {
+		ss.Abort(errors.New("invalid login token data"))
+		return
+	}
 	aesKey := xmcKey[0:16]
 
 	reqData := gjson.Parse(ctx.MustGet("request_data").(string))
@@ -48,7 +52,15 @@ func login(ctx *gin.Context) {
 	if ss.CheckErr(err) {
 		return
 	}
-	loginKey := encrypt.AESCBCDecrypt(key, aesKey)[16:]
+	decryptedLoginKey, err := encrypt.AESCBCDecrypt(key, aesKey)
+	if ss.CheckErr(err) {
+		return
+	}
+	if len(decryptedLoginKey) < 16 {
+		ss.Abort(errors.New("invalid login key"))
+		return
+	}
+	loginKey := decryptedLoginKey[16:]
 	// fmt.Println("loginKey", string(loginKey))
 
 	// password, err := base64.StdEncoding.DecodeString(reqData.Get("login_passwd").String())

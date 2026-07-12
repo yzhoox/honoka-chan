@@ -25,7 +25,10 @@ func authKey(ctx *gin.Context) {
 	if ss.CheckErr(err) {
 		return
 	}
-	dummyTokenDecrypted := encrypt.RSADecrypt(dummyToken)
+	dummyTokenDecrypted, err := encrypt.RSADecrypt(dummyToken)
+	if ss.CheckErr(err) {
+		return
+	}
 
 	// aesKey := dummyTokenDecrypted[0:16]
 	// authData, err := base64.StdEncoding.DecodeString(reqData.Get("auth_data").String())

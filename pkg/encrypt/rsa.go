@@ -7,6 +7,7 @@ import (
 	"crypto/sha1"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"honoka-chan/config"
 	"os"
 	"path/filepath"
@@ -75,100 +76,67 @@ func RSAGen(bits int) {
 	pem.Encode(publickeyfile, &publickeyblock)
 }
 
-func RSAEncrypt(plainText []byte, publickeypath string) []byte {
-	//open publickeyfile
-	publickeyfile, err := os.Open(publickeypath)
+func RSAEncrypt(plainText []byte, publickeypath string) ([]byte, error) {
+	data, err := os.ReadFile(publickeypath)
 	if err != nil {
-		panic(err)
-	}
-	defer publickeyfile.Close()
-
-	//get publickeyfile info
-	publickeyfileInfo, _ := publickeyfile.Stat()
-
-	//read publickeyfile content
-	//1. make size
-	buf := make([]byte, publickeyfileInfo.Size())
-	//2. read file to buf
-	publickeyfile.Read(buf)
-	//3. decode pem
-	publickeyDecodeBlock, _ := pem.Decode(buf)
-	//4. x509 decode
-	publicKeyInterface, err := x509.ParsePKIXPublicKey(publickeyDecodeBlock.Bytes)
-	if err != nil {
-		panic(err)
-	}
-	//assert
-	publicKey := publicKeyInterface.(*rsa.PublicKey)
-
-	//encrypt plainText
-	cipherText, err := rsa.EncryptPKCS1v15(rand.Reader, publicKey, plainText)
-	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return cipherText
+	block, _ := pem.Decode(data)
+	if block == nil {
+		return nil, fmt.Errorf("invalid RSA public key PEM")
+	}
+	parsedKey, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	publicKey, ok := parsedKey.(*rsa.PublicKey)
+	if !ok {
+		return nil, fmt.Errorf("PEM does not contain an RSA public key")
+	}
+
+	return rsa.EncryptPKCS1v15(rand.Reader, publicKey, plainText)
 }
 
-func RSADecrypt(cipherText []byte) []byte {
-	//open privatekeyfile
-	privatekeyfile, err := os.Open(config.PrivateKeyPath)
+func RSADecrypt(cipherText []byte) ([]byte, error) {
+	privateKey, err := loadPrivateKey()
 	if err != nil {
-		panic(err)
-	}
-	defer privatekeyfile.Close()
-	//get privatekeyfile content
-	privatekeyinfo, _ := privatekeyfile.Stat()
-	buf := make([]byte, privatekeyinfo.Size())
-	privatekeyfile.Read(buf)
-	//pem decode
-	privatekeyblock, _ := pem.Decode(buf)
-	//X509 decode
-	parseKey, err := x509.ParsePKCS8PrivateKey(privatekeyblock.Bytes)
-	if err != nil {
-		panic(err)
-	}
-	privateKey := parseKey.(*rsa.PrivateKey)
-	//decrypt the cipher
-	plainText, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, cipherText)
-	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return plainText
+	return rsa.DecryptPKCS1v15(rand.Reader, privateKey, cipherText)
 }
 
-func RSASignSHA1(cipherText []byte) []byte {
-	//open privatekeyfile
-	privatekeyfile, err := os.Open(config.PrivateKeyPath)
+func RSASignSHA1(cipherText []byte) ([]byte, error) {
+	privateKey, err := loadPrivateKey()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	defer privatekeyfile.Close()
-	//get privatekeyfile content
-	privatekeyinfo, _ := privatekeyfile.Stat()
-	buf := make([]byte, privatekeyinfo.Size())
-	privatekeyfile.Read(buf)
-	//pem decode
-	privatekeyblock, _ := pem.Decode(buf)
-	//X509 decode
-	parseKey, err := x509.ParsePKCS8PrivateKey(privatekeyblock.Bytes)
-	if err != nil {
-		panic(err)
-	}
-	privateKey := parseKey.(*rsa.PrivateKey)
 
 	msgHash := sha1.New()
-	_, err = msgHash.Write(cipherText)
-	if err != nil {
-		panic(err)
-	}
+	_, _ = msgHash.Write(cipherText)
 	msgHashSum := msgHash.Sum(nil)
 
-	signature, err := rsa.SignPSS(rand.Reader, privateKey, crypto.SHA1, msgHashSum, nil)
+	return rsa.SignPSS(rand.Reader, privateKey, crypto.SHA1, msgHashSum, nil)
+}
+
+func loadPrivateKey() (*rsa.PrivateKey, error) {
+	data, err := os.ReadFile(config.PrivateKeyPath)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return signature
+	block, _ := pem.Decode(data)
+	if block == nil {
+		return nil, fmt.Errorf("invalid RSA private key PEM")
+	}
+	parsedKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	privateKey, ok := parsedKey.(*rsa.PrivateKey)
+	if !ok {
+		return nil, fmt.Errorf("PEM does not contain an RSA private key")
+	}
+	return privateKey, nil
 }

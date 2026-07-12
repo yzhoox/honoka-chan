@@ -186,13 +186,21 @@ func (ss *Session) CheckErr(err error) bool {
 }
 
 func (ss *Session) Respond(resp any) {
+	if ss.done {
+		return
+	}
+
 	data, err := json.Marshal(resp)
 	if ss.CheckErr(err) {
 		return
 	}
 
 	ss.resp.setHeader("Content-Type", "application/json")
-	ss.resp.setHeader("X-Message-Sign", base64.StdEncoding.EncodeToString(encrypt.RSASignSHA1(data)))
+	signature, err := encrypt.RSASignSHA1(data)
+	if ss.CheckErr(err) {
+		return
+	}
+	ss.resp.setHeader("X-Message-Sign", base64.StdEncoding.EncodeToString(signature))
 	ss.resp.writeBody(http.StatusOK, string(data))
 }
 
