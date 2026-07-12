@@ -51,7 +51,9 @@ func New(ctx *gin.Context) *Session {
 
 	ss.MainEng = db.MainEng.NewSession()
 	ss.UserEng = db.UserEng.NewSession()
-	ss.UserEng.Begin()
+	if err := ss.UserEng.Begin(); err != nil {
+		ss.Abort(err)
+	}
 
 	return ss
 }

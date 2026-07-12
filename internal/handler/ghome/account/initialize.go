@@ -14,6 +14,9 @@ import (
 
 func initialize(ctx *gin.Context) {
 	ss := session.Attach(ctx)
+	if ss.Done() {
+		return
+	}
 	defer ss.FinalizeOrRollback()
 
 	initData := ghomeschema.InitializeData{

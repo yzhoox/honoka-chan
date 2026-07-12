@@ -16,6 +16,9 @@ import (
 
 func loginAuto(ctx *gin.Context) {
 	ss := session.Attach(ctx)
+	if ss.Done() {
+		return
+	}
 	defer ss.FinalizeOrRollback()
 
 	data, err := ctx.GetRawData()
