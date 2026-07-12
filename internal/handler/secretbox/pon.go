@@ -18,7 +18,7 @@ import (
 
 func pon(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	ponReq := secretboxschema.PonReq{}
 	err := honokautils.ParseRequestData(ctx, &ponReq)

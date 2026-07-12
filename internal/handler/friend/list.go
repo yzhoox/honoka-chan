@@ -33,7 +33,7 @@ type friendListRow struct {
 
 func list(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	listReq := friendschema.ListReq{}
 	err := honokautils.ParseRequestData(ctx, &listReq)

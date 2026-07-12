@@ -18,7 +18,7 @@ import (
 
 func authKey(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	reqData := gjson.Parse(ctx.MustGet("request_data").(string))
 	dummyToken, err := base64.StdEncoding.DecodeString(reqData.Get("dummy_token").String())

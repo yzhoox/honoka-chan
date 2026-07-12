@@ -15,7 +15,7 @@ import (
 
 func changeName(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	req := gjson.Parse(ctx.MustGet("request_data").(string))
 	var oldName string

@@ -15,7 +15,7 @@ import (
 
 func request(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	req := friendschema.UserIDReq{}
 	err := honokautils.ParseRequestData(ctx, &req)

@@ -90,7 +90,7 @@ func (ss *Session) Finalize() {
 	if err := ss.UserEng.Commit(); err != nil {
 		log.Println(err.Error())
 		ss.closeAllSessions(false)
-		ss.respondError(http.StatusInternalServerError, honokautils.NewInternalErrorContent(err))
+		ss.respondError(http.StatusInternalServerError, honokautils.NewInternalErrorContent())
 		return
 	}
 
@@ -106,7 +106,7 @@ func (ss *Session) Abort(err error) {
 
 	msg := ss.formatAbortMessage(err)
 	log.Println(msg)
-	ss.abortWithContent(http.StatusInternalServerError, honokautils.NewErrorContent("SessionAbort", msg))
+	ss.abortWithContent(http.StatusInternalServerError, honokautils.NewInternalErrorContent())
 }
 
 func (ss *Session) AbortWithStatus(status int, content any) {
@@ -114,6 +114,25 @@ func (ss *Session) AbortWithStatus(status int, content any) {
 		return
 	}
 	ss.abortWithContent(status, content)
+}
+
+// FinalizeOrRollback commits successful requests and rolls back before a panic reaches recovery.
+func (ss *Session) FinalizeOrRollback() {
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			ss.Rollback()
+			panic(recovered)
+		}
+	}()
+	ss.Finalize()
+}
+
+func (ss *Session) Rollback() {
+	if ss.done {
+		return
+	}
+	ss.done = true
+	ss.closeAllSessions(true)
 }
 
 func (ss *Session) formatAbortMessage(err error) string {

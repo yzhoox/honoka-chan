@@ -13,7 +13,7 @@ import (
 
 func multi(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	multiReq := secretboxschema.MultiReq{}
 	err := honokautils.ParseRequestData(ctx, &multiReq)

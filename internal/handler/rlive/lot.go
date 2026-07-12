@@ -31,7 +31,7 @@ type randomLiveCandidateRow struct {
 
 func lot(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	req := rliveschema.LotReq{}
 	err := honokautils.ParseRequestData(ctx, &req)

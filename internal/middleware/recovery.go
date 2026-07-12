@@ -21,18 +21,18 @@ func Recovery() gin.HandlerFunc {
 			stack := debug.Stack()
 			log.Printf("panic serving %s %s: %v\n%s", ctx.Request.Method, ctx.Request.URL.String(), recovered, stack)
 
+			if value, ok := ctx.Get("session"); ok {
+				if ss, ok := value.(*session.Session); ok {
+					ss.Rollback()
+				}
+			}
+
 			if !honokautils.IsMainPHPRequest(ctx.Request.URL.Path) {
 				ctx.AbortWithStatus(http.StatusInternalServerError)
 				return
 			}
 
-			content := honokautils.NewPanicContent(recovered, stack)
-			if value, ok := ctx.Get("session"); ok {
-				value.(*session.Session).AbortWithStatus(http.StatusInternalServerError, content)
-				return
-			}
-
-			honokautils.AbortMaintenanceJSON(ctx, http.StatusInternalServerError, content)
+			honokautils.AbortMaintenanceJSON(ctx, http.StatusInternalServerError, honokautils.NewPanicContent())
 		}()
 
 		ctx.Next()

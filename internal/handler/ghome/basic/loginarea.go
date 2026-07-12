@@ -10,7 +10,7 @@ import (
 
 func loginArea(ctx *gin.Context) {
 	ss := session.Attach(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	ss.Respond(ghomeschema.LoginAreaResp{
 		Code: 0,

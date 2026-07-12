@@ -12,7 +12,7 @@ import (
 
 func list(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	ss.Respond(rewardschema.ListResp{
 		ResponseData: rewardschema.ListData{

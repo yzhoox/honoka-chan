@@ -16,7 +16,7 @@ const pagingAccomplishedPageSize = 10
 
 func pagingAccomplishedList(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	req := achievementschema.PagingAccomplishedListReq{}
 	err := honokautils.ParseRequestData(ctx, &req)

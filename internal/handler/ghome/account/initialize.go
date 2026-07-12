@@ -14,7 +14,7 @@ import (
 
 func initialize(ctx *gin.Context) {
 	ss := session.Attach(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	initData := ghomeschema.InitializeData{
 		BrandLogo:                 "http://gskd.sdo.com/ghome/ztc/logo/og/logo_xhdpi.png",

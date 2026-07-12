@@ -14,7 +14,7 @@ import (
 
 func changeNavi(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	req := gjson.Parse(ctx.MustGet("request_data").(string))
 	pref := usermodel.UserPref{

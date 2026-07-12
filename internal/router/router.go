@@ -116,7 +116,7 @@ func SifRouter(r *gin.Engine) {
 			return
 		}
 
-		honokautils.AbortMaintenanceJSON(ctx, http.StatusNotFound, honokautils.NewNotFoundContent(ctx.Request.URL.String()))
+		honokautils.AbortMaintenanceJSON(ctx, http.StatusNotFound, honokautils.NewNotFoundContent(ctx.Request.URL.Path))
 	}
 	r.NoRoute(notFoundHandler)
 	r.NoMethod(notFoundHandler)

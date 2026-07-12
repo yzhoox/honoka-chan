@@ -13,7 +13,7 @@ import (
 
 func removableSkillEquipment(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	req := unitschema.RemovableSkillEquipmentReq{}
 	err := honokautils.ParseRequestData(ctx, &req)

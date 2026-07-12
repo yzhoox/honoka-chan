@@ -29,10 +29,15 @@ func Common(ctx *gin.Context) {
 
 	ss := session.Attach(ctx)
 	ctx.Set("session", ss)
+	defer ss.FinalizeOrRollback()
 
-	if ctx.Request.URL.Path != "/login/authkey" && ctx.Request.URL.Path != "/login/login" {
+	if ctx.IsAborted() {
+		return
+	}
+
+	if !honokautils.IsMainLoginEndpoint(ctx.Request.URL.Path) {
 		if ss.UserPref.ForceRelogin {
-			honokautils.AbortMaintenanceJSON(ctx, http.StatusNotFound, honokautils.NewNotFoundContent(ctx.Request.URL.String()))
+			ss.AbortWithStatus(http.StatusNotFound, honokautils.NewNotFoundContent(ctx.Request.URL.Path))
 			return
 		}
 	}
@@ -40,7 +45,7 @@ func Common(ctx *gin.Context) {
 	authorize := ctx.GetHeader("Authorize")
 	params, err := url.ParseQuery(authorize)
 	if err != nil {
-		honokautils.AbortMaintenanceJSON(ctx, http.StatusNotFound, honokautils.NewNotFoundContent(ctx.Request.URL.String()))
+		ss.AbortWithStatus(http.StatusNotFound, honokautils.NewNotFoundContent(ctx.Request.URL.Path))
 		return
 	}
 

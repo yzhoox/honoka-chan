@@ -14,7 +14,7 @@ import (
 
 func register(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	req := gjson.Parse(ctx.PostForm("request_data"))
 	pref := usermodel.UserPref{

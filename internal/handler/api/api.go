@@ -41,7 +41,7 @@ import (
 
 func api(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	apiReq := []apischema.ApiReq{}
 	err := honokautils.ParseRequestData(ctx, &apiReq)

@@ -14,7 +14,7 @@ import (
 
 func set(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	reqData := gjson.Parse(ctx.MustGet("request_data").(string))
 	pref := usermodel.UserPref{

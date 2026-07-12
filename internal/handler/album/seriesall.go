@@ -12,7 +12,7 @@ import (
 
 func seriesAll(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	var albumID []int
 	err := ss.MainEng.Table("album_series_m").Select("album_series_id").Find(&albumID)

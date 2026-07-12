@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -48,14 +47,17 @@ func IsUnimplementedError(err error) bool {
 const maintenanceHeader = "Maintenance"
 
 type ErrorContent struct {
-	Detail    string   `json:"detail,omitempty"`
-	Exception string   `json:"exception,omitempty"`
-	Message   string   `json:"message,omitempty"`
-	Traceback []string `json:"traceback,omitempty"`
+	Detail    string `json:"detail,omitempty"`
+	Exception string `json:"exception,omitempty"`
+	Message   string `json:"message,omitempty"`
 }
 
 func IsMainPHPRequest(path string) bool {
 	return path == "/main.php" || strings.HasPrefix(path, "/main.php/")
+}
+
+func IsMainLoginEndpoint(path string) bool {
+	return path == "/main.php/login/authkey" || path == "/main.php/login/login"
 }
 
 func WriteMaintenanceJSON(setHeader func(string, string), writeJSON func(int, any), status int, content any) {
@@ -80,46 +82,13 @@ func NewNotFoundContent(path string) ErrorContent {
 	return NewDetailContent(fmt.Sprintf("Endpoint not found: %s", path))
 }
 
-func NewInternalErrorContent(err error) ErrorContent {
+func NewInternalErrorContent() ErrorContent {
 	return ErrorContent{
-		Exception: exceptionName(err),
-		Message:   err.Error(),
+		Exception: "InternalServerError",
+		Message:   http.StatusText(http.StatusInternalServerError),
 	}
 }
 
-func NewErrorContent(exception, message string) ErrorContent {
-	return ErrorContent{
-		Exception: exception,
-		Message:   message,
-	}
-}
-
-func NewPanicContent(recovered any, stack []byte) ErrorContent {
-	return ErrorContent{
-		Exception: "panic",
-		Message:   fmt.Sprint(recovered),
-		Traceback: splitLines(stack),
-	}
-}
-
-func exceptionName(err error) string {
-	if err == nil {
-		return http.StatusText(http.StatusInternalServerError)
-	}
-
-	typ := reflect.TypeOf(err)
-	if typ.Kind() == reflect.Pointer {
-		typ = typ.Elem()
-	}
-	if name := typ.Name(); name != "" {
-		return name
-	}
-	return typ.String()
-}
-
-func splitLines(stack []byte) []string {
-	if len(stack) == 0 {
-		return nil
-	}
-	return strings.Split(strings.TrimSpace(string(stack)), "\n")
+func NewPanicContent() ErrorContent {
+	return NewInternalErrorContent()
 }

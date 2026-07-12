@@ -17,7 +17,7 @@ import (
 
 func deck(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	deckReq := unitschema.DeckReq{}
 	err := honokautils.ParseRequestData(ctx, &deckReq)

@@ -16,7 +16,7 @@ import (
 
 func getUrl(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	downloadReq := downloadschema.UrlReq{}
 	err := honokautils.ParseRequestData(ctx, &downloadReq)

@@ -16,7 +16,7 @@ import (
 
 func deleteMail(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	req := greetschema.DeleteReq{}
 	err := honokautils.ParseRequestData(ctx, &req)

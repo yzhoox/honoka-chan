@@ -14,7 +14,7 @@ import (
 
 func publicKey(ctx *gin.Context) {
 	ss := session.Attach(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	publicKeyCode := 0
 	publicKeyMsg := "ok"

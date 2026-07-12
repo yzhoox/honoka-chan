@@ -14,7 +14,7 @@ import (
 
 func partyList(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 	partyListData, err := BuildPartyListData(ss)
 	if ss.CheckErr(err) {
 		return

@@ -18,7 +18,7 @@ import (
 
 func preciseScore(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	playScoreReq := liveschema.PlayScoreReq{}
 	err := honokautils.ParseRequestData(ctx, &playScoreReq)

@@ -14,7 +14,7 @@ import (
 
 func play(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	req := rliveschema.PlayReq{}
 	err := honokautils.ParseRequestData(ctx, &req)

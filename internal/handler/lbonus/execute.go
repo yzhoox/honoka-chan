@@ -13,7 +13,7 @@ import (
 
 func execute(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	weeks := map[string]int{
 		"Monday":    1,

@@ -13,7 +13,7 @@ import (
 
 func get(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	noticeResp := personalnoticeschema.GetResp{
 		ResponseData: personalnoticeschema.GetData{

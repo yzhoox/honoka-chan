@@ -10,7 +10,7 @@ import (
 
 func active(ctx *gin.Context) {
 	ss := session.Attach(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	ss.Respond(ghomeschema.ActiveResp{
 		Code: 0,

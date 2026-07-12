@@ -15,7 +15,7 @@ import (
 
 func userGreetingHistory(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	req := noticeschema.GreetingNoticeReq{}
 	err := honokautils.ParseRequestData(ctx, &req)

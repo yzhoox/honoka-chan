@@ -28,7 +28,7 @@ type liveRankingRow struct {
 
 func live(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	req := rankingschema.LiveReq{}
 	err := honokautils.ParseRequestData(ctx, &req)

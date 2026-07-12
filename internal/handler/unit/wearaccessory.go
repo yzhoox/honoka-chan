@@ -15,7 +15,7 @@ import (
 
 func wearAccessory(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	req := unitschema.WearAccessoryReq{}
 	err := honokautils.ParseRequestData(ctx, &req)

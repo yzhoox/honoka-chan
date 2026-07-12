@@ -19,7 +19,7 @@ import (
 
 func login(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	has, authKeyData, err := ss.GetAuthKey(ctx.MustGet("token").(string))
 	if ss.CheckErr(err) {

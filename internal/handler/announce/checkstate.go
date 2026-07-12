@@ -13,7 +13,7 @@ import (
 
 func checkState(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	ss.Respond(announceschema.CheckStateDataResp{
 		ResponseData: announceschema.CheckStateData{

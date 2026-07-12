@@ -13,7 +13,7 @@ import (
 
 func sellUnit(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	ss.Respond(rewardschema.SellUnitResp{
 		ResponseData: commonschema.ErrorData{

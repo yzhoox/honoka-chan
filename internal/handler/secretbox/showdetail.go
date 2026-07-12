@@ -14,7 +14,7 @@ import (
 
 func showDetail(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	showDetailReq := secretboxschema.ShowDetailReq{}
 	err := honokautils.ParseRequestData(ctx, &showDetailReq)

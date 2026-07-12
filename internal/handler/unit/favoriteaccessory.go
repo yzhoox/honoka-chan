@@ -18,7 +18,7 @@ type SetResp struct {
 
 func favoriteAccessory(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	fmt.Println(ctx.MustGet("request_data").(string))
 

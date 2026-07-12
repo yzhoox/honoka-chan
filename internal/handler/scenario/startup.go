@@ -14,7 +14,7 @@ import (
 
 func startup(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	startReq := scenarioschema.StartUpReq{}
 	err := json.Unmarshal([]byte(ctx.PostForm("request_data")), &startReq)

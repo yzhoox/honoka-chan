@@ -30,7 +30,7 @@ type friendSearchRow struct {
 
 func search(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	req := friendschema.SearchReq{}
 	err := honokautils.ParseRequestData(ctx, &req)

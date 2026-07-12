@@ -10,7 +10,7 @@ import (
 
 func agreement(ctx *gin.Context) {
 	ss := session.Attach(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	ss.Respond(ghomeschema.AgreementResp{
 		ReturnCode:    0,

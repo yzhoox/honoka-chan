@@ -13,7 +13,7 @@ import (
 
 func list(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	targets := []eventschema.TargetList{}
 	for i := range 6 {

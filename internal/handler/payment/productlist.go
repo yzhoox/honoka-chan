@@ -14,7 +14,7 @@ import (
 
 func productList(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	prodResp := paymentschema.ProductListResp{
 		ResponseData: paymentschema.ProductListData{

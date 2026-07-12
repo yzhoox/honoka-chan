@@ -14,7 +14,7 @@ import (
 
 func continuee(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	req := rliveschema.TokenReq{}
 	err := honokautils.ParseRequestData(ctx, &req)

@@ -10,7 +10,7 @@ import (
 
 func getProductList(ctx *gin.Context) {
 	ss := session.Attach(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	getProductListData := ghomeschema.GetProductListData{
 		Message: []string{},

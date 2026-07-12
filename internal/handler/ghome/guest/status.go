@@ -10,7 +10,7 @@ import (
 
 func status(ctx *gin.Context) {
 	ss := session.Attach(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	ss.Respond(ghomeschema.GuestStatusResp{
 		Code: 0,

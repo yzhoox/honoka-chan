@@ -14,7 +14,7 @@ import (
 
 func setDisplayRank(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	var req unitschema.SetDisplayRankReq
 	err := honokautils.ParseRequestData(ctx, &req)

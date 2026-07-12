@@ -16,7 +16,7 @@ import (
 
 func batch(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	downloadReq := downloadschema.BatchReq{}
 	err := honokautils.ParseRequestData(ctx, &downloadReq)

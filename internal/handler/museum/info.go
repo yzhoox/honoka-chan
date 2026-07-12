@@ -13,7 +13,7 @@ import (
 
 func info(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	var contents []struct {
 		MuseumContentsId int `xorm:"museum_contents_id"`

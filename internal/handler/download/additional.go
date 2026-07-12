@@ -15,7 +15,7 @@ import (
 
 func additional(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	downloadReq := downloadschema.AdditionalReq{}
 	err := honokautils.ParseRequestData(ctx, &downloadReq)

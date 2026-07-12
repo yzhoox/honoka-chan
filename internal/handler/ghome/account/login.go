@@ -34,7 +34,7 @@ const (
 
 func login(ctx *gin.Context) {
 	ss := session.Attach(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	data, err := ctx.GetRawData()
 	if ss.CheckErr(err) {

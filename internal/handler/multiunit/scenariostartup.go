@@ -14,7 +14,7 @@ import (
 
 func scenarioStartup(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	startReq := multiunitschema.ScenarioStartUpReq{}
 	err := honokautils.ParseRequestData(ctx, &startReq)

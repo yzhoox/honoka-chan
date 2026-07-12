@@ -12,7 +12,7 @@ import (
 
 func setNotificationToken(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	ss.Respond(userschema.SetNotificationTokenResp{
 		ResponseData: []any{},

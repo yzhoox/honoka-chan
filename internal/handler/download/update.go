@@ -19,7 +19,7 @@ const overrideServerConfigFileName = "99_0_115.zip"
 
 func update(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer ss.Finalize()
+	defer ss.FinalizeOrRollback()
 
 	downloadReq := downloadschema.UpdateReq{}
 	err := honokautils.ParseRequestData(ctx, &downloadReq)
