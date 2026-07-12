@@ -15,13 +15,12 @@ import (
 func reward(ctx *gin.Context) {
 	ss := session.Get(ctx)
 	token := ""
-	defer func() {
+	defer ss.FinalizeOrRollbackAfter(func() {
 		if ss.UserEng != nil {
 			deleteRandomLiveByToken(ss, token)
 			ss.ClearLiveInProgress()
 		}
-		ss.Finalize()
-	}()
+	})
 
 	req := rliveschema.RewardReq{}
 	err := honokautils.ParseRequestData(ctx, &req)

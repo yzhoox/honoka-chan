@@ -17,12 +17,11 @@ import (
 
 func reward(ctx *gin.Context) {
 	ss := session.Get(ctx)
-	defer func() {
+	defer ss.FinalizeOrRollbackAfter(func() {
 		if ss.UserEng != nil {
 			ss.ClearLiveInProgress()
 		}
-		ss.Finalize()
-	}()
+	})
 
 	playRewardReq := liveschema.RewardReq{}
 	err := honokautils.ParseRequestData(ctx, &playRewardReq)

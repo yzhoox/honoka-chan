@@ -130,6 +130,22 @@ func (ss *Session) FinalizeOrRollback() {
 	ss.Finalize()
 }
 
+// FinalizeOrRollbackAfter runs cleanup only on the normal completion path.
+func (ss *Session) FinalizeOrRollbackAfter(cleanup func()) {
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			ss.Rollback()
+			panic(recovered)
+		}
+	}()
+
+	if ss.done {
+		return
+	}
+	cleanup()
+	ss.Finalize()
+}
+
 func (ss *Session) Rollback() {
 	if ss.done {
 		return
