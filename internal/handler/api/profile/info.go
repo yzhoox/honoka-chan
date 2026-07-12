@@ -326,7 +326,7 @@ func getAccessoryInfo(ss *session.Session, targetUserID, unitOwningUserID int) (
 		return nil, nil
 	}
 
-	has, accessoryData := ss.GetAccessoryByAccessoryOwningUserID(accessoryOwningID)
+	has, accessoryData := ss.GetAccessoryByAccessoryOwningUserIDForUser(targetUserID, accessoryOwningID)
 	if !has {
 		return nil, nil
 	}

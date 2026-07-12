@@ -49,6 +49,15 @@ func wearAccessory(ctx *gin.Context) {
 			return
 		}
 
+		exists, err = ss.HasUserUnit(v.UnitOwningUserID)
+		if ss.CheckErr(err) {
+			return
+		}
+		if !exists {
+			ss.CheckErr(errors.New("unit not found for user"))
+			return
+		}
+
 		data := unitschema.WearAccessoryData{
 			AccessoryOwningUserID: v.AccessoryOwningUserID,
 			UnitOwningUserID:      v.UnitOwningUserID,

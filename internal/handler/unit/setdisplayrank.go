@@ -26,7 +26,8 @@ func setDisplayRank(ctx *gin.Context) {
 		DisplayRank: req.DisplayRank,
 	}
 	_, err = ss.UserEng.Table(new(usermodel.UserUnitData)).
-		ID(req.UnitOwningUserID).Cols("display_rank").Update(&data)
+		Where("user_id = ? AND unit_owning_user_id = ?", ss.UserID, req.UnitOwningUserID).
+		Cols("display_rank").Update(&data)
 	if ss.CheckErr(err) {
 		return
 	}

@@ -9,7 +9,7 @@ import (
 func (ss *Session) GetUserAccessoryWearByUnitOwningUserID(unitOwningUserID int) (bool, *usermodel.UserAccessoryWear) {
 	wearData := usermodel.UserAccessoryWear{}
 	has, err := ss.UserEng.Table(new(usermodel.UserAccessoryWear)).
-		Where("unit_owning_user_id = ?", unitOwningUserID).Get(&wearData)
+		Where("user_id = ? AND unit_owning_user_id = ?", ss.UserID, unitOwningUserID).Get(&wearData)
 	if ss.CheckErr(err) {
 		return false, nil
 	}
@@ -18,9 +18,13 @@ func (ss *Session) GetUserAccessoryWearByUnitOwningUserID(unitOwningUserID int) 
 }
 
 func (ss *Session) GetUserAccessoryByAccessoryOwningUserID(accessoryOwningUserID int) (bool, *usermodel.UserAccessory) {
+	return ss.GetUserAccessoryByAccessoryOwningUserIDForUser(ss.UserID, accessoryOwningUserID)
+}
+
+func (ss *Session) GetUserAccessoryByAccessoryOwningUserIDForUser(userID, accessoryOwningUserID int) (bool, *usermodel.UserAccessory) {
 	accessoryData := usermodel.UserAccessory{}
 	has, err := ss.UserEng.Table(new(usermodel.UserAccessory)).
-		Where("accessory_owning_user_id = ?", accessoryOwningUserID).
+		Where("user_id = ? AND accessory_owning_user_id = ?", userID, accessoryOwningUserID).
 		Get(&accessoryData)
 	if ss.CheckErr(err) {
 		return false, nil
@@ -30,7 +34,11 @@ func (ss *Session) GetUserAccessoryByAccessoryOwningUserID(accessoryOwningUserID
 }
 
 func (ss *Session) GetAccessoryByAccessoryOwningUserID(accessoryOwningUserID int) (bool, *accessorymodel.Accessory) {
-	has, userAccessoryData := ss.GetUserAccessoryByAccessoryOwningUserID(accessoryOwningUserID)
+	return ss.GetAccessoryByAccessoryOwningUserIDForUser(ss.UserID, accessoryOwningUserID)
+}
+
+func (ss *Session) GetAccessoryByAccessoryOwningUserIDForUser(userID, accessoryOwningUserID int) (bool, *accessorymodel.Accessory) {
+	has, userAccessoryData := ss.GetUserAccessoryByAccessoryOwningUserIDForUser(userID, accessoryOwningUserID)
 	if !has {
 		return false, nil
 	}

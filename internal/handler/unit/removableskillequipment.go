@@ -35,12 +35,21 @@ func removableSkillEquipment(ctx *gin.Context) {
 	// 佩戴宝石
 	for _, v := range req.Equip {
 		// fmt.Println("Equip:", v.UnitOwningUserID, v.UnitRemovableSkillID)
+		exists, err := ss.HasUserUnit(v.UnitOwningUserID)
+		if ss.CheckErr(err) {
+			return
+		}
+		if !exists {
+			ss.AbortWithStatus(http.StatusNotFound, honokautils.NewNotFoundContent(ctx.Request.URL.Path))
+			return
+		}
+
 		data := unitschema.RemovableSkillEquipmentData{
 			UnitRemovableSkillId: v.UnitRemovableSkillID,
 			UnitOwningUserID:     v.UnitOwningUserID,
 			UserID:               ss.UserID,
 		}
-		_, err := ss.UserEng.Table("user_unit_skill_equip").Insert(&data)
+		_, err = ss.UserEng.Table("user_unit_skill_equip").Insert(&data)
 		if ss.CheckErr(err) {
 			return
 		}

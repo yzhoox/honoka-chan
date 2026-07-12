@@ -180,6 +180,7 @@ func matchMemberTag(ss *session.Session, cache map[memberTagMatchKey]bool, unitT
 func loadDeckUnitDataMap(ss *session.Session, unitOwningUserIDs []int) (map[int]unitmodel.UnitDataMap, error) {
 	unitRows := []unitmodel.UnitDataMap{}
 	err := ss.GetBasicUnitInfo().
+		Where("a.user_id = ?", ss.UserID).
 		In("a.unit_owning_user_id", unitOwningUserIDs).
 		Find(&unitRows)
 	if err != nil {
@@ -221,6 +222,7 @@ func loadAccessoryBonusMap(ss *session.Session, userID int, unitOwningUserIDs []
 
 	rows := []accessoryBonusRow{}
 	err = ss.UserEng.Table("user_accessory").
+		Where("user_id = ?", userID).
 		In("accessory_owning_user_id", accessoryIDs).
 		Cols("accessory_owning_user_id,accessory_id").
 		Find(&rows)

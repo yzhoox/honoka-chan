@@ -26,7 +26,7 @@ func (ss *Session) GetUserDeckUnit(deckID int) []usermodel.UserDeckUnit {
 
 	unitData := []usermodel.UserDeckUnit{}
 	err = ss.UserEng.Table("user_deck_unit").
-		Where("user_deck_id = ?", deckData.ID).Find(&unitData)
+		Where("user_deck_id = ? AND user_id = ?", deckData.ID, ss.UserID).Find(&unitData)
 	if ss.CheckErr(err) {
 		return []usermodel.UserDeckUnit{}
 	}

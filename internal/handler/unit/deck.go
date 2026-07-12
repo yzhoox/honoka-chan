@@ -33,13 +33,15 @@ func deck(ctx *gin.Context) {
 	}
 
 	// 删除全部原有队伍成员
-	_, err = ss.UserEng.Table("user_deck_unit").In("user_deck_id", userDeckID).Delete()
+	_, err = ss.UserEng.Table("user_deck_unit").
+		Where("user_id = ?", ss.UserID).In("user_deck_id", userDeckID).Delete()
 	if ss.CheckErr(err) {
 		return
 	}
 
 	// 删除全部原有队伍
-	_, err = ss.UserEng.Table("user_deck").In("id", userDeckID).Delete()
+	_, err = ss.UserEng.Table("user_deck").
+		Where("user_id = ?", ss.UserID).In("id", userDeckID).Delete()
 	if ss.CheckErr(err) {
 		return
 	}
@@ -65,9 +67,13 @@ func deck(ctx *gin.Context) {
 		for _, u := range deck.UnitDeckDetail {
 			// 成员信息
 			unitData := unitmodel.UnitDataMap{}
-			_, err = ss.GetBasicUnitInfo().
-				Where("a.unit_owning_user_id = ?", u.UnitOwningUserID).Get(&unitData)
+			has, err := ss.GetBasicUnitInfo().
+				Where("a.user_id = ? AND a.unit_owning_user_id = ?", ss.UserID, u.UnitOwningUserID).Get(&unitData)
 			if ss.CheckErr(err) {
+				return
+			}
+			if !has {
+				ss.AbortWithStatus(http.StatusNotFound, honokautils.NewNotFoundContent(ctx.Request.URL.Path))
 				return
 			}
 			// fmt.Println("新的成员信息:", unitData)

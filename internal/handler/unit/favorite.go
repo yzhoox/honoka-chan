@@ -26,7 +26,8 @@ func favorite(ctx *gin.Context) {
 		FavoriteFlag: req.FavoriteFlag != 0,
 	}
 	_, err = ss.UserEng.Table(new(usermodel.UserUnitData)).
-		ID(req.UnitOwningUserID).Cols("favorite_flag").Update(&data)
+		Where("user_id = ? AND unit_owning_user_id = ?", ss.UserID, req.UnitOwningUserID).
+		Cols("favorite_flag").Update(&data)
 	if ss.CheckErr(err) {
 		return
 	}

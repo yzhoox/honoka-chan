@@ -36,7 +36,7 @@ func (ss *Session) GetUnitInfo(unitID int) (bool, *unitmodel.CommonUnitData) {
 func (ss *Session) GetUserUnitInfo(unitOwningUserID int) (bool, *unitmodel.CommonUnitData) {
 	var unitID int
 	has, err := ss.UserEng.Table(new(usermodel.UserUnitData)).
-		Where("unit_owning_user_id = ?", unitOwningUserID).
+		Where("user_id = ? AND unit_owning_user_id = ?", ss.UserID, unitOwningUserID).
 		Cols("unit_id").Get(&unitID)
 	if ss.CheckErr(err) {
 		return false, nil
@@ -49,10 +49,16 @@ func (ss *Session) GetUserUnitInfo(unitOwningUserID int) (bool, *unitmodel.Commo
 	return ss.GetUnitInfo(unitID)
 }
 
+func (ss *Session) HasUserUnit(unitOwningUserID int) (bool, error) {
+	return ss.UserEng.Table(new(usermodel.UserUnitData)).
+		Where("user_id = ? AND unit_owning_user_id = ?", ss.UserID, unitOwningUserID).
+		Exist()
+}
+
 func (ss *Session) GetUserUnitSkillEquip(unitOwningUserID int) []usermodel.UserUnitSkillEquip {
 	skill := []usermodel.UserUnitSkillEquip{}
 	err := ss.UserEng.Table("user_unit_skill_equip").
-		Where("unit_owning_user_id = ?", unitOwningUserID).Find(&skill)
+		Where("user_id = ? AND unit_owning_user_id = ?", ss.UserID, unitOwningUserID).Find(&skill)
 	if ss.CheckErr(err) {
 		return []usermodel.UserUnitSkillEquip{}
 	}

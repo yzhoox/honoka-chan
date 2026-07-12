@@ -200,7 +200,7 @@ func getRankingAccessoryInfo(ss *session.Session, targetUserID, unitOwningUserID
 		return nil, nil
 	}
 
-	has, accessoryData := ss.GetAccessoryByAccessoryOwningUserID(accessoryOwningID)
+	has, accessoryData := ss.GetAccessoryByAccessoryOwningUserIDForUser(targetUserID, accessoryOwningID)
 	if !has {
 		return nil, nil
 	}

@@ -29,7 +29,11 @@ func sale(ctx *gin.Context) {
 		salePrice := 1 // TODO: 从 unit_level_up_pattern_m 表获取实际价格
 		totalCoin += salePrice
 
-		_, unitData := ss.GetUserUnitInfo(id)
+		has, unitData := ss.GetUserUnitInfo(id)
+		if !has || unitData == nil {
+			ss.AbortWithStatus(http.StatusNotFound, honokautils.NewNotFoundContent(ctx.Request.URL.Path))
+			return
+		}
 
 		saleDetail = append(saleDetail, unitschema.Detail{
 			UnitOwningUserID: id,
@@ -40,21 +44,21 @@ func sale(ctx *gin.Context) {
 
 		// 卸载宝石
 		_, err = ss.UserEng.Table(new(usermodel.UserUnitSkillEquip)).
-			Where("unit_owning_user_id = ?", id).Delete()
+			Where("user_id = ? AND unit_owning_user_id = ?", ss.UserID, id).Delete()
 		if ss.CheckErr(err) {
 			return
 		}
 
 		// 卸载饰品
 		_, err = ss.UserEng.Table(new(usermodel.UserAccessoryWear)).
-			Where("unit_owning_user_id = ?", id).Delete()
+			Where("user_id = ? AND unit_owning_user_id = ?", ss.UserID, id).Delete()
 		if ss.CheckErr(err) {
 			return
 		}
 
 		// 移除卡片
 		_, err = ss.UserEng.Table(new(usermodel.UserUnitData)).
-			Where("unit_owning_user_id = ?", id).Delete()
+			Where("user_id = ? AND unit_owning_user_id = ?", ss.UserID, id).Delete()
 		if ss.CheckErr(err) {
 			return
 		}

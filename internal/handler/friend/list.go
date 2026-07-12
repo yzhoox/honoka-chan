@@ -179,7 +179,7 @@ func buildCenterUnitInfo(ss *session.Session, userID, unitOwningUserID, awardID 
 		return info, err
 	}
 	if has && accessoryWear.AccessoryOwningUserID > 0 {
-		hasAccessory, accessoryData := ss.GetAccessoryByAccessoryOwningUserID(accessoryWear.AccessoryOwningUserID)
+		hasAccessory, accessoryData := ss.GetAccessoryByAccessoryOwningUserIDForUser(userID, accessoryWear.AccessoryOwningUserID)
 		if hasAccessory {
 			accessoryInfo = friendschema.AccessoryInfo{
 				AccessoryOwningUserID: accessoryWear.AccessoryOwningUserID,

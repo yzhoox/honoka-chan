@@ -134,7 +134,7 @@ func getGreetingAccessoryInfo(ss *session.Session, userID, unitOwningUserID int)
 		return nil, nil
 	}
 
-	has, accessoryData := ss.GetAccessoryByAccessoryOwningUserID(accessoryWear.AccessoryOwningUserID)
+	has, accessoryData := ss.GetAccessoryByAccessoryOwningUserIDForUser(userID, accessoryWear.AccessoryOwningUserID)
 	if !has {
 		return nil, nil
 	}
