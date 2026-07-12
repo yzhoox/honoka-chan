@@ -17,7 +17,9 @@ import (
 
 func main() {
 	// 初始化配置
-	config.InitConfig()
+	if err := config.InitConfig(); err != nil {
+		log.Fatalf("初始化配置失败: %v", err)
+	}
 
 	// 初始化数据库表和用户数据
 	startup.StartUp()
@@ -54,5 +56,7 @@ func main() {
 	// SIF
 	router.SifRouter(r)
 
-	r.Run(":" + config.Conf.Settings.ListenPort) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	if err := r.Run(":" + config.Conf.Settings.ListenPort); err != nil {
+		log.Fatalf("HTTP 服务启动失败: %v", err)
+	}
 }

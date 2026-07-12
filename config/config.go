@@ -2,7 +2,7 @@ package config
 
 import (
 	"encoding/json"
-	"honoka-chan/pkg/utils"
+	"fmt"
 	"os"
 	"strconv"
 	"time"
@@ -28,8 +28,13 @@ type Settings struct {
 	UnlockAllSpecialRotation bool   `json:"unlock_all_special_rotation"`
 }
 
-func InitConfig() {
-	Conf = Load("./config.json")
+func InitConfig() error {
+	conf, err := Load("./config.json")
+	if err != nil {
+		return err
+	}
+	Conf = conf
+	return nil
 }
 
 func DefaultConfigs() *AppConfigs {
@@ -43,19 +48,33 @@ func DefaultConfigs() *AppConfigs {
 	}
 }
 
-func Load(p string) *AppConfigs {
-	if !utils.PathExists(p) {
-		_ = DefaultConfigs().Save(p)
+func Load(p string) (*AppConfigs, error) {
+	data, err := os.ReadFile(p)
+	if os.IsNotExist(err) {
+		conf := DefaultConfigs()
+		if err := conf.Save(p); err != nil {
+			return nil, fmt.Errorf("create default config: %w", err)
+		}
+		return conf, nil
 	}
-	c := AppConfigs{}
-	err := json.Unmarshal([]byte(utils.ReadAllText(p)), &c)
 	if err != nil {
-		_ = os.Rename(p, p+".backup"+strconv.FormatInt(time.Now().Unix(), 10))
-		_ = DefaultConfigs().Save(p)
+		return nil, fmt.Errorf("read config: %w", err)
 	}
-	c = AppConfigs{}
-	_ = json.Unmarshal([]byte(utils.ReadAllText(p)), &c)
-	return &c
+
+	c := AppConfigs{}
+	if err := json.Unmarshal(data, &c); err == nil {
+		return &c, nil
+	}
+
+	backup := p + ".backup" + strconv.FormatInt(time.Now().Unix(), 10)
+	if err := os.Rename(p, backup); err != nil {
+		return nil, fmt.Errorf("backup invalid config: %w", err)
+	}
+	conf := DefaultConfigs()
+	if err := conf.Save(p); err != nil {
+		return nil, fmt.Errorf("write default config: %w", err)
+	}
+	return conf, nil
 }
 
 func (c *AppConfigs) Save(p string) error {
@@ -63,6 +82,5 @@ func (c *AppConfigs) Save(p string) error {
 	if err != nil {
 		return err
 	}
-	utils.WriteAllText(p, string(data)+"\n")
-	return nil
+	return os.WriteFile(p, append(data, '\n'), 0644)
 }
