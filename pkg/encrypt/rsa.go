@@ -10,70 +10,46 @@ import (
 	"fmt"
 	"honoka-chan/config"
 	"os"
-	"path/filepath"
-	"runtime"
 )
 
 func RSAGen(bits int) {
-	//get current path
-	_, currentpath, _, _ := runtime.Caller(0)
-	currentpath = filepath.Dir(currentpath)
-
-	//----------------------------------------------private key
-
-	// GenerateKey generates an RSA keypair of the given bit size using the
-	// random source random (for example, crypto/rand.Reader).
 	privateKey, err := rsa.GenerateKey(rand.Reader, bits)
 	if err != nil {
 		panic(err)
 	}
 
-	//serialize privatekey to ASN.1 der by x509.MarshalPKCS8PrivateKey
-	x509privatekey, err := x509.MarshalPKCS8PrivateKey(privateKey)
+	privateKeyDER, err := x509.MarshalPKCS8PrivateKey(privateKey)
 	if err != nil {
 		panic(err)
 	}
 
-	//encode x509 to pem and save to file
-	//1. create privatefile
-	privatekeyfile, err := os.Create(config.PrivateKeyPath)
+	privateKeyFile, err := os.Create(config.PrivateKeyPath)
 	if err != nil {
 		panic(err)
 	}
-	defer privatekeyfile.Close()
-	//2. new a pem block struct object
-	privatekeyblock := pem.Block{
-		Type:    "PRIVATE KEY",
-		Headers: nil,
-		Bytes:   x509privatekey,
+	defer privateKeyFile.Close()
+	if err := pem.Encode(privateKeyFile, &pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: privateKeyDER,
+	}); err != nil {
+		panic(err)
 	}
-	//3. save to file
-	pem.Encode(privatekeyfile, &privatekeyblock)
 
-	//----------------------------------------------public key
-
-	//get public key
-	publickey := privateKey.PublicKey
-	//serialize publickey to ASN.1 der by x509.MarshalPKCS8PublicKey
-	x509publickey, _ := x509.MarshalPKIXPublicKey(&publickey)
-
-	//encode x509 to pem and save to file
-	//1. create publickeyfile
-	publickeyfile, err := os.Create(config.PublicKeyPath)
+	publicKeyDER, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
 	if err != nil {
 		panic(err)
 	}
-	defer publickeyfile.Close()
-
-	//2. new a pem block struct object
-	publickeyblock := pem.Block{
-		Type:    "PUBLIC KEY",
-		Headers: nil,
-		Bytes:   x509publickey,
+	publicKeyFile, err := os.Create(config.PublicKeyPath)
+	if err != nil {
+		panic(err)
 	}
-
-	//3. save to file
-	pem.Encode(publickeyfile, &publickeyblock)
+	defer publicKeyFile.Close()
+	if err := pem.Encode(publicKeyFile, &pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: publicKeyDER,
+	}); err != nil {
+		panic(err)
+	}
 }
 
 func RSAEncrypt(plainText []byte, publickeypath string) ([]byte, error) {
@@ -95,6 +71,7 @@ func RSAEncrypt(plainText []byte, publickeypath string) ([]byte, error) {
 		return nil, fmt.Errorf("PEM does not contain an RSA public key")
 	}
 
+	//nolint:staticcheck // Legacy clients require PKCS#1 v1.5 encryption.
 	return rsa.EncryptPKCS1v15(rand.Reader, publicKey, plainText)
 }
 
@@ -104,6 +81,7 @@ func RSADecrypt(cipherText []byte) ([]byte, error) {
 		return nil, err
 	}
 
+	//nolint:staticcheck // Legacy clients send PKCS#1 v1.5 encrypted payloads.
 	return rsa.DecryptPKCS1v15(rand.Reader, privateKey, cipherText)
 }
 
