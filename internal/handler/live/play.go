@@ -240,7 +240,7 @@ func BuildPlayResp(ss *session.Session, playReq liveschema.PlayReq, isRandom boo
 
 		// 好友主唱技能加成
 		tomoCenterSmile, tomoCenterPure, tomoCenterCool := applyAttributeBonus(
-			myLeaderSkill.AttributeID,
+			tomoLeaderSkill.AttributeID,
 			tomoLeaderSkill.MainEffectValue,
 			smileMax, pureMax, coolMax,
 		)
@@ -255,7 +255,7 @@ func BuildPlayResp(ss *session.Session, playReq liveschema.PlayReq, isRandom boo
 		var tomoSubSmile, tomoSubPure, tomoSubCool float64
 		if matched {
 			tomoSubSmile, tomoSubPure, tomoSubCool = applyAttributeBonus(
-				myLeaderSkill.AttributeID,
+				tomoLeaderSkill.AttributeID,
 				tomoLeaderSkill.ExtraEffectValue,
 				smileMax, pureMax, coolMax,
 			)
