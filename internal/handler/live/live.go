@@ -22,8 +22,9 @@ type liveSettingData struct {
 }
 
 type leaderSkillData struct {
-	AttributeID      int     `xorm:"attribute_id"`
+	MainEffectType   int     `xorm:"main_effect_type"`
 	MainEffectValue  float64 `xorm:"main_effect_value"`
+	ExtraEffectType  int     `xorm:"extra_effect_type"`
 	ExtraEffectValue float64 `xorm:"extra_effect_value"`
 	MemberTagID      int     `xorm:"member_tag_id"`
 }
@@ -135,8 +136,9 @@ func getLeaderSkillData(ss *session.Session, unitID int) (leaderSkillData, error
 		Join("LEFT", "unit_leader_skill_extra_m", "unit_m.default_leader_skill_id = unit_leader_skill_extra_m.unit_leader_skill_id").
 		Where("unit_m.unit_id = ?", unitID).
 		Cols(`
-			unit_m.attribute_id,
+			unit_leader_skill_m.leader_skill_effect_type AS main_effect_type,
 			unit_leader_skill_m.effect_value AS main_effect_value,
+			unit_leader_skill_extra_m.leader_skill_effect_type AS extra_effect_type,
 			unit_leader_skill_extra_m.effect_value AS extra_effect_value,
 			unit_leader_skill_extra_m.member_tag_id
 		`).
@@ -144,14 +146,35 @@ func getLeaderSkillData(ss *session.Session, unitID int) (leaderSkillData, error
 	return data, err
 }
 
-func applyAttributeBonus(attributeID int, effectValue, smile, pure, cool float64) (float64, float64, float64) {
-	switch attributeID {
+func applyLeaderSkillBonus(effectType int, effectValue, smile, pure, cool float64) (float64, float64, float64) {
+	switch effectType {
 	case 1:
+		// Smile 的百分比增加至 Smile。
 		return math.Ceil(smile * (effectValue / 100)), 0, 0
 	case 2:
+		// Pure 的百分比增加至 Pure。
 		return 0, math.Ceil(pure * (effectValue / 100)), 0
 	case 3:
+		// Cool 的百分比增加至 Cool。
 		return 0, 0, math.Ceil(cool * (effectValue / 100))
+	case 112:
+		// Smile 的百分比增加至 Pure。
+		return 0, math.Ceil(smile * (effectValue / 100)), 0
+	case 113:
+		// Smile 的百分比增加至 Cool。
+		return 0, 0, math.Ceil(smile * (effectValue / 100))
+	case 121:
+		// Pure 的百分比增加至 Smile。
+		return math.Ceil(pure * (effectValue / 100)), 0, 0
+	case 123:
+		// Pure 的百分比增加至 Cool。
+		return 0, 0, math.Ceil(pure * (effectValue / 100))
+	case 131:
+		// Cool 的百分比增加至 Smile。
+		return math.Ceil(cool * (effectValue / 100)), 0, 0
+	case 132:
+		// Cool 的百分比增加至 Pure。
+		return 0, math.Ceil(cool * (effectValue / 100)), 0
 	default:
 		return 0, 0, 0
 	}

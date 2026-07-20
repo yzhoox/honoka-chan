@@ -214,9 +214,9 @@ func BuildPlayResp(ss *session.Session, playReq liveschema.PlayReq, isRandom boo
 		pureMax = basePure + kissPure + skillPure
 		coolMax = baseCool + kissCool + skillCool
 
-		// 主唱技能加成：主C技能（这里不使用新C技能，即以某属性的百分比提升另一属性）
-		myCenterSmile, myCenterPure, myCenterCool := applyAttributeBonus(
-			myLeaderSkill.AttributeID,
+		// 主唱技能加成：主C技能
+		myCenterSmile, myCenterPure, myCenterCool := applyLeaderSkillBonus(
+			myLeaderSkill.MainEffectType,
 			myLeaderSkill.MainEffectValue,
 			smileMax, pureMax, coolMax,
 		)
@@ -230,8 +230,8 @@ func BuildPlayResp(ss *session.Session, playReq liveschema.PlayReq, isRandom boo
 
 		var mySubSmile, mySubPure, mySubCool float64
 		if matched {
-			mySubSmile, mySubPure, mySubCool = applyAttributeBonus(
-				myLeaderSkill.AttributeID,
+			mySubSmile, mySubPure, mySubCool = applyLeaderSkillBonus(
+				myLeaderSkill.ExtraEffectType,
 				myLeaderSkill.ExtraEffectValue,
 				smileMax, pureMax, coolMax,
 			)
@@ -239,8 +239,8 @@ func BuildPlayResp(ss *session.Session, playReq liveschema.PlayReq, isRandom boo
 		}
 
 		// 好友主唱技能加成
-		tomoCenterSmile, tomoCenterPure, tomoCenterCool := applyAttributeBonus(
-			tomoLeaderSkill.AttributeID,
+		tomoCenterSmile, tomoCenterPure, tomoCenterCool := applyLeaderSkillBonus(
+			tomoLeaderSkill.MainEffectType,
 			tomoLeaderSkill.MainEffectValue,
 			smileMax, pureMax, coolMax,
 		)
@@ -254,8 +254,8 @@ func BuildPlayResp(ss *session.Session, playReq liveschema.PlayReq, isRandom boo
 
 		var tomoSubSmile, tomoSubPure, tomoSubCool float64
 		if matched {
-			tomoSubSmile, tomoSubPure, tomoSubCool = applyAttributeBonus(
-				tomoLeaderSkill.AttributeID,
+			tomoSubSmile, tomoSubPure, tomoSubCool = applyLeaderSkillBonus(
+				tomoLeaderSkill.ExtraEffectType,
 				tomoLeaderSkill.ExtraEffectValue,
 				smileMax, pureMax, coolMax,
 			)
